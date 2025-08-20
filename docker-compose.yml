@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # PHP API Server
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/var/www/html
+      - ./config:/var/www/config
+      - ./shared:/var/www/shared
+    environment:
+      - APP_ENV=development
+      - DB_HOST=database
+      - REDIS_HOST=redis
+    depends_on:
+      - database
+      - redis
+    networks:
+      - interviews-network
+
+  # Frontend Development Server
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - interviews-network
+
+  # MySQL Database
+  database:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: interviews_tv
+      MYSQL_USER: interviews
+      MYSQL_PASSWORD: interviews
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - interviews-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - interviews-network
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/sites:/etc/nginx/sites-available
+      - ./web/dist:/var/www/web
+      - ./api/public:/var/www/api
+    depends_on:
+      - api
+      - web
+    networks:
+      - interviews-network
+    profiles:
+      - production
+
+  # MinIO for S3-compatible storage (Development)
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - interviews-network
+    profiles:
+      - development
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
+
+networks:
+  interviews-network:
+    driver: bridge

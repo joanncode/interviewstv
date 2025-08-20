@@ -1,0 +1,35 @@
+backend/
+├── config/
+├── controllers/             # (Updated)
+│   ├── InterviewController.php  # Add like/unlike methods
+│   ├── UserController.php
+│   ├── AuthController.php
+│   ├── CommunityController.php
+│   ├── EventController.php
+│   └── BusinessController.php
+├── models/
+│   ├── User.php
+│   ├── Interview.php
+│   ├── Community.php
+│   ├── Event.php
+│   ├── Business.php
+│   ├── Comment.php
+│   ├── InterviewMedia.php
+│   └── Like.php **(New)** # Model for likes
+├── routes/                  # (Updated)
+│   ├── api.php             # Add /api/interviews/:id/like, /api/media/:id/like
+│   └── web.php
+├── public/
+├── utils/
+├── migrations/              # (Updated)
+│   ├── create_users_table.php
+│   ├── create_interviews_table.php
+│   ├── create_communities_table.php
+│   ├── create_events_table.php
+│   ├── create_businesses_table.php
+│   ├── create_comments_table.php
+│   ├── create_interview_media_table.php
+│   └── create_likes_table.php **(New)**
+├── .env
+├── composer.json
+└── README.md

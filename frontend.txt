@@ -1,0 +1,34 @@
+frontend/
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/          # (Updated)
+│   │   ├── Header.js
+│   │   ├── VideoPlayer.js   # Add like button
+│   │   ├── CommentSection.js
+│   │   ├── ProfileCard.js
+│   │   ├── EventCalendar.js
+│   │   ├── BusinessCard.js
+│   │   ├── MediaGallery.js  # Add like button for media items
+│   │   └── FileUploader.js
+│   ├── pages/
+│   │   ├── Home/
+│   │   ├── Explore/
+│   │   ├── Interviews/
+│   │   │   ├── ViewInterview.js # Add like count/button
+│   │   │   └── MyInterviews.js
+│   │   ├── Create/
+│   │   ├── Profile/
+│   │   ├── Settings/
+│   │   ├── Events/
+│   │   └── Business/
+│   ├── services/            # (Updated)
+│   │   ├── api.js           # Add like/unlike API calls
+│   │   └── auth.js
+│   ├── utils/
+│   ├── App.js
+│   ├── index.js
+│   └── styles/
+├── .env
+├── package.json
+└── README.md

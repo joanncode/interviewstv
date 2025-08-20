@@ -1,0 +1,161 @@
+-- Users table: Stores user information (interviewers, interviewees, viewers, promoters, admins)
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT 'Unique username for profile URL',
+    email VARCHAR(255) NOT NULL UNIQUE COMMENT 'Email for login and notifications',
+    password VARCHAR(255) NOT NULL COMMENT 'Hashed password',
+    bio TEXT COMMENT 'User biography',
+    avatar_url VARCHAR(255) COMMENT 'S3 URL for profile picture',
+    role ENUM('user', 'interviewer', 'interviewee', 'promoter', 'admin') NOT NULL DEFAULT 'user' COMMENT 'User role',
+    verified BOOLEAN DEFAULT FALSE COMMENT 'Email verification status',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_email (email)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Interviews table: Stores interview details (video, audio, text, live)
+CREATE TABLE interviews (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL COMMENT 'Interview title',
+    description TEXT COMMENT 'Interview description',
+    type ENUM('video', 'audio', 'text', 'live') NOT NULL COMMENT 'Interview format',
+    media_url VARCHAR(255) COMMENT 'S3 URL for main video/audio file',
+    transcript_url VARCHAR(255) COMMENT 'S3 URL for transcript file',
+    thumbnail_url VARCHAR(255) COMMENT 'S3 URL for thumbnail',
+    host_id BIGINT UNSIGNED NOT NULL COMMENT 'User ID of interviewer',
+    guest_id BIGINT UNSIGNED COMMENT 'User ID of interviewee (nullable)',
+    event_id BIGINT UNSIGNED COMMENT 'Linked event (nullable)',
+    business_id BIGINT UNSIGNED COMMENT 'Linked business (nullable)',
+    duration INT UNSIGNED COMMENT 'Duration in seconds',
+    status ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft' COMMENT 'Interview status',
+    is_public BOOLEAN DEFAULT TRUE COMMENT 'Public or private visibility',
+    has_gallery BOOLEAN DEFAULT FALSE COMMENT 'Flag if interview has additional media gallery',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    scheduled_at TIMESTAMP COMMENT 'Scheduled time for live interviews',
+    FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (guest_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    INDEX idx_host_id (host_id),
+    INDEX idx_event_id (event_id),
+    INDEX idx_business_id (business_id),
+    INDEX idx_has_gallery (has_gallery),
+    FULLTEXT INDEX idx_title_description (title, description)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Events table: Stores event details (conferences, festivals, etc.)
+CREATE TABLE events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL COMMENT 'Event title',
+    description TEXT COMMENT 'Event description',
+    promoter_id BIGINT UNSIGNED NOT NULL COMMENT 'User ID of event organizer',
+    start_date TIMESTAMP NOT NULL COMMENT 'Event start time',
+    end_date TIMESTAMP COMMENT 'Event end time (nullable)',
+    location VARCHAR(255) COMMENT 'Physical or virtual location',
+    is_virtual BOOLEAN DEFAULT FALSE COMMENT 'Virtual or in-person event',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (promoter_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_promoter_id (promoter_id),
+    INDEX idx_start_date (start_date),
+    FULLTEXT INDEX idx_title_description (title, description)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Businesses table: Stores business/place details (shops, restaurants, etc.)
+CREATE TABLE businesses (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL COMMENT 'Business name',
+    owner_id BIGINT UNSIGNED NOT NULL COMMENT 'User ID of business owner/manager',
+    industry ENUM('retail', 'hospitality', 'tech', 'other') NOT NULL COMMENT 'Business category',
+    description TEXT COMMENT 'Business description',
+    location VARCHAR(255) COMMENT 'Physical address or coordinates',
+    website_url VARCHAR(255) COMMENT 'Business website',
+    logo_url VARCHAR(255) COMMENT 'S3 URL for logo',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_owner_id (owner_id),
+    FULLTEXT INDEX idx_name_description (name, description)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Communities table: Stores community/group details
+CREATE TABLE communities (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL COMMENT 'Community name',
+    description TEXT COMMENT 'Community description',
+    creator_id BIGINT UNSIGNED NOT NULL COMMENT 'User ID of community creator',
+    is_public BOOLEAN DEFAULT TRUE COMMENT 'Public or private community',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_creator_id (creator_id),
+    FULLTEXT INDEX idx_name_description (name, description)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Comments table: Stores comments on interviews, businesses, or events
+CREATE TABLE comments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    entity_type ENUM('interview', 'business', 'event') NOT NULL COMMENT 'Type of entity being commented on',
+    entity_id BIGINT UNSIGNED NOT NULL COMMENT 'ID of the entity (interview, business, or event)',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT 'Comment author',
+    content TEXT NOT NULL COMMENT 'Comment text',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_entity_type_id (entity_type, entity_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Followers table: Stores user follow relationships
+CREATE TABLE followers (
+    follower_id BIGINT UNSIGNED NOT NULL COMMENT 'User who follows',
+    followed_id BIGINT UNSIGNED NOT NULL COMMENT 'User being followed',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (follower_id, followed_id),
+    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_followed_id (followed_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Community Members table: Stores community memberships
+CREATE TABLE community_members (
+    community_id BIGINT UNSIGNED NOT NULL COMMENT 'Community ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT 'Member ID',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (community_id, user_id),
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Interview Media table: Stores additional photos/videos for galleries
+CREATE TABLE interview_media (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    interview_id BIGINT UNSIGNED NOT NULL COMMENT 'Linked interview',
+    type ENUM('photo', 'video', 'clip') NOT NULL COMMENT 'Media type',
+    url VARCHAR(255) NOT NULL COMMENT 'S3 URL for media file',
+    thumbnail_url VARCHAR(255) COMMENT 'S3 URL for thumbnail (for videos)',
+    caption TEXT COMMENT 'Media description/caption',
+    order INT UNSIGNED DEFAULT 0 COMMENT 'Display order in gallery',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+    INDEX idx_interview_id (interview_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Likes table: Stores likes for interviews and gallery media
+CREATE TABLE likes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL COMMENT 'User who liked',
+    interview_id BIGINT UNSIGNED NULL COMMENT 'Liked interview (nullable)',
+    media_id BIGINT UNSIGNED NULL COMMENT 'Liked gallery media (nullable)',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+    FOREIGN KEY (media_id) REFERENCES interview_media(id) ON DELETE CASCADE,
+    UNIQUE KEY idx_user_interview_media (user_id, interview_id, media_id),
+    INDEX idx_interview_id (interview_id),
+    INDEX idx_media_id (media_id)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -1,0 +1,206 @@
+Comprehensive Summary of Interviews.tv
+Interviews.tv is a specialized social networking platform designed to create, share, discover, and engage with interviews, positioning itself as a unique hub for meaningful conversations. Launched conceptually in early 2025, it focuses exclusively on interviews, connecting users with diverse personalities such as artists, musicians, bands, politicians, business owners, event promoters, and everyday individuals. The platform blends video hosting, professional networking, real-time discussions, and scheduling tools into an interview-centric ecosystem, drawing inspiration from platforms like YouTube, LinkedIn, Twitter/X, and Calendly, but with a distinct focus on authentic, user-driven dialogues.
+Built on a modern tech stack—React for a responsive frontend, PHP with MySQL for the backend, and AWS S3 for media storage—Interviews.tv emphasizes simplicity, engagement, and scalability. Its bold black (#000000), red (#FF0000), and white (#FFFFFF) color scheme creates a striking, professional aesthetic, as seen in its Bootstrap-powered landing page with a hero banner proclaiming “Join the Ultimate Interview Network.” The platform supports a freemium model with premium features like ad-free viewing and exclusive content, aiming for a 3-6 month MVP development timeline, with potential for iOS/Android apps.
+The core mission is to democratize interviews, making them accessible for creation and consumption while fostering community around shared interests. It caters to a diverse audience—interviewers (hosts), interviewees (guests), viewers (audience), promoters (event organizers), business owners, and admins—offering tools for storytelling, networking, and monetization.
+Core Features
+Interviews.tv provides a robust set of features, organized around user management, interview creation, social interaction, and specialized modules for businesses and events. Below is a comprehensive list, incorporating all elements from prior discussions (March 29 to August 19, 2025).
+1. User Management
+
+Registration and Authentication:
+
+Sign up via email or social logins (Google/X) with role selection: user, interviewer, interviewee, promoter, or admin.
+Secure login with password hashing (bcrypt) and JWT/session-based authentication.
+Email verification (verified flag in users table).
+
+
+User Roles:
+
+User: General audience, can view, comment, like, and follow.
+Interviewer: Hosts interviews, manages content.
+Interviewee: Featured in interviews, can have profiles.
+Promoter: Organizes events, links interviews.
+Admin: Moderates content, manages users.
+
+
+Settings:
+
+Manage account details, notifications (e.g., new followers, likes), privacy (public/private profiles), and billing (subscriptions).
+Routes: /settings, /settings/notifications, /settings/privacy, /settings/billing.
+
+
+
+2. User Profiles
+
+Profile Pages:
+
+Public profiles at /profile/:username with bio, S3-hosted avatar, interview history, and follower/following counts.
+Edit profile at /profile/edit (update bio, avatar).
+Follower lists (/profile/:username/followers) and following lists (/profile/:username/following).
+
+
+Social Features:
+
+Follow System: Users can follow interviewers, interviewees, promoters, etc., via the followers table (follower_id, followed_id). Personalized feeds show content from followed users.
+API endpoints: POST/DELETE /api/users/:username/follow, GET /api/users/:username/followers.
+
+
+
+3. Interview Management
+
+Creation and Scheduling:
+
+Create interviews at /create/new with support for video, audio, text, or live formats.
+Upload main media (video/audio) and additional gallery items (photos, videos, clips) to S3.
+Schedule live interviews (scheduled_at in interviews table) with calendar integration at /create/schedule.
+Collaborative question submission from communities at /create/collaborate.
+
+
+Interview Types:
+
+Video/Audio: Recorded content with S3-hosted files (media_url, thumbnail_url).
+Text: Transcripts or Q&A (transcript_url).
+Live: Real-time streaming (assumes third-party integration like Agora).
+
+
+Media Galleries:
+
+Each interview can have a gallery (interview_media table: id, interview_id, type [photo, video, clip], url, thumbnail_url, caption, order).
+View at /interviews/:id/gallery with carousel display.
+
+
+Management:
+
+Status: Draft, published, archived (status in interviews table).
+Visibility: Public or private (is_public).
+Tagging: Link to events (event_id) or businesses (business_id).
+Analytics: Views, likes, comments for creators at /my-interviews.
+
+
+Routes:
+
+/interviews/:id: Main interview page with video player, comments, gallery link.
+/interviews/:id/transcript: Text transcript.
+/interviews/:id/gallery: Full gallery view.
+/my-interviews: User’s hosted/participated interviews.
+
+
+
+4. Social Interactions
+
+Like System:
+
+Users can like interviews or gallery media (likes table: user_id, interview_id, media_id).
+Toggleable like buttons with counts on /interviews/:id and /interviews/:id/gallery.
+Endpoints: POST/DELETE /api/interviews/:id/like, POST/DELETE /api/media/:id/like.
+
+
+Comments System:
+
+Users can comment on interviews, businesses, or events (comments table, updated to include entity_type [interview, business, event], entity_id).
+Threaded comments displayed on /interviews/:id, /business/:id, /events/:id.
+Endpoints: POST /api/comments, GET /api/comments/:entity_type/:entity_id.
+Replaces the proposed reviews system, allowing feedback like “Great café!” or “Loved the festival!” without star ratings.
+
+
+Communities:
+
+Create/join groups at /communities/create, /communities/:id.
+Public/private communities (is_public) with membership tracking (community_members table).
+Event or business-themed communities (e.g., “Music Interviews”).
+
+
+Sharing: Shareable links for interviews, profiles, businesses, events via social media.
+
+5. Business Module
+
+Business Profiles:
+
+Directory at /business/browse with filters by industry (retail, hospitality, tech, other).
+Profile pages at /business/:id with name, description, location, website, logo, linked interviews, and comments.
+Request interview form at /business/:id/request.
+Owner-managed businesses at /business/my (owner_id in businesses table).
+
+
+Feedback: Users comment on businesses (e.g., “Amazing service!”) via the updated comments table.
+Features: Galleries linked to interviews, searchable directory, promotion potential (e.g., featured listings).
+
+6. Events Module
+
+Event Management:
+
+Create events at /events/create with title, description, promoter, dates, location, and virtual/in-person flag.
+Browse events at /events/browse with filters (date, type, location).
+Event pages at /events/:id with schedule, linked interviews (attendee or promoter), comments, and optional galleries.
+User’s events at /events/my.
+
+
+Feedback: Comments on events (e.g., “Best conference ever!”) via comments table.
+Integration: Link interviews to events (event_id in interviews), support for attendee submissions.
+
+7. Discovery and Search
+
+Explore Hub (/explore):
+
+Personalized recommendations based on followed users and interests.
+Trending interviews at /trending.
+Category filters (music, politics, business, events) at /categories.
+
+
+Search (/search?q=query):
+
+By keyword, topic, person, date, or type (video, audio, live).
+FULLTEXT indexes on title, description for fast results.
+
+
+Calendar: View upcoming events and scheduled interviews at /scheduled.
+
+8. Monetization and Analytics
+
+Freemium Model:
+
+Free access with usage quotas.
+Premium subscriptions (SuperGrok-like) for ad-free viewing, priority scheduling, exclusive galleries.
+
+
+Revenue Streams:
+
+Ads, sponsorships, donations/tips.
+Event ticketing or business promotion packages.
+
+
+Analytics:
+
+Creator dashboard (/my-interviews, /business/my) with views, likes, comments, engagement metrics.
+
+
+
+9. Security and Compliance
+
+User Verification: For high-profile accounts (e.g., celebrities, business owners).
+Content Moderation: AI and human moderation for comments and media.
+Privacy: Public/private settings for interviews and profiles.
+Data Integrity: MySQL foreign keys with ON DELETE CASCADE ensure clean deletes.
+
+10. Technical and UI/UX
+
+Landing Page (/): Bootstrap 5, responsive, with hero banner, features section (“Connect with Stories,” “Create & Share,” “Discover Events”), and signup CTA.
+Navigation: Sitemap includes /, /explore, /interviews, /create, /profile, /events, /business, /settings, /about, /help, /terms.
+Frontend: React with components like VideoPlayer.js, MediaGallery.js, CommentSection.js, ProfileCard.js, EventCalendar.js, BusinessCard.js, FileUploader.js.
+Backend: PHP with MySQL, PDO for database, S3 for media, REST API (/api/*).
+Mobile: Responsive design; planned native apps with push notifications.
+SEO: Meta tags, clean URLs (e.g., /profile/:username).
+
+Technical Structure
+
+MySQL Schema:
+
+Tables: users, interviews, events, businesses, communities, comments, followers, community_members, interview_media, likes.
+Key Updates: comments table now supports entity_type (interview, business, event) for flexible feedback, replacing reviews.
+Indexes: FULLTEXT for search, indexes for performance (e.g., idx_username, idx_interview_id).
+
+
+Directory:
+
+Frontend: React (src/components, src/pages, services/api.js for API calls).
+Backend: PHP (controllers, models, routes/api.php, utils/upload.php for S3).
+Migrations: Schema setup for all tables.
