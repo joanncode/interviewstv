@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interviews.tv - Join the Ultimate Interview Network</title>
+    
+    <!-- Meta tags -->
+    <meta name="description" content="Create, share, discover, and engage with interviews from artists, musicians, politicians, business owners, and everyday people sharing their stories.">
+    <meta name="keywords" content="interviews, social network, video, audio, conversations, stories">
+    <meta name="author" content="Interviews.tv">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Interviews.tv - Join the Ultimate Interview Network">
+    <meta property="og:description" content="Create, share, discover, and engage with interviews from artists, musicians, politicians, business owners, and everyday people sharing their stories.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://interviews.tv">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-black: #000000;
+            --primary-red: #FF0000;
+            --primary-white: #FFFFFF;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            
+            --bs-primary: var(--primary-red);
+            --bs-dark: var(--primary-black);
+            --bs-light: var(--primary-white);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--primary-white);
+            color: var(--primary-black);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: var(--primary-black) !important;
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .navbar-brand {
+            color: var(--primary-white) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .brand-accent {
+            color: var(--primary-red);
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--primary-white) !important;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link:focus,
+        .navbar-nav .nav-link.active {
+            color: var(--primary-red) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+            color: var(--primary-white);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: #cc0000;
+            border-color: #cc0000;
+            color: var(--primary-white);
+        }
+
+        .text-primary {
+            color: var(--primary-red) !important;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary-black) 0%, var(--gray-900) 100%);
+            color: var(--primary-white);
+            padding: 100px 0;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title .accent {
+            color: var(--primary-red);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .footer {
+            background-color: var(--primary-black);
+            color: var(--primary-white);
+            padding: 40px 0 20px;
+        }
+
+        .footer-brand {
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+
+        .footer-link {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--primary-red);
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner-border {
+            color: var(--primary-red);
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 0;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading screen -->
+    <div class="loading">
+        <div class="text-center">
+            <div class="spinner-border mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading Interviews.tv...</p>
+        </div>
+    </div>
+
+    <!-- Main application container -->
+    <div id="app">
+        <!-- Application will be rendered here -->
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application JS -->
+    <script type="module" src="/src/index.js"></script>
+</body>
+</html>
