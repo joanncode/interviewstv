@@ -257,6 +257,39 @@ class APIService {
         return this.put(`/api/galleries/${id}/media/order`, { media_order: mediaOrder });
     }
 
+    // Comment endpoints
+    async getComments(entityType, entityId, params = {}) {
+        return this.get(`/api/comments/${entityType}/${entityId}`, params);
+    }
+
+    async createComment(data) {
+        return this.post('/api/comments', data);
+    }
+
+    async updateComment(id, data) {
+        return this.put(`/api/comments/${id}`, data);
+    }
+
+    async deleteComment(id) {
+        return this.delete(`/api/comments/${id}`);
+    }
+
+    async likeComment(id) {
+        return this.post(`/api/comments/${id}/like`);
+    }
+
+    async unlikeComment(id) {
+        return this.delete(`/api/comments/${id}/like`);
+    }
+
+    async reportComment(id, data) {
+        return this.post(`/api/comments/${id}/report`, data);
+    }
+
+    async getCommentReplies(id, params = {}) {
+        return this.get(`/api/comments/${id}/replies`, params);
+    }
+
     // Health check
     async healthCheck() {
         return this.get('/api/health');

@@ -52,11 +52,17 @@ $router->group(['prefix' => 'interviews'], function($router) {
 // Comment routes
 $router->group(['prefix' => 'comments'], function($router) {
     $router->get('{entityType}/{entityId}', 'CommentController@index')
-        ->where('entityType', '(interview|business|event)')
+        ->where('entityType', '(interview|gallery|business|event)')
         ->where('entityId', '[0-9]+');
     $router->post('/', 'CommentController@create')->middleware('auth');
     $router->put('{id}', 'CommentController@update')->middleware('auth');
     $router->delete('{id}', 'CommentController@delete')->middleware('auth');
+
+    // Comment interactions
+    $router->post('{id}/like', 'CommentController@like')->middleware('auth');
+    $router->delete('{id}/like', 'CommentController@unlike')->middleware('auth');
+    $router->post('{id}/report', 'CommentController@report')->middleware('auth');
+    $router->get('{id}/replies', 'CommentController@getReplies');
 });
 
 // Gallery routes

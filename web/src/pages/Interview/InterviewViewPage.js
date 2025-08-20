@@ -1,12 +1,14 @@
 import Auth from '../../services/auth.js';
 import API from '../../services/api.js';
 import Router from '../../utils/router.js';
+import Comments from '../../components/Comments.js';
 
 class InterviewViewPage {
     constructor() {
         this.interview = null;
         this.currentUser = Auth.getCurrentUser();
         this.isLoading = false;
+        this.commentsComponent = null;
     }
 
     async render(container, props = {}) {
@@ -23,6 +25,7 @@ class InterviewViewPage {
             await this.loadInterview(interviewId);
             container.innerHTML = this.getHTML();
             this.setupEventListeners(container);
+            this.initializeComments(container);
         } catch (error) {
             console.error('Failed to load interview:', error);
             container.innerHTML = this.getErrorHTML();
@@ -74,6 +77,7 @@ class InterviewViewPage {
                 ${this.getInterviewHeader()}
                 ${this.getInterviewContent()}
                 ${this.getInterviewSidebar()}
+                ${this.getCommentsSection()}
             </div>
         `;
     }
@@ -421,6 +425,28 @@ class InterviewViewPage {
             return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         } else {
             return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
+
+    getCommentsSection() {
+        return `
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div id="comments-section">
+                            <!-- Comments will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    initializeComments(container) {
+        const commentsContainer = container.querySelector('#comments-section');
+        if (commentsContainer && this.interview) {
+            this.commentsComponent = new Comments('interview', this.interview.id, commentsContainer);
+            this.commentsComponent.render();
         }
     }
 }
