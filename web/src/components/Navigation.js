@@ -29,6 +29,9 @@ class Navigation {
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">
+                                <a class="nav-link" href="/interviews">Interviews</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="/explore">Explore</a>
                             </li>
                             <li class="nav-item">

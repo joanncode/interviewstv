@@ -5,6 +5,8 @@ import RegisterPage from '../pages/Auth/RegisterPage.js';
 import ExplorePage from '../pages/Explore/ExplorePage.js';
 import ProfilePage from '../pages/Profile/ProfilePage.js';
 import EditProfilePage from '../pages/Profile/EditProfilePage.js';
+import InterviewListPage from '../pages/Interview/InterviewListPage.js';
+import InterviewViewPage from '../pages/Interview/InterviewViewPage.js';
 import NotFoundPage from '../pages/NotFound/NotFoundPage.js';
 
 class Router {
@@ -23,6 +25,8 @@ class Router {
             { path: '/explore', component: ExplorePage, title: 'Explore - Interviews.tv' },
             { path: '/trending', component: ExplorePage, title: 'Trending - Interviews.tv', props: { filter: 'trending' } },
             { path: '/categories', component: ExplorePage, title: 'Categories - Interviews.tv', props: { filter: 'categories' } },
+            { path: '/interviews', component: InterviewListPage, title: 'Interviews - Interviews.tv' },
+            { path: '/interviews/:id', component: InterviewViewPage, title: 'Interview - Interviews.tv' },
             { path: '/profile/:username', component: ProfilePage, title: 'Profile - Interviews.tv' },
             { path: '/profile/:username/edit', component: EditProfilePage, title: 'Edit Profile - Interviews.tv', requireAuth: true }
         ];

@@ -187,6 +187,43 @@ class APIService {
         return this.get(`/api/users/${username}/following`, params);
     }
 
+    // Interview endpoints
+    async getInterviews(params = {}) {
+        return this.get('/api/interviews', params);
+    }
+
+    async getInterview(id) {
+        return this.get(`/api/interviews/${id}`);
+    }
+
+    async createInterview(data) {
+        return this.post('/api/interviews', data);
+    }
+
+    async updateInterview(id, data) {
+        return this.put(`/api/interviews/${id}`, data);
+    }
+
+    async deleteInterview(id) {
+        return this.delete(`/api/interviews/${id}`);
+    }
+
+    async getInterviewMedia(id) {
+        return this.get(`/api/interviews/${id}/media`);
+    }
+
+    async addInterviewMedia(id, formData) {
+        return this.upload(`/api/interviews/${id}/media`, formData);
+    }
+
+    async likeInterview(id) {
+        return this.post(`/api/interviews/${id}/like`);
+    }
+
+    async unlikeInterview(id) {
+        return this.delete(`/api/interviews/${id}/like`);
+    }
+
     // Health check
     async healthCheck() {
         return this.get('/api/health');
