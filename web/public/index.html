@@ -209,6 +209,82 @@
             --fancybox-bg: rgba(0, 0, 0, 0.9);
         }
 
+        /* Interview Creation Styles */
+        .progress-steps .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-steps .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .progress-steps .step.active .step-number {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .progress-steps .step.completed .step-number {
+            background: #198754;
+            color: white;
+        }
+
+        .progress-steps .step-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .progress-steps .step.active .step-title {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+
+        .progress-steps .step.completed .step-title {
+            color: #198754;
+        }
+
+        .upload-area {
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #0d6efd !important;
+        }
+
+        .upload-item {
+            transition: all 0.3s ease;
+        }
+
+        .upload-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .media-item {
+            transition: all 0.3s ease;
+        }
+
+        .media-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .interview-preview-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+        }
+
         @media (max-width: 768px) {
             .hero {
                 padding: 60px 0;
