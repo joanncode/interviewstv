@@ -59,6 +59,20 @@ $router->group(['prefix' => 'comments'], function($router) {
     $router->delete('{id}', 'CommentController@delete')->middleware('auth');
 });
 
+// Gallery routes
+$router->group(['prefix' => 'galleries'], function($router) {
+    $router->get('/', 'GalleryController@index');
+    $router->get('{id}', 'GalleryController@show');
+    $router->post('/', 'GalleryController@create')->middleware('auth');
+    $router->put('{id}', 'GalleryController@update')->middleware('auth');
+    $router->delete('{id}', 'GalleryController@delete')->middleware('auth');
+
+    // Gallery media
+    $router->get('{id}/media', 'GalleryController@getMedia');
+    $router->post('{id}/media', 'GalleryController@addMedia')->middleware('auth');
+    $router->put('{id}/media/order', 'GalleryController@updateMediaOrder')->middleware('auth');
+});
+
 // Event routes
 $router->group(['prefix' => 'events'], function($router) {
     $router->get('/', 'EventController@index');

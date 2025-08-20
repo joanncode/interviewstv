@@ -224,6 +224,39 @@ class APIService {
         return this.delete(`/api/interviews/${id}/like`);
     }
 
+    // Gallery endpoints
+    async getGalleries(params = {}) {
+        return this.get('/api/galleries', params);
+    }
+
+    async getGallery(id) {
+        return this.get(`/api/galleries/${id}`);
+    }
+
+    async createGallery(data) {
+        return this.post('/api/galleries', data);
+    }
+
+    async updateGallery(id, data) {
+        return this.put(`/api/galleries/${id}`, data);
+    }
+
+    async deleteGallery(id) {
+        return this.delete(`/api/galleries/${id}`);
+    }
+
+    async getGalleryMedia(id) {
+        return this.get(`/api/galleries/${id}/media`);
+    }
+
+    async addGalleryMedia(id, formData) {
+        return this.upload(`/api/galleries/${id}/media`, formData);
+    }
+
+    async updateGalleryMediaOrder(id, mediaOrder) {
+        return this.put(`/api/galleries/${id}/media/order`, { media_order: mediaOrder });
+    }
+
     // Health check
     async healthCheck() {
         return this.get('/api/health');
