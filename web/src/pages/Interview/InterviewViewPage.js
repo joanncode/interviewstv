@@ -2,6 +2,8 @@ import Auth from '../../services/auth.js';
 import API from '../../services/api.js';
 import Router from '../../utils/router.js';
 import Comments from '../../components/Comments.js';
+import MediaPlayer from '../../components/MediaPlayer.js';
+import LikeButton from '../../components/LikeButton.js';
 
 class InterviewViewPage {
     constructor() {
@@ -9,6 +11,8 @@ class InterviewViewPage {
         this.currentUser = Auth.getCurrentUser();
         this.isLoading = false;
         this.commentsComponent = null;
+        this.mediaPlayer = null;
+        this.likeButton = null;
     }
 
     async render(container, props = {}) {
@@ -25,7 +29,9 @@ class InterviewViewPage {
             await this.loadInterview(interviewId);
             container.innerHTML = this.getHTML();
             this.setupEventListeners(container);
+            this.initializeMediaPlayer(container);
             this.initializeComments(container);
+            this.initializeLikeButton(container);
         } catch (error) {
             console.error('Failed to load interview:', error);
             container.innerHTML = this.getErrorHTML();
@@ -144,23 +150,22 @@ class InterviewViewPage {
 
     getActionButtons(canEdit) {
         const interview = this.interview;
-        const isLiked = interview.is_liked;
-        
+
         return `
             <div class="d-flex flex-column gap-2">
-                ${this.currentUser ? `
-                    <button class="btn ${isLiked ? 'btn-danger' : 'btn-outline-danger'}" 
-                            id="like-btn"
-                            data-liked="${isLiked}">
-                        <i class="fas fa-heart me-2"></i>
-                        ${isLiked ? 'Unlike' : 'Like'}
-                    </button>
-                ` : ''}
-                
+                <div class="d-flex align-items-center gap-3">
+                    <div id="like-button-container"></div>
+                    <div class="interview-stats">
+                        <small class="text-muted">
+                            <i class="fas fa-eye me-1"></i>${interview.view_count || 0} views
+                        </small>
+                    </div>
+                </div>
+
                 <button class="btn btn-outline-primary" id="share-btn">
                     <i class="fas fa-share me-2"></i>Share
                 </button>
-                
+
                 ${canEdit ? `
                     <a href="/interviews/${interview.id}/edit" class="btn btn-outline-secondary">
                         <i class="fas fa-edit me-2"></i>Edit
@@ -177,8 +182,8 @@ class InterviewViewPage {
             <div class="container">
                 <div class="row">
                     <div class="col-md-8">
-                        <div class="interview-media mb-4">
-                            ${this.getMediaPlayer()}
+                        <div class="interview-media mb-4" id="media-player-container">
+                            <!-- MediaPlayer component will be rendered here -->
                         </div>
                         
                         <div class="interview-details">
@@ -328,12 +333,6 @@ class InterviewViewPage {
     }
 
     setupEventListeners(container) {
-        // Like button
-        const likeBtn = container.querySelector('#like-btn');
-        if (likeBtn) {
-            likeBtn.addEventListener('click', () => this.handleLikeToggle(likeBtn));
-        }
-
         // Share button
         const shareBtn = container.querySelector('#share-btn');
         if (shareBtn) {
@@ -341,45 +340,38 @@ class InterviewViewPage {
         }
     }
 
-    async handleLikeToggle(button) {
-        if (this.isLoading) return;
+    initializeLikeButton(container) {
+        const likeContainer = container.querySelector('#like-button-container');
+        if (!likeContainer) return;
 
-        try {
-            this.isLoading = true;
-            const isLiked = button.getAttribute('data-liked') === 'true';
-            
-            button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        this.likeButton = new LikeButton({
+            entityType: 'interview',
+            entityId: this.interview.id,
+            liked: this.interview.is_liked || false,
+            count: this.interview.like_count || 0,
+            size: 'large',
+            showCount: true,
+            showText: true,
+            animated: true,
+            onLikeChange: (data) => {
+                // Update interview data
+                this.interview.is_liked = data.liked;
+                this.interview.like_count = data.count;
 
-            let response;
-            if (isLiked) {
-                response = await API.delete(`/api/interviews/${this.interview.id}/like`);
-            } else {
-                response = await API.post(`/api/interviews/${this.interview.id}/like`);
+                // Update any other like displays on the page
+                this.updateLikeDisplays(data);
             }
+        });
 
-            if (response.success) {
-                // Update button state
-                const newLiked = !isLiked;
-                button.setAttribute('data-liked', newLiked);
-                button.className = `btn ${newLiked ? 'btn-danger' : 'btn-outline-danger'}`;
-                button.innerHTML = `
-                    <i class="fas fa-heart me-2"></i>
-                    ${newLiked ? 'Unlike' : 'Like'}
-                `;
+        this.likeButton.render(likeContainer);
+    }
 
-                // Update like count in the header
-                this.interview.like_count = response.data.like_count;
-                this.updateLikeCount();
-            }
-
-        } catch (error) {
-            console.error('Like toggle error:', error);
-            // TODO: Show error message
-        } finally {
-            this.isLoading = false;
-            button.disabled = false;
-        }
+    updateLikeDisplays(data) {
+        // Update any other like count displays on the page
+        const likeCountElements = document.querySelectorAll('.interview-like-count');
+        likeCountElements.forEach(element => {
+            element.textContent = data.count;
+        });
     }
 
     handleShare() {
@@ -440,6 +432,36 @@ class InterviewViewPage {
                 </div>
             </div>
         `;
+    }
+
+    initializeMediaPlayer(container) {
+        const mediaContainer = container.querySelector('#media-player-container');
+        if (mediaContainer && this.interview) {
+            // Prepare media data for the player
+            const primaryMedia = this.interview.media?.find(m => m.is_primary) || this.interview.media?.[0];
+
+            if (primaryMedia) {
+                this.mediaPlayer = new MediaPlayer(primaryMedia, {
+                    autoplay: false,
+                    controls: true,
+                    showTranscript: true,
+                    showChapters: true,
+                    showPlaybackSpeed: true
+                });
+
+                this.mediaPlayer.render(mediaContainer);
+            } else {
+                // Show no media available message
+                mediaContainer.innerHTML = `
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <div class="text-center">
+                            <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No media available for this interview</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
     }
 
     initializeComments(container) {

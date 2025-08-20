@@ -9,9 +9,25 @@ import InterviewListPage from '../pages/Interview/InterviewListPage.js';
 import InterviewViewPage from '../pages/Interview/InterviewViewPage.js';
 import InterviewCreatePage from '../pages/Interview/InterviewCreatePage.js';
 import InterviewEditPage from '../pages/Interview/InterviewEditPage.js';
+import InterviewManagePage from '../pages/Interview/InterviewManagePage.js';
+import InterviewDiscoveryPage from '../pages/Interview/InterviewDiscoveryPage.js';
 import GalleryListPage from '../pages/Gallery/GalleryListPage.js';
 import GalleryViewPage from '../pages/Gallery/GalleryViewPage.js';
+import GalleryCreatePage from '../pages/Gallery/GalleryCreatePage.js';
+import GalleryEditPage from '../pages/Gallery/GalleryEditPage.js';
+import PersonalFeedPage from '../pages/Feed/PersonalFeedPage.js';
+import DiscoveryPage from '../pages/Discovery/DiscoveryPage.js';
+import BusinessDirectoryPage from '../pages/Business/BusinessDirectoryPage.js';
+import BusinessProfilePage from '../pages/Business/BusinessProfilePage.js';
+import BusinessCreatePage from '../pages/Business/BusinessCreatePage.js';
+import BusinessManagePage from '../pages/Business/BusinessManagePage.js';
+import EventsDirectoryPage from '../pages/Events/EventsDirectoryPage.js';
+import EventProfilePage from '../pages/Events/EventProfilePage.js';
+import EventCreatePage from '../pages/Events/EventCreatePage.js';
 import SearchResultsPage from '../pages/Search/SearchResultsPage.js';
+import DiscoverPage from '../pages/Discover/DiscoverPage.js';
+import NotificationsPage from '../pages/Notifications/NotificationsPage.js';
+import ActivityFeedPage from '../pages/Feed/ActivityFeedPage.js';
 import NotFoundPage from '../pages/NotFound/NotFoundPage.js';
 
 class Router {
@@ -25,18 +41,34 @@ class Router {
         // Define all routes
         this.routes = [
             { path: '/', component: HomePage, title: 'Home - Interviews.tv' },
+            { path: '/feed', component: PersonalFeedPage, title: 'Your Feed - Interviews.tv', requireAuth: true },
             { path: '/login', component: LoginPage, title: 'Login - Interviews.tv' },
             { path: '/register', component: RegisterPage, title: 'Sign Up - Interviews.tv' },
-            { path: '/explore', component: ExplorePage, title: 'Explore - Interviews.tv' },
+            { path: '/explore', component: DiscoveryPage, title: 'Discover - Interviews.tv' },
+            { path: '/discover', component: DiscoveryPage, title: 'Discover - Interviews.tv' },
             { path: '/trending', component: ExplorePage, title: 'Trending - Interviews.tv', props: { filter: 'trending' } },
             { path: '/categories', component: ExplorePage, title: 'Categories - Interviews.tv', props: { filter: 'categories' } },
             { path: '/interviews', component: InterviewListPage, title: 'Interviews - Interviews.tv' },
+            { path: '/interviews/discover', component: InterviewDiscoveryPage, title: 'Discover Interviews - Interviews.tv' },
             { path: '/interviews/create', component: InterviewCreatePage, title: 'Create Interview - Interviews.tv', requireAuth: true },
+            { path: '/interviews/manage', component: InterviewManagePage, title: 'Manage Interviews - Interviews.tv', requireAuth: true },
             { path: '/interviews/:id', component: InterviewViewPage, title: 'Interview - Interviews.tv' },
             { path: '/interviews/:id/edit', component: InterviewEditPage, title: 'Edit Interview - Interviews.tv', requireAuth: true },
             { path: '/gallery', component: GalleryListPage, title: 'Galleries - Interviews.tv' },
+            { path: '/gallery/create', component: GalleryCreatePage, title: 'Create Gallery - Interviews.tv', requireAuth: true },
             { path: '/gallery/:id', component: GalleryViewPage, title: 'Gallery - Interviews.tv' },
+            { path: '/gallery/:id/edit', component: GalleryEditPage, title: 'Edit Gallery - Interviews.tv', requireAuth: true },
+            { path: '/business', component: BusinessDirectoryPage, title: 'Business Directory - Interviews.tv' },
+            { path: '/business/create', component: BusinessCreatePage, title: 'Add Business - Interviews.tv', requireAuth: true },
+            { path: '/business/:id/manage', component: BusinessManagePage, title: 'Manage Business - Interviews.tv', requireAuth: true },
+            { path: '/business/:id', component: BusinessProfilePage, title: 'Business Profile - Interviews.tv' },
+            { path: '/events', component: EventsDirectoryPage, title: 'Events Directory - Interviews.tv' },
+            { path: '/events/create', component: EventCreatePage, title: 'Create Event - Interviews.tv', requireAuth: true },
+            { path: '/events/:id', component: EventProfilePage, title: 'Event - Interviews.tv' },
             { path: '/search', component: SearchResultsPage, title: 'Search - Interviews.tv' },
+            { path: '/discover', component: DiscoverPage, title: 'Discover Users - Interviews.tv' },
+            { path: '/notifications', component: NotificationsPage, title: 'Notifications - Interviews.tv', requireAuth: true },
+            { path: '/feed', component: ActivityFeedPage, title: 'Activity Feed - Interviews.tv' },
             { path: '/profile/:username', component: ProfilePage, title: 'Profile - Interviews.tv' },
             { path: '/profile/:username/edit', component: EditProfilePage, title: 'Edit Profile - Interviews.tv', requireAuth: true }
         ];

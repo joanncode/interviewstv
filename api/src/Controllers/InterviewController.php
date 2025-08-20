@@ -156,7 +156,16 @@ class InterviewController
             ];
             
             $interview = Interview::create($interviewData);
-            
+
+            // Create activity if interview is published
+            if ($interview && $interview['status'] === 'published') {
+                \App\Models\Activity::createInterviewPublishedActivity(
+                    $currentUser['id'],
+                    $interview['id'],
+                    $interview
+                );
+            }
+
             return Response::success($interview, 'Interview created successfully', 201);
             
         } catch (ValidationException $e) {
@@ -214,7 +223,19 @@ class InterviewController
             
             // Update interview
             $updatedInterview = Interview::update($id, $data);
-            
+
+            // Create activity if status changed to published
+            if ($updatedInterview &&
+                isset($data['status']) &&
+                $data['status'] === 'published' &&
+                $interview['status'] !== 'published') {
+                \App\Models\Activity::createInterviewPublishedActivity(
+                    $currentUser['id'],
+                    $updatedInterview['id'],
+                    $updatedInterview
+                );
+            }
+
             return Response::success($updatedInterview, 'Interview updated successfully');
             
         } catch (ValidationException $e) {
@@ -349,10 +370,17 @@ class InterviewController
             
             // Add like
             $this->addLike($id, $currentUser['id']);
-            
+
             // Update like count
             Interview::updateLikeCount($id);
-            
+
+            // Create activity for like
+            \App\Models\Activity::createInterviewLikedActivity(
+                $currentUser['id'],
+                $id,
+                $interview
+            );
+
             return Response::success([
                 'liked' => true,
                 'like_count' => $interview['like_count'] + 1

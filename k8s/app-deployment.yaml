@@ -1,0 +1,316 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interviews-tv-api
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-api
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: interviews-tv-api
+  template:
+    metadata:
+      labels:
+        app: interviews-tv-api
+        version: v1
+    spec:
+      containers:
+      - name: api
+        image: interviews-tv/api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: APP_DEBUG
+          value: "false"
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_DATABASE
+          value: "interviews_tv"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: CACHE_DRIVER
+          value: "redis"
+        - name: SESSION_DRIVER
+          value: "redis"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: jwt-secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret
+              key: access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret
+              key: secret-access-key
+        - name: AWS_DEFAULT_REGION
+          value: "us-east-1"
+        - name: AWS_BUCKET
+          value: "interviews-tv-storage"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: storage
+          mountPath: /var/www/html/api/storage
+        - name: config
+          mountPath: /var/www/html/config
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+      - name: config
+        configMap:
+          name: app-config
+      imagePullSecrets:
+      - name: registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interviews-tv-api-service
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-api
+spec:
+  selector:
+    app: interviews-tv-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interviews-tv-frontend
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-frontend
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: interviews-tv-frontend
+  template:
+    metadata:
+      labels:
+        app: interviews-tv-frontend
+        version: v1
+    spec:
+      containers:
+      - name: frontend
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: frontend-files
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: frontend-files
+        configMap:
+          name: frontend-files
+      - name: nginx-config
+        configMap:
+          name: nginx-frontend-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interviews-tv-frontend-service
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-frontend
+spec:
+  selector:
+    app: interviews-tv-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interviews-tv-queue
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-queue
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: interviews-tv-queue
+  template:
+    metadata:
+      labels:
+        app: interviews-tv-queue
+        version: v1
+    spec:
+      containers:
+      - name: queue-worker
+        image: interviews-tv/api:latest
+        command: ["php", "api/artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: storage
+          mountPath: /var/www/html/api/storage
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interviews-tv-scheduler
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-scheduler
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: interviews-tv-scheduler
+  template:
+    metadata:
+      labels:
+        app: interviews-tv-scheduler
+        version: v1
+    spec:
+      containers:
+      - name: scheduler
+        image: interviews-tv/api:latest
+        command: ["php", "api/artisan", "schedule:work"]
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi

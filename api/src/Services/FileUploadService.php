@@ -9,6 +9,7 @@ class FileUploadService
     protected $allowedAudioTypes;
     protected $maxFileSize;
     protected $uploadPath;
+    protected $s3Client;
     
     public function __construct()
     {
@@ -150,10 +151,27 @@ class FileUploadService
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {
                 throw new \Exception('Failed to move uploaded file');
             }
-            
+
+            $fileUrl = "/uploads/{$relativePath}";
+
+            // Upload to S3 if configured
+            if (env('STORAGE_DRIVER') === 's3') {
+                try {
+                    $s3Url = $this->uploadToS3($filePath, $relativePath);
+                    $fileUrl = $s3Url;
+
+                    // Optionally delete local file after S3 upload
+                    if (env('DELETE_LOCAL_AFTER_S3', false)) {
+                        unlink($filePath);
+                    }
+                } catch (\Exception $e) {
+                    error_log('S3 upload failed, using local storage: ' . $e->getMessage());
+                }
+            }
+
             $result = [
                 'success' => true,
-                'url' => "/uploads/{$relativePath}",
+                'url' => $fileUrl,
                 'path' => $filePath,
                 'filename' => $filename,
                 'type' => $this->getFileType($extension),
@@ -345,5 +363,105 @@ class FileUploadService
             default:
                 return 'Unknown upload error';
         }
+    }
+
+    public function deleteFile($fileUrl)
+    {
+        if (empty($fileUrl)) {
+            return true; // Nothing to delete
+        }
+
+        // Check if this is a local file or S3 URL
+        if (strpos($fileUrl, 'http') === 0) {
+            // This is a URL (likely S3), extract the file path
+            $parsedUrl = parse_url($fileUrl);
+            $filePath = ltrim($parsedUrl['path'], '/');
+
+            // If using S3, delete from S3
+            if (env('STORAGE_DRIVER') === 's3') {
+                return $this->deleteFromS3($filePath);
+            }
+        } else {
+            // This is a local file path
+            $filePath = $this->uploadPath . '/' . ltrim($fileUrl, '/');
+
+            if (file_exists($filePath)) {
+                return unlink($filePath);
+            }
+        }
+
+        return true; // File doesn't exist, consider it deleted
+    }
+
+    protected function deleteFromS3($filePath)
+    {
+        try {
+            // Initialize S3 client if not already done
+            if (!$this->s3Client) {
+                $this->initializeS3Client();
+            }
+
+            $this->s3Client->deleteObject([
+                'Bucket' => env('AWS_S3_BUCKET'),
+                'Key' => $filePath
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            error_log('S3 delete error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    protected function initializeS3Client()
+    {
+        if (!class_exists('\Aws\S3\S3Client')) {
+            throw new \Exception('AWS SDK not installed. Run: composer require aws/aws-sdk-php');
+        }
+
+        $this->s3Client = new \Aws\S3\S3Client([
+            'version' => 'latest',
+            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+            'credentials' => [
+                'key' => env('AWS_ACCESS_KEY_ID'),
+                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            ],
+        ]);
+    }
+
+    protected function uploadToS3($localPath, $s3Key)
+    {
+        try {
+            if (!$this->s3Client) {
+                $this->initializeS3Client();
+            }
+
+            $result = $this->s3Client->putObject([
+                'Bucket' => env('AWS_S3_BUCKET'),
+                'Key' => $s3Key,
+                'SourceFile' => $localPath,
+                'ACL' => 'public-read',
+                'ContentType' => mime_content_type($localPath)
+            ]);
+
+            return $result['ObjectURL'];
+
+        } catch (\Exception $e) {
+            error_log('S3 upload error: ' . $e->getMessage());
+            throw new \Exception('Failed to upload to S3: ' . $e->getMessage());
+        }
+    }
+
+    protected function getS3Url($key)
+    {
+        $bucket = env('AWS_S3_BUCKET');
+        $region = env('AWS_DEFAULT_REGION', 'us-east-1');
+
+        if (env('AWS_CLOUDFRONT_DOMAIN')) {
+            return 'https://' . env('AWS_CLOUDFRONT_DOMAIN') . '/' . $key;
+        }
+
+        return "https://{$bucket}.s3.{$region}.amazonaws.com/{$key}";
     }
 }

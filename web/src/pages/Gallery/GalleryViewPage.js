@@ -1,7 +1,9 @@
 import Auth from '../../services/auth.js';
 import API from '../../services/api.js';
 import Router from '../../utils/router.js';
+import FancyboxService from '../../services/fancybox.js';
 import Comments from '../../components/Comments.js';
+import LikeButton from '../../components/LikeButton.js';
 
 class GalleryViewPage {
     constructor() {
@@ -10,6 +12,7 @@ class GalleryViewPage {
         this.isLoading = false;
         this.fancyboxInitialized = false;
         this.commentsComponent = null;
+        this.likeButtons = new Map(); // Store like buttons for each media item
     }
 
     async render(container, props = {}) {
@@ -28,6 +31,7 @@ class GalleryViewPage {
             this.setupEventListeners(container);
             await this.initializeFancybox();
             this.initializeComments(container);
+            this.initializeLikeButtons(container);
         } catch (error) {
             console.error('Failed to load gallery:', error);
             container.innerHTML = this.getErrorHTML();
@@ -48,76 +52,31 @@ class GalleryViewPage {
         if (this.fancyboxInitialized) return;
 
         try {
-            // Load Fancybox CSS and JS dynamically
-            await this.loadFancyboxAssets();
-            
-            // Initialize Fancybox with custom options (no top tools as requested)
-            if (window.Fancybox) {
-                window.Fancybox.bind('[data-fancybox="gallery"]', {
-                    // Disable top toolbar as requested
-                    Toolbar: {
-                        display: {
-                            left: [],
-                            middle: [],
-                            right: []
-                        }
-                    },
-                    // Custom UI configuration
-                    UI: {
-                        closeButton: "inside",
-                        parentEl: "body"
-                    },
-                    // Image settings
+            // Use our enhanced FancyboxService with no top tools configuration
+            if (FancyboxService.isAvailable()) {
+                FancyboxService.initGallery('[data-fancybox="gallery"]', {
+                    // Additional gallery-specific options
                     Images: {
-                        zoom: true,
-                        protected: false
-                    },
-                    // Thumbs configuration
-                    Thumbs: {
-                        showOnStart: false,
-                        hideOnClose: true
-                    },
-                    // Animation settings
-                    animated: true,
-                    hideScrollbar: true,
-                    // Custom buttons (minimal set)
-                    buttons: [
-                        "zoom",
-                        "slideShow",
-                        "thumbs",
-                        "close"
-                    ],
-                    // Prevent right-click context menu
-                    protect: true
+                        protected: false // Allow right-click for this gallery
+                    }
+                }, {
+                    id: this.gallery?.id,
+                    title: this.gallery?.title,
+                    allowDownload: this.gallery?.allow_download || false,
+                    allowLikes: !!this.currentUser,
+                    originalTitle: document.title
                 });
-                
+
                 this.fancyboxInitialized = true;
+            } else {
+                console.warn('Fancybox is not available. Make sure it is loaded.');
             }
         } catch (error) {
             console.error('Failed to initialize Fancybox:', error);
         }
     }
 
-    async loadFancyboxAssets() {
-        // Load Fancybox CSS
-        if (!document.querySelector('link[href*="fancybox"]')) {
-            const cssLink = document.createElement('link');
-            cssLink.rel = 'stylesheet';
-            cssLink.href = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css';
-            document.head.appendChild(cssLink);
-        }
 
-        // Load Fancybox JS
-        if (!window.Fancybox) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-    }
 
     getLoadingHTML() {
         return `
@@ -321,14 +280,25 @@ class GalleryViewPage {
                         </div>
                     `}
                     
-                    ${item.title ? `
-                        <div class="media-info mt-2">
-                            <p class="mb-0 small fw-medium">${item.title}</p>
-                            ${item.description ? `
-                                <p class="mb-0 small text-muted">${item.description.substring(0, 50)}...</p>
-                            ` : ''}
+                    <div class="media-info mt-2">
+                        ${item.title ? `
+                            <p class="mb-1 small fw-medium">${item.title}</p>
+                        ` : ''}
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="media-like-container" data-media-id="${item.id}"></div>
+                            <div class="media-stats">
+                                <small class="text-muted">
+                                    ${item.file_size ? this.formatFileSize(item.file_size) : ''}
+                                    ${item.width && item.height ? ` • ${item.width}×${item.height}` : ''}
+                                </small>
+                            </div>
                         </div>
-                    ` : ''}
+
+                        ${item.description ? `
+                            <p class="mb-0 small text-muted mt-1">${item.description.substring(0, 80)}...</p>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -435,6 +405,72 @@ class GalleryViewPage {
         if (commentsContainer && this.gallery) {
             this.commentsComponent = new Comments('gallery', this.gallery.id, commentsContainer);
             this.commentsComponent.render();
+        }
+    }
+
+    formatFileSize(bytes) {
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        if (bytes === 0) return '0 B';
+
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    initializeLikeButtons(container) {
+        // Clear existing like buttons
+        this.likeButtons.clear();
+
+        // Find all media like containers
+        const likeContainers = container.querySelectorAll('.media-like-container');
+
+        likeContainers.forEach(likeContainer => {
+            const mediaId = likeContainer.dataset.mediaId;
+            const mediaItem = this.gallery.media.find(item => item.id == mediaId);
+
+            if (mediaItem) {
+                const likeButton = new LikeButton({
+                    entityType: 'media',
+                    entityId: mediaId,
+                    liked: mediaItem.is_liked || false,
+                    count: mediaItem.like_count || 0,
+                    size: 'small',
+                    showCount: true,
+                    showText: false,
+                    animated: true,
+                    onLikeChange: (data) => {
+                        // Update media item data
+                        mediaItem.is_liked = data.liked;
+                        mediaItem.like_count = data.count;
+
+                        // Update any other displays of this media's like count
+                        this.updateMediaLikeDisplays(mediaId, data);
+                    }
+                });
+
+                likeButton.render(likeContainer);
+                this.likeButtons.set(mediaId, likeButton);
+            }
+        });
+    }
+
+    updateMediaLikeDisplays(mediaId, data) {
+        // Update any other like count displays for this media
+        const likeCountElements = document.querySelectorAll(`[data-media-id="${mediaId}"] .media-like-count`);
+        likeCountElements.forEach(element => {
+            element.textContent = data.count;
+        });
+    }
+
+    destroy() {
+        // Clean up like buttons
+        this.likeButtons.forEach(likeButton => {
+            likeButton.destroy();
+        });
+        this.likeButtons.clear();
+
+        // Clean up comments component
+        if (this.commentsComponent) {
+            this.commentsComponent.destroy();
         }
     }
 }

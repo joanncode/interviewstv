@@ -187,6 +187,89 @@ class APIService {
         return this.get(`/api/users/${username}/following`, params);
     }
 
+    async getUserInterviews(username, params = {}) {
+        return this.get(`/api/users/${username}/interviews`, params);
+    }
+
+    async getUserStats(username) {
+        return this.get(`/api/users/${username}/stats`);
+    }
+
+    async getUserPrivacySettings(username) {
+        return this.get(`/api/users/${username}/privacy`);
+    }
+
+    async updateUserPrivacySettings(username, settings) {
+        return this.put(`/api/users/${username}/privacy`, settings);
+    }
+
+    async searchUsers(params = {}) {
+        return this.get('/api/users/search', params);
+    }
+
+    async discoverUsers(params = {}) {
+        return this.get('/api/users/discover', params);
+    }
+
+    // Notification endpoints
+    async getNotifications(params = {}) {
+        return this.get('/api/notifications', params);
+    }
+
+    async getUnreadNotificationCount() {
+        return this.get('/api/notifications/unread-count');
+    }
+
+    async markNotificationAsRead(notificationId) {
+        return this.put(`/api/notifications/${notificationId}/read`);
+    }
+
+    async markAllNotificationsAsRead() {
+        return this.put('/api/notifications/mark-all-read');
+    }
+
+    async deleteNotification(notificationId) {
+        return this.delete(`/api/notifications/${notificationId}`);
+    }
+
+    async getNotificationPreferences() {
+        return this.get('/api/notifications/preferences');
+    }
+
+    async updateNotificationPreferences(preferences) {
+        return this.put('/api/notifications/preferences', preferences);
+    }
+
+    // Feed endpoints
+    async getPersonalFeed(params = {}) {
+        return this.get('/api/feed/personal', params);
+    }
+
+    async getPublicFeed(params = {}) {
+        return this.get('/api/feed/public', params);
+    }
+
+    async getUserFeed(username, params = {}) {
+        return this.get(`/api/feed/user/${username}`, params);
+    }
+
+    async getFeedPreferences() {
+        return this.get('/api/feed/preferences');
+    }
+
+    async updateFeedPreferences(preferences) {
+        return this.put('/api/feed/preferences', preferences);
+    }
+
+    // Profile sharing endpoints
+    async trackProfileShare(username, platform) {
+        return this.post(`/api/users/${username}/share`, { platform });
+    }
+
+    async getProfileShareStats(username) {
+        return this.get(`/api/users/${username}/share-stats`);
+    }
+
     // Interview endpoints
     async getInterviews(params = {}) {
         return this.get('/api/interviews', params);
@@ -208,20 +291,66 @@ class APIService {
         return this.delete(`/api/interviews/${id}`);
     }
 
-    async getInterviewMedia(id) {
-        return this.get(`/api/interviews/${id}/media`);
+    async getInterview(id) {
+        return this.get(`/api/interviews/${id}`);
     }
 
-    async addInterviewMedia(id, formData) {
-        return this.upload(`/api/interviews/${id}/media`, formData);
+    async getInterviews(params = {}) {
+        return this.get('/api/interviews', params);
     }
 
+    // Like/Unlike endpoints
     async likeInterview(id) {
         return this.post(`/api/interviews/${id}/like`);
     }
 
     async unlikeInterview(id) {
         return this.delete(`/api/interviews/${id}/like`);
+    }
+
+    async likeMedia(id) {
+        return this.post(`/api/media/${id}/like`);
+    }
+
+    async unlikeMedia(id) {
+        return this.delete(`/api/media/${id}/like`);
+    }
+
+    async likeComment(id) {
+        return this.post(`/api/comments/${id}/like`);
+    }
+
+    async unlikeComment(id) {
+        return this.delete(`/api/comments/${id}/like`);
+    }
+
+    // Media upload endpoints
+    async uploadMedia(formData) {
+        return this.post('/api/upload/media', formData, {
+            'Content-Type': 'multipart/form-data'
+        });
+    }
+
+    async uploadThumbnail(formData) {
+        return this.post('/api/upload/thumbnail', formData, {
+            'Content-Type': 'multipart/form-data'
+        });
+    }
+
+    async updateInterview(id, data) {
+        return this.put(`/api/interviews/${id}`, data);
+    }
+
+    async deleteInterview(id) {
+        return this.delete(`/api/interviews/${id}`);
+    }
+
+    async getInterviewMedia(id) {
+        return this.get(`/api/interviews/${id}/media`);
+    }
+
+    async addInterviewMedia(id, formData) {
+        return this.upload(`/api/interviews/${id}/media`, formData);
     }
 
     // Gallery endpoints
@@ -235,6 +364,22 @@ class APIService {
 
     async createGallery(data) {
         return this.post('/api/galleries', data);
+    }
+
+    async updateGallery(id, data) {
+        return this.put(`/api/galleries/${id}`, data);
+    }
+
+    async deleteGallery(id) {
+        return this.delete(`/api/galleries/${id}`);
+    }
+
+    async getGallery(id) {
+        return this.get(`/api/galleries/${id}`);
+    }
+
+    async getGalleries(params = {}) {
+        return this.get('/api/galleries', params);
     }
 
     async updateGallery(id, data) {
@@ -325,6 +470,109 @@ class APIService {
 
     async removeFromSearchIndex(type, id) {
         return this.delete(`/api/search/index/${type}/${id}`);
+    }
+
+    // Feed endpoints
+    async getPersonalFeed(params = {}) {
+        return this.get('/api/feed/personal', params);
+    }
+
+    async getPublicFeed(params = {}) {
+        return this.get('/api/feed/public', params);
+    }
+
+    // Business endpoints
+    async getBusinesses(params = {}) {
+        return this.get('/api/businesses', params);
+    }
+
+    async getBusiness(id) {
+        return this.get(`/api/businesses/${id}`);
+    }
+
+    async createBusiness(data) {
+        return this.post('/api/businesses', data);
+    }
+
+    async updateBusiness(id, data) {
+        return this.put(`/api/businesses/${id}`, data);
+    }
+
+    async deleteBusiness(id) {
+        return this.delete(`/api/businesses/${id}`);
+    }
+
+    async searchBusinesses(params = {}) {
+        return this.get('/api/businesses/search', params);
+    }
+
+    async getBusinessInterviews(id, params = {}) {
+        return this.get(`/api/businesses/${id}/interviews`, params);
+    }
+
+    async linkBusinessInterview(businessId, interviewId) {
+        return this.post(`/api/businesses/${businessId}/interviews`, { interview_id: interviewId });
+    }
+
+    async unlinkBusinessInterview(businessId, interviewId) {
+        return this.delete(`/api/businesses/${businessId}/interviews`, { interview_id: interviewId });
+    }
+
+    async getBusinessIndustries() {
+        return this.get('/api/businesses/industries');
+    }
+
+    async getPopularBusinesses(params = {}) {
+        return this.get('/api/businesses/popular', params);
+    }
+
+    // Event endpoints
+    async getEvents(params = {}) {
+        return this.get('/api/events', params);
+    }
+
+    async getEvent(id) {
+        return this.get(`/api/events/${id}`);
+    }
+
+    async createEvent(data) {
+        return this.post('/api/events', data);
+    }
+
+    async updateEvent(id, data) {
+        return this.put(`/api/events/${id}`, data);
+    }
+
+    async deleteEvent(id) {
+        return this.delete(`/api/events/${id}`);
+    }
+
+    async searchEvents(params = {}) {
+        return this.get('/api/events/search', params);
+    }
+
+    async getEventInterviews(id, params = {}) {
+        return this.get(`/api/events/${id}/interviews`, params);
+    }
+
+    async getUpcomingEvents(params = {}) {
+        return this.get('/api/events/upcoming', params);
+    }
+
+    async getEventTypes() {
+        return this.get('/api/events/types');
+    }
+
+    async rsvpToEvent(eventId) {
+        return this.post(`/api/events/${eventId}/rsvp`);
+    }
+
+    async cancelRsvp(eventId) {
+        return this.delete(`/api/events/${eventId}/rsvp`);
+    }
+
+    async getEventAttendance(eventId) {
+        return this.get(`/api/events/${eventId}/attendance`);
     }
 
     // Health check

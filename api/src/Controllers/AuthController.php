@@ -283,4 +283,59 @@ class AuthController
             return Response::error('Token refresh failed: ' . $e->getMessage());
         }
     }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+            $data = $request->all();
+
+            // Validate input
+            $validator = Validator::make($data)
+                ->required('current_password')
+                ->required('new_password')
+                ->required('confirm_password')
+                ->min('new_password', 8)
+                ->confirmed('new_password', 'confirm_password');
+
+            if ($validator->fails()) {
+                return Response::validationError($validator->errors());
+            }
+
+            // Get user from database to verify current password
+            $user = User::findById($currentUser['id']);
+
+            if (!$user) {
+                return Response::error('User not found', 404);
+            }
+
+            // Verify current password
+            if (!$this->authService->verifyPassword($data['current_password'], $user['password'])) {
+                return Response::error('Current password is incorrect', 400);
+            }
+
+            // Check if new password is different from current
+            if ($this->authService->verifyPassword($data['new_password'], $user['password'])) {
+                return Response::error('New password must be different from current password', 400);
+            }
+
+            // Hash new password
+            $hashedPassword = $this->authService->hashPassword($data['new_password']);
+
+            // Update password
+            User::update($currentUser['id'], [
+                'password' => $hashedPassword
+            ]);
+
+            // Log password change
+            error_log("Password changed for user ID: {$currentUser['id']} at " . date('Y-m-d H:i:s'));
+
+            return Response::success(null, 'Password changed successfully');
+
+        } catch (ValidationException $e) {
+            return Response::validationError($e->getErrors());
+        } catch (\Exception $e) {
+            return Response::error('Password change failed: ' . $e->getMessage());
+        }
+    }
 }

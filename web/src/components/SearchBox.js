@@ -1,5 +1,7 @@
 import API from '../services/api.js';
 import Router from '../utils/router.js';
+import SearchService from '../services/SearchService.js';
+import SearchFilters from './SearchFilters.js';
 
 class SearchBox {
     constructor(container, options = {}) {
@@ -14,6 +16,8 @@ class SearchBox {
         this.suggestions = [];
         this.isLoading = false;
         this.searchTimeout = null;
+        this.searchFilters = null;
+        this.currentFilters = {};
     }
 
     render() {
@@ -213,16 +217,20 @@ class SearchBox {
 
         try {
             this.isLoading = true;
-            
-            const response = await API.get('/api/search/suggestions', { q: query });
-            
-            if (response.success) {
-                this.suggestions = response.data;
+
+            // Use enhanced SearchService for better suggestions
+            const suggestions = await SearchService.getSuggestions(query);
+
+            if (suggestions && suggestions.length > 0) {
+                this.suggestions = suggestions;
                 this.renderSuggestions();
                 this.showSuggestions();
+            } else {
+                this.hideSuggestions();
             }
         } catch (error) {
             console.error('Failed to load suggestions:', error);
+            this.hideSuggestions();
         } finally {
             this.isLoading = false;
         }

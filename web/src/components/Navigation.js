@@ -1,17 +1,20 @@
 import Auth from '../services/auth.js';
 import Router from '../utils/router.js';
 import SearchBox from './SearchBox.js';
+import NotificationDropdown from './NotificationDropdown.js';
 
 class Navigation {
     constructor() {
         this.user = Auth.getCurrentUser();
         this.searchBox = null;
+        this.notificationDropdown = null;
     }
 
     render(container) {
         container.innerHTML = this.getNavigationHTML();
         this.setupEventListeners(container);
         this.initializeSearchBox(container);
+        this.initializeNotificationDropdown(container);
     }
 
     getNavigationHTML() {
@@ -41,6 +44,9 @@ class Navigation {
                                 <a class="nav-link" href="/explore">Explore</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="/feed">Feed</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="/trending">Trending</a>
                             </li>
                             <li class="nav-item dropdown">
@@ -48,6 +54,10 @@ class Navigation {
                                     Discover
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/discover">
+                                        <i class="fas fa-users me-2"></i>Users
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/interviews">Interviews</a></li>
                                     <li><a class="dropdown-item" href="/events">Events</a></li>
                                     <li><a class="dropdown-item" href="/business">Businesses</a></li>
@@ -78,12 +88,15 @@ class Navigation {
 
     getAuthenticatedNav(user) {
         return `
+            <li class="nav-item" id="notification-dropdown-container">
+                <!-- Notification dropdown will be rendered here -->
+            </li>
 
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                    <img src="${user?.avatar_url || '/assets/default-avatar.png'}" 
-                         alt="${user?.username || 'User'}" 
-                         class="rounded-circle me-2" 
+                    <img src="${user?.avatar_url || '/assets/default-avatar.png'}"
+                         alt="${user?.username || 'User'}"
+                         class="rounded-circle me-2"
                          width="32" height="32"
                          onerror="this.src='/assets/default-avatar.png'">
                     ${user?.username || 'User'}
@@ -94,6 +107,9 @@ class Navigation {
                     </a></li>
                     <li><a class="dropdown-item" href="/my-interviews">
                         <i class="fas fa-video me-2"></i>My Interviews
+                    </a></li>
+                    <li><a class="dropdown-item" href="/notifications">
+                        <i class="fas fa-bell me-2"></i>Notifications
                     </a></li>
                     <li><a class="dropdown-item" href="/settings">
                         <i class="fas fa-cog me-2"></i>Settings
@@ -208,6 +224,14 @@ class Navigation {
             });
 
             this.searchBox.render();
+        }
+    }
+
+    initializeNotificationDropdown(container) {
+        const notificationContainer = container.querySelector('#notification-dropdown-container');
+        if (notificationContainer && Auth.isAuthenticated()) {
+            this.notificationDropdown = new NotificationDropdown();
+            this.notificationDropdown.render(notificationContainer);
         }
     }
 }

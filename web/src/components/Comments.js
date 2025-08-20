@@ -1,5 +1,7 @@
 import Auth from '../services/auth.js';
 import API from '../services/api.js';
+import LikeButton from './LikeButton.js';
+import { realtimeService } from '../services/realtime.js';
 
 class Comments {
     constructor(entityType, entityId, container) {
@@ -13,11 +15,14 @@ class Comments {
         this.sortBy = 'newest';
         this.currentUser = Auth.getCurrentUser();
         this.replyingTo = null;
+        this.likeButtons = new Map(); // Store like button instances
+        this.realtimeUnsubscribers = [];
     }
 
     async render() {
         this.container.innerHTML = this.getHTML();
         this.setupEventListeners();
+        this.setupRealtimeListeners();
         await this.loadComments();
     }
 
@@ -236,12 +241,7 @@ class Comments {
                         </div>
                         
                         <div class="comment-actions d-flex align-items-center">
-                            <button class="btn btn-sm btn-link text-muted p-0 me-3 like-btn" 
-                                    data-comment-id="${comment.id}"
-                                    ${!this.currentUser ? 'disabled' : ''}>
-                                <i class="fas fa-heart me-1"></i>
-                                <span class="like-count">${comment.like_count || 0}</span>
-                            </button>
+                            <div class="comment-like-container me-3" data-comment-id="${comment.id}"></div>
                             
                             ${canReply ? `
                                 <button class="btn btn-sm btn-link text-muted p-0 me-3 reply-btn" 
@@ -251,27 +251,28 @@ class Comments {
                                 </button>
                             ` : ''}
                             
-                            ${canEdit ? `
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-link text-muted p-0" 
-                                            data-bs-toggle="dropdown">
-                                        <i class="fas fa-ellipsis-h"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-muted p-0"
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    ${canEdit ? `
                                         <li><a class="dropdown-item edit-comment" href="#" data-comment-id="${comment.id}">
                                             <i class="fas fa-edit me-2"></i>Edit
                                         </a></li>
                                         <li><a class="dropdown-item delete-comment text-danger" href="#" data-comment-id="${comment.id}">
                                             <i class="fas fa-trash me-2"></i>Delete
                                         </a></li>
-                                    </ul>
-                                </div>
-                            ` : this.currentUser ? `
-                                <button class="btn btn-sm btn-link text-muted p-0 report-btn" 
-                                        data-comment-id="${comment.id}">
-                                    <i class="fas fa-flag me-1"></i>Report
-                                </button>
-                            ` : ''}
+                                        ${this.currentUser && this.currentUser.id !== comment.user_id ? '<li><hr class="dropdown-divider"></li>' : ''}
+                                    ` : ''}
+                                    ${this.currentUser && this.currentUser.id !== comment.user_id ? `
+                                        <li><a class="dropdown-item text-warning report-comment" href="#" data-comment-id="${comment.id}">
+                                            <i class="fas fa-flag me-2"></i>Report
+                                        </a></li>
+                                    ` : ''}
+                                </ul>
+                            </div>
                         </div>
                         
                         ${comment.replies && comment.replies.length > 0 ? `
@@ -298,13 +299,8 @@ class Comments {
     setupCommentEventListeners() {
         const container = this.container.querySelector('#comments-container');
 
-        // Like buttons
-        container.querySelectorAll('.like-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const commentId = e.currentTarget.getAttribute('data-comment-id');
-                this.handleLike(commentId, e.currentTarget);
-            });
-        });
+        // Initialize like buttons
+        this.initializeLikeButtons(container);
 
         // Reply buttons
         container.querySelectorAll('.reply-btn').forEach(btn => {
@@ -330,6 +326,15 @@ class Comments {
                 e.preventDefault();
                 const commentId = e.currentTarget.getAttribute('data-comment-id');
                 this.handleDelete(commentId);
+            });
+        });
+
+        // Report buttons
+        container.querySelectorAll('.report-comment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const commentId = e.currentTarget.getAttribute('data-comment-id');
+                this.handleReport(commentId);
             });
         });
 
@@ -362,35 +367,28 @@ class Comments {
         try {
             this.setLoadingState(submitBtn, true);
 
-            const data = {
-                commentable_type: this.entityType,
-                commentable_id: this.entityId,
-                content: content
+            // Use real-time service for optimistic updates
+            const commentData = {
+                content: content,
+                parent_id: parentIdField.value || null
             };
 
-            if (parentIdField.value) {
-                data.parent_id = parentIdField.value;
+            const newComment = await realtimeService.addComment(
+                this.entityType,
+                this.entityId,
+                commentData
+            );
+
+            // Clear form
+            contentField.value = '';
+            this.container.querySelector('#char-count').textContent = '0';
+
+            // Cancel reply if it was a reply
+            if (this.replyingTo) {
+                this.cancelReply();
             }
 
-            const response = await API.post('/api/comments', data);
-
-            if (response.success) {
-                // Clear form
-                contentField.value = '';
-                this.container.querySelector('#char-count').textContent = '0';
-                
-                // Cancel reply if it was a reply
-                if (this.replyingTo) {
-                    this.cancelReply();
-                }
-
-                // Reload comments
-                await this.loadComments(this.currentPage);
-
-                this.showAlert('success', 'Comment posted successfully!');
-            } else {
-                this.showAlert('error', response.message || 'Failed to post comment');
-            }
+            this.showAlert('success', 'Comment posted successfully!');
 
         } catch (error) {
             console.error('Failed to post comment:', error);
@@ -398,6 +396,48 @@ class Comments {
         } finally {
             this.setLoadingState(submitBtn, false);
         }
+    }
+
+    setupRealtimeListeners() {
+        // Listen for new comments
+        const unsubscribeCommentAdded = realtimeService.on('comment_added', (data) => {
+            if (data.entityType === this.entityType && data.entityId == this.entityId) {
+                // Add optimistic comment to the list
+                this.comments.unshift(data.comment);
+                this.renderComments();
+            }
+        });
+
+        // Listen for comment confirmations
+        const unsubscribeCommentConfirmed = realtimeService.on('comment_confirmed', (data) => {
+            if (data.entityType === this.entityType && data.entityId == this.entityId) {
+                // Replace temp comment with real one
+                const index = this.comments.findIndex(c => c.id === data.tempId);
+                if (index !== -1) {
+                    this.comments[index] = data.comment;
+                    this.renderComments();
+                }
+            }
+        });
+
+        // Listen for comment failures
+        const unsubscribeCommentFailed = realtimeService.on('comment_failed', (data) => {
+            if (data.entityType === this.entityType && data.entityId == this.entityId) {
+                // Mark comment as failed
+                const index = this.comments.findIndex(c => c.id === data.comment.id);
+                if (index !== -1) {
+                    this.comments[index] = data.comment;
+                    this.renderComments();
+                }
+            }
+        });
+
+        // Store unsubscribe functions
+        this.realtimeUnsubscribers.push(
+            unsubscribeCommentAdded,
+            unsubscribeCommentConfirmed,
+            unsubscribeCommentFailed
+        );
     }
 
     handleReply(commentId, username) {
@@ -437,30 +477,88 @@ class Comments {
         cancelBtn.style.display = 'none';
     }
 
-    async handleLike(commentId, button) {
+    initializeLikeButtons(container) {
+        // Clear existing like buttons
+        this.likeButtons.clear();
+
+        // Find all comment like containers
+        const likeContainers = container.querySelectorAll('.comment-like-container');
+
+        likeContainers.forEach(likeContainer => {
+            const commentId = likeContainer.dataset.commentId;
+            const comment = this.findCommentById(commentId);
+
+            if (comment) {
+                const likeButton = new LikeButton({
+                    entityType: 'comment',
+                    entityId: commentId,
+                    liked: comment.is_liked || false,
+                    count: comment.like_count || 0,
+                    size: 'small',
+                    showCount: true,
+                    showText: false,
+                    animated: true,
+                    onLikeChange: (data) => {
+                        // Update comment data
+                        comment.is_liked = data.liked;
+                        comment.like_count = data.count;
+
+                        // Update any other displays of this comment's like count
+                        this.updateCommentLikeDisplays(commentId, data);
+                    }
+                });
+
+                likeButton.render(likeContainer);
+                this.likeButtons.set(commentId, likeButton);
+            }
+        });
+    }
+
+    findCommentById(commentId) {
+        // Search through comments and their replies
+        for (const comment of this.comments) {
+            if (comment.id == commentId) {
+                return comment;
+            }
+            if (comment.replies) {
+                for (const reply of comment.replies) {
+                    if (reply.id == commentId) {
+                        return reply;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    updateCommentLikeDisplays(commentId, data) {
+        // Update any other like count displays for this comment
+        const likeCountElements = document.querySelectorAll(`[data-comment-id="${commentId}"] .comment-like-count`);
+        likeCountElements.forEach(element => {
+            element.textContent = data.count;
+        });
+    }
+
+    async handleReport(commentId) {
         if (!this.currentUser) return;
 
+        const reason = prompt('Please provide a reason for reporting this comment:');
+        if (!reason || reason.trim() === '') return;
+
         try {
-            const isLiked = button.classList.contains('liked');
-            const endpoint = isLiked ? 'unlike' : 'like';
-            
-            const response = await API.post(`/api/comments/${commentId}/${endpoint}`);
+            const response = await API.post(`/api/comments/${commentId}/report`, {
+                reason: reason.trim()
+            });
 
             if (response.success) {
-                const likeCountSpan = button.querySelector('.like-count');
-                likeCountSpan.textContent = response.data.like_count;
-                
-                if (response.data.liked) {
-                    button.classList.add('liked');
-                    button.classList.add('text-danger');
-                } else {
-                    button.classList.remove('liked');
-                    button.classList.remove('text-danger');
-                }
+                this.showAlert('success', 'Comment reported successfully. Our moderators will review it.');
+            } else {
+                this.showAlert('error', response.message || 'Failed to report comment');
             }
 
         } catch (error) {
-            console.error('Failed to like/unlike comment:', error);
+            console.error('Failed to report comment:', error);
+            this.showAlert('error', 'Failed to report comment. Please try again.');
         }
     }
 
@@ -625,6 +723,14 @@ class Comments {
                 alert.remove();
             }
         }, 3000);
+    }
+
+    destroy() {
+        // Clean up like buttons
+        this.likeButtons.forEach(likeButton => {
+            likeButton.destroy();
+        });
+        this.likeButtons.clear();
     }
 }
 

@@ -8,11 +8,15 @@ class GalleryListPage {
         this.currentPage = 1;
         this.totalPages = 1;
         this.isLoading = false;
+        this.hasMore = true;
+        this.viewMode = 'grid'; // grid or masonry
         this.filters = {
             search: '',
             type: '',
             sort: 'recent'
         };
+        this.intersectionObserver = null;
+        this.lazyLoadObserver = null;
     }
 
     async render(container, props = {}) {
@@ -23,6 +27,8 @@ class GalleryListPage {
 
         container.innerHTML = this.getHTML();
         this.setupEventListeners(container);
+        this.setupLazyLoading();
+        this.setupInfiniteScroll();
         await this.loadGalleries();
     }
 
@@ -87,13 +93,26 @@ class GalleryListPage {
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-primary" id="apply-filters">
-                                    <i class="fas fa-search me-2"></i>Search
-                                </button>
-                                <button class="btn btn-outline-secondary" id="clear-filters">
-                                    <i class="fas fa-times me-2"></i>Clear
-                                </button>
+                            <div class="d-flex gap-2 justify-content-between">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary" id="apply-filters">
+                                        <i class="fas fa-search me-2"></i>Search
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="clear-filters">
+                                        <i class="fas fa-times me-2"></i>Clear
+                                    </button>
+                                </div>
+
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary ${this.viewMode === 'grid' ? 'active' : ''}"
+                                            id="grid-view-btn" title="Grid View">
+                                        <i class="fas fa-th"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary ${this.viewMode === 'masonry' ? 'active' : ''}"
+                                            id="masonry-view-btn" title="Masonry View">
+                                        <i class="fas fa-th-large"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -105,16 +124,38 @@ class GalleryListPage {
     getGalleriesSection() {
         return `
             <div class="container">
-                <div id="galleries-container">
-                    <div class="text-center py-5">
+                <!-- Results Info -->
+                <div class="d-flex justify-content-between align-items-center mb-4" id="results-info" style="display: none !important;">
+                    <div>
+                        <span id="results-count">0 galleries found</span>
+                        ${this.filters.search ? `<span class="text-muted"> for "${this.filters.search}"</span>` : ''}
+                    </div>
+                    <div class="text-muted small">
+                        <span id="loading-indicator" style="display: none;">
+                            <i class="fas fa-spinner fa-spin me-1"></i>Loading more...
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Galleries Grid -->
+                <div id="galleries-container" class="galleries-container ${this.viewMode}-layout">
+                    <div class="text-center py-5" id="initial-loading">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading galleries...</span>
                         </div>
                         <p class="mt-3">Loading galleries...</p>
                     </div>
                 </div>
-                
-                <div id="pagination-container" class="mt-4"></div>
+
+                <!-- Infinite Scroll Trigger -->
+                <div id="scroll-trigger" style="height: 1px; margin-bottom: 50px;"></div>
+
+                <!-- Load More Button (fallback) -->
+                <div class="text-center mb-4" id="load-more-container" style="display: none;">
+                    <button class="btn btn-outline-primary" id="load-more-btn">
+                        <i class="fas fa-plus me-2"></i>Load More Galleries
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -181,17 +222,33 @@ class GalleryListPage {
         }
     }
 
-    renderGalleries() {
+    renderGalleries(append = false) {
         const container = document.getElementById('galleries-container');
+        const initialLoading = document.getElementById('initial-loading');
+        const resultsInfo = document.getElementById('results-info');
 
-        if (this.galleries.length === 0) {
+        // Hide initial loading
+        if (initialLoading) {
+            initialLoading.style.display = 'none';
+        }
+
+        // Show results info
+        if (resultsInfo) {
+            resultsInfo.style.display = 'flex';
+            const countEl = document.getElementById('results-count');
+            if (countEl) {
+                countEl.textContent = `${this.galleries.length} galleries found`;
+            }
+        }
+
+        if (this.galleries.length === 0 && !append) {
             container.innerHTML = `
                 <div class="text-center py-5">
                     <i class="fas fa-images fa-3x text-muted mb-3"></i>
                     <h4>No galleries found</h4>
                     <p class="text-muted">Try adjusting your search criteria or create the first gallery!</p>
                     ${Auth.getCurrentUser() ? `
-                        <a href="/galleries/create" class="btn btn-primary mt-3">
+                        <a href="/gallery/create" class="btn btn-primary mt-3">
                             <i class="fas fa-plus me-2"></i>Create Gallery
                         </a>
                     ` : ''}
@@ -200,11 +257,34 @@ class GalleryListPage {
             return;
         }
 
-        container.innerHTML = `
-            <div class="row g-4">
-                ${this.galleries.map(gallery => this.getGalleryCard(gallery)).join('')}
-            </div>
-        `;
+        const gridClass = this.viewMode === 'masonry' ? 'masonry-grid' : 'row g-4';
+        const galleriesHTML = this.galleries.map(gallery => this.getGalleryCard(gallery)).join('');
+
+        if (append) {
+            // Append new galleries for infinite scroll
+            const existingGrid = container.querySelector('.row, .masonry-grid');
+            if (existingGrid) {
+                existingGrid.insertAdjacentHTML('beforeend', galleriesHTML);
+            }
+        } else {
+            // Replace all galleries
+            container.innerHTML = `
+                <div class="${gridClass}">
+                    ${galleriesHTML}
+                </div>
+            `;
+        }
+
+        // Update container class for layout
+        container.className = `galleries-container ${this.viewMode}-layout`;
+
+        // Initialize masonry if needed
+        if (this.viewMode === 'masonry') {
+            this.initializeMasonry();
+        }
+
+        // Trigger lazy loading for new images
+        this.triggerLazyLoad();
     }
 
     getGalleryCard(gallery) {
@@ -219,10 +299,11 @@ class GalleryListPage {
             <div class="col-md-6 col-lg-4">
                 <div class="card gallery-card h-100">
                     <div class="position-relative">
-                        <img src="${gallery.cover_image_url || '/assets/default-gallery.jpg'}" 
-                             class="card-img-top" 
+                        <img data-src="${gallery.cover_image_url || '/assets/default-gallery.jpg'}"
+                             src="/assets/placeholder-gallery.jpg"
+                             class="card-img-top lazy-load"
                              alt="${gallery.title}"
-                             style="height: 200px; object-fit: cover;"
+                             style="height: 200px; object-fit: cover; transition: opacity 0.3s;"
                              onerror="this.src='/assets/default-gallery.jpg'">
                         <div class="position-absolute top-0 start-0 m-2">
                             <span class="badge bg-primary">
@@ -374,6 +455,144 @@ class GalleryListPage {
 
         // Reload galleries
         this.loadGalleries(1);
+    }
+
+    setupLazyLoading() {
+        // Set up Intersection Observer for lazy loading images
+        if ('IntersectionObserver' in window) {
+            this.lazyLoadObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.dataset.src;
+
+                        if (src) {
+                            img.src = src;
+                            img.classList.remove('lazy-load');
+                            img.style.opacity = '1';
+                            this.lazyLoadObserver.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px 0px',
+                threshold: 0.1
+            });
+        }
+    }
+
+    setupInfiniteScroll() {
+        // Set up Intersection Observer for infinite scroll
+        if ('IntersectionObserver' in window) {
+            this.intersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !this.isLoading && this.hasMore) {
+                        this.loadMoreGalleries();
+                    }
+                });
+            }, {
+                rootMargin: '100px 0px',
+                threshold: 0.1
+            });
+
+            // Observe the scroll trigger
+            const scrollTrigger = document.getElementById('scroll-trigger');
+            if (scrollTrigger) {
+                this.intersectionObserver.observe(scrollTrigger);
+            }
+        }
+    }
+
+    triggerLazyLoad() {
+        if (this.lazyLoadObserver) {
+            const lazyImages = document.querySelectorAll('.lazy-load');
+            lazyImages.forEach(img => {
+                this.lazyLoadObserver.observe(img);
+            });
+        }
+    }
+
+    async loadMoreGalleries() {
+        if (this.isLoading || !this.hasMore) return;
+
+        try {
+            this.isLoading = true;
+            this.showLoadingIndicator();
+
+            this.currentPage++;
+
+            const params = {
+                page: this.currentPage,
+                limit: 12,
+                ...this.filters
+            };
+
+            // Remove empty params
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) {
+                    delete params[key];
+                }
+            });
+
+            const response = await API.get('/api/galleries', params);
+
+            if (response.success) {
+                const newGalleries = response.data.items;
+
+                if (newGalleries.length === 0) {
+                    this.hasMore = false;
+                } else {
+                    this.galleries = [...this.galleries, ...newGalleries];
+                    this.renderGalleries(true); // Append mode
+                }
+            }
+
+        } catch (error) {
+            console.error('Failed to load more galleries:', error);
+            this.currentPage--; // Revert page increment
+        } finally {
+            this.isLoading = false;
+            this.hideLoadingIndicator();
+        }
+    }
+
+    showLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.style.display = 'inline';
+        }
+    }
+
+    hideLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (indicator) {
+            indicator.style.display = 'none';
+        }
+    }
+
+    setViewMode(mode) {
+        this.viewMode = mode;
+
+        // Update button states
+        document.getElementById('grid-view-btn').classList.toggle('active', mode === 'grid');
+        document.getElementById('masonry-view-btn').classList.toggle('active', mode === 'masonry');
+
+        // Re-render galleries with new layout
+        this.renderGalleries();
+
+        // Save preference
+        localStorage.setItem('gallery-view-mode', mode);
+    }
+
+    destroy() {
+        // Clean up observers
+        if (this.intersectionObserver) {
+            this.intersectionObserver.disconnect();
+        }
+
+        if (this.lazyLoadObserver) {
+            this.lazyLoadObserver.disconnect();
+        }
     }
 }
 

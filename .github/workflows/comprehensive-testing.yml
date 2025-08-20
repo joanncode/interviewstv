@@ -1,0 +1,532 @@
+name: Comprehensive Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  PHP_VERSION: '8.2'
+  MYSQL_VERSION: '8.0'
+
+jobs:
+  # Code Quality and Static Analysis
+  code-quality:
+    name: Code Quality & Static Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
+        coverage: xdebug
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install PHP dependencies
+      working-directory: ./api
+      run: composer install --prefer-dist --no-progress --no-suggest
+
+    - name: Install Node.js dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: PHP Code Style Check (PSR-12)
+      working-directory: ./api
+      run: vendor/bin/phpcs --standard=PSR12 src/
+
+    - name: PHP Static Analysis (PHPStan)
+      working-directory: ./api
+      run: vendor/bin/phpstan analyse src/ --level=8
+
+    - name: PHP Mess Detector
+      working-directory: ./api
+      run: vendor/bin/phpmd src/ text cleancode,codesize,controversial,design,naming,unusedcode
+
+    - name: JavaScript/TypeScript Linting
+      working-directory: ./web
+      run: npm run lint
+
+    - name: CSS Linting
+      working-directory: ./web
+      run: npm run lint:css
+
+    - name: Security Vulnerability Scan (PHP)
+      working-directory: ./api
+      run: composer audit
+
+    - name: Security Vulnerability Scan (Node.js)
+      working-directory: ./web
+      run: npm audit --audit-level=moderate
+
+    - name: Dependency License Check
+      working-directory: ./web
+      run: npm run license-check
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP ${{ matrix.php-version }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql
+        coverage: xdebug
+
+    - name: Install PHP dependencies
+      working-directory: ./api
+      run: composer install --prefer-dist --no-progress
+
+    - name: Create test database
+      run: |
+        mkdir -p api/tests/database
+        touch api/tests/database/test.sqlite
+
+    - name: Run PHP Unit Tests
+      working-directory: ./api
+      run: vendor/bin/phpunit --testsuite=Unit --coverage-clover=tests/coverage/clover.xml
+
+    - name: Upload PHP Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./api/tests/coverage/clover.xml
+        flags: php-unit
+        name: php-unit-tests
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Node.js dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: Run JavaScript Unit Tests
+      working-directory: ./web
+      run: npm run test:unit -- --coverage
+
+    - name: Upload JS Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./web/coverage/lcov.info
+        flags: javascript-unit
+        name: javascript-unit-tests
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: interviews_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      elasticsearch:
+        image: elasticsearch:8.8.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+        ports:
+          - 9200:9200
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, redis
+        coverage: xdebug
+
+    - name: Install PHP dependencies
+      working-directory: ./api
+      run: composer install --prefer-dist --no-progress
+
+    - name: Setup test environment
+      working-directory: ./api
+      run: |
+        cp .env.testing .env
+        php artisan key:generate
+        php artisan migrate --force
+        php artisan db:seed --class=TestSeeder
+
+    - name: Wait for services
+      run: |
+        sleep 30
+        curl -f http://localhost:9200/_cluster/health || exit 1
+
+    - name: Run Integration Tests
+      working-directory: ./api
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: interviews_test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+        REDIS_HOST: 127.0.0.1
+        REDIS_PORT: 6379
+        ELASTICSEARCH_HOST: 127.0.0.1:9200
+      run: vendor/bin/phpunit --testsuite=Integration --coverage-clover=tests/coverage/integration-clover.xml
+
+    - name: Upload Integration Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./api/tests/coverage/integration-clover.xml
+        flags: php-integration
+        name: php-integration-tests
+
+  # API Tests
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: interviews_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql
+
+    - name: Install PHP dependencies
+      working-directory: ./api
+      run: composer install --prefer-dist --no-progress
+
+    - name: Setup API environment
+      working-directory: ./api
+      run: |
+        cp .env.testing .env
+        php artisan key:generate
+        php artisan migrate --force
+        php artisan db:seed --class=TestSeeder
+
+    - name: Start API server
+      working-directory: ./api
+      run: php -S localhost:8000 -t public &
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: interviews_test
+        DB_USERNAME: root
+        DB_PASSWORD: root
+
+    - name: Wait for API server
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:8000/api/health; do sleep 2; done'
+
+    - name: Run API Tests with Newman
+      run: |
+        npm install -g newman
+        newman run tests/api/postman-collection.json \
+          --environment tests/api/test-environment.json \
+          --reporters cli,junit \
+          --reporter-junit-export tests/api-results/newman-report.xml
+
+    - name: Upload API Test Results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: api-test-results
+        path: tests/api-results/
+
+  # Frontend Tests
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      working-directory: ./web
+      run: npm ci
+
+    - name: Build application
+      working-directory: ./web
+      run: npm run build
+
+    - name: Run component tests
+      working-directory: ./web
+      run: npm run test:component
+
+    - name: Run accessibility tests
+      working-directory: ./web
+      run: npm run test:a11y
+
+    - name: Visual regression tests
+      working-directory: ./web
+      run: npm run test:visual
+
+    - name: Upload visual test artifacts
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: visual-test-artifacts
+        path: web/tests/visual/screenshots/
+
+  # End-to-End Tests
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [api-tests, frontend-tests]
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: interviews_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql
+
+    - name: Install dependencies
+      run: |
+        cd web && npm ci
+        cd api && composer install --prefer-dist --no-progress
+
+    - name: Setup test environment
+      working-directory: ./api
+      run: |
+        cp .env.testing .env
+        php artisan key:generate
+        php artisan migrate --force
+        php artisan db:seed --class=E2ETestSeeder
+
+    - name: Build frontend
+      working-directory: ./web
+      run: npm run build
+
+    - name: Start servers
+      run: |
+        cd api && php -S localhost:8000 -t public &
+        cd web && npm run preview -- --port 3000 &
+
+    - name: Wait for servers
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:8000/api/health; do sleep 2; done'
+        timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+    - name: Install Playwright
+      working-directory: ./web
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      working-directory: ./web
+      run: npx playwright test
+      env:
+        BASE_URL: http://localhost:3000
+        API_BASE_URL: http://localhost:8000/api
+
+    - name: Upload E2E test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: e2e-test-results
+        path: |
+          tests/e2e-results/
+          web/test-results/
+          web/playwright-report/
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli@0.12.x
+
+    - name: Build and start application
+      run: |
+        cd web && npm ci && npm run build && npm run preview -- --port 3000 &
+        timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+    - name: Run Lighthouse CI
+      run: lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Upload Lighthouse results
+      uses: actions/upload-artifact@v3
+      with:
+        name: lighthouse-results
+        path: .lighthouseci/
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+
+  # Test Results Summary
+  test-summary:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, api-tests, frontend-tests, e2e-tests]
+    if: always()
+    
+    steps:
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Generate test summary
+      run: |
+        echo "# Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Test Status" >> $GITHUB_STEP_SUMMARY
+        echo "- Unit Tests: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Integration Tests: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Frontend Tests: ${{ needs.frontend-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- E2E Tests: ${{ needs.e2e-tests.result }}" >> $GITHUB_STEP_SUMMARY
+
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const testResults = {
+            unit: '${{ needs.unit-tests.result }}',
+            integration: '${{ needs.integration-tests.result }}',
+            api: '${{ needs.api-tests.result }}',
+            frontend: '${{ needs.frontend-tests.result }}',
+            e2e: '${{ needs.e2e-tests.result }}'
+          };
+          
+          const body = `## 🧪 Test Results
+          
+          | Test Suite | Status |
+          |------------|--------|
+          | Unit Tests | ${testResults.unit === 'success' ? '✅' : '❌'} ${testResults.unit} |
+          | Integration Tests | ${testResults.integration === 'success' ? '✅' : '❌'} ${testResults.integration} |
+          | API Tests | ${testResults.api === 'success' ? '✅' : '❌'} ${testResults.api} |
+          | Frontend Tests | ${testResults.frontend === 'success' ? '✅' : '❌'} ${testResults.frontend} |
+          | E2E Tests | ${testResults.e2e === 'success' ? '✅' : '❌'} ${testResults.e2e} |
+          
+          ${Object.values(testResults).every(result => result === 'success') ? 
+            '🎉 All tests passed! Ready for merge.' : 
+            '⚠️ Some tests failed. Please review and fix before merging.'}`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });

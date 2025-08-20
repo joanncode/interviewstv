@@ -1,0 +1,962 @@
+openapi: 3.0.3
+info:
+  title: Interviews.tv API
+  description: |
+    Comprehensive API for the Interviews.tv platform - a professional interview sharing and networking platform.
+    
+    ## Authentication
+    
+    The API uses Bearer token authentication. Include your token in the Authorization header:
+    ```
+    Authorization: Bearer your-token-here
+    ```
+    
+    ## Rate Limiting
+    
+    API requests are rate limited:
+    - **General API**: 1000 requests per hour
+    - **Authentication**: 5 attempts per 5 minutes
+    - **File Upload**: 10 uploads per 10 minutes
+    
+    ## Error Handling
+    
+    The API returns standard HTTP status codes and JSON error responses:
+    ```json
+    {
+      "success": false,
+      "message": "Error description",
+      "error_code": "ERROR_CODE",
+      "errors": {}
+    }
+    ```
+    
+  version: 1.0.0
+  contact:
+    name: Interviews.tv API Support
+    email: api-support@interviews.tv
+    url: https://interviews.tv/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.interviews.tv/v1
+    description: Production server
+  - url: https://staging-api.interviews.tv/v1
+    description: Staging server
+  - url: http://localhost:8000/api
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account with email verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                  description: "Must contain uppercase, lowercase, number, and special character"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Registration successful. Please verify your email."
+                  user_id:
+                    type: integer
+                    example: 123
+                  verification_token:
+                    type: string
+                    example: "abc123def456"
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  example: "SecurePass123!"
+                remember_me:
+                  type: boolean
+                  default: false
+                  example: false
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+                  session:
+                    type: object
+                    properties:
+                      session_id:
+                        type: string
+                        example: "sess_abc123def456"
+                      expires_at:
+                        type: string
+                        format: date-time
+                        example: "2024-01-01T12:00:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: Invalidate current session
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+
+  # User Management Endpoints
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      description: Retrieve the authenticated user's profile information
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    put:
+      tags:
+        - Users
+      summary: Update user profile
+      description: Update the authenticated user's profile information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: "John Doe"
+                bio:
+                  type: string
+                  maxLength: 1000
+                  example: "Software engineer with 5 years of experience"
+                location:
+                  type: string
+                  maxLength: 100
+                  example: "San Francisco, CA"
+                website:
+                  type: string
+                  format: uri
+                  example: "https://johndoe.com"
+                linkedin_url:
+                  type: string
+                  format: uri
+                  example: "https://linkedin.com/in/johndoe"
+                github_url:
+                  type: string
+                  format: uri
+                  example: "https://github.com/johndoe"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # Interview Endpoints
+  /interviews:
+    get:
+      tags:
+        - Interviews
+      summary: List interviews
+      description: Get a paginated list of interviews with filtering options
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: "technology"
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+          example: "intermediate"
+        - name: search
+          in: query
+          schema:
+            type: string
+          example: "javascript"
+      responses:
+        '200':
+          description: Interviews retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interview'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - Interviews
+      summary: Create new interview
+      description: Create a new interview recording
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - category
+                - difficulty
+              properties:
+                title:
+                  type: string
+                  minLength: 5
+                  maxLength: 200
+                  example: "Senior JavaScript Developer Interview"
+                description:
+                  type: string
+                  minLength: 20
+                  maxLength: 2000
+                  example: "Comprehensive interview covering React, Node.js, and system design"
+                category:
+                  type: string
+                  example: "technology"
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  example: "intermediate"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["javascript", "react", "nodejs"]
+                is_public:
+                  type: boolean
+                  default: true
+                  example: true
+      responses:
+        '201':
+          description: Interview created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  interview:
+                    $ref: '#/components/schemas/Interview'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /interviews/{id}:
+    get:
+      tags:
+        - Interviews
+      summary: Get interview details
+      description: Retrieve detailed information about a specific interview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 456
+      responses:
+        '200':
+          description: Interview retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  interview:
+                    $ref: '#/components/schemas/InterviewDetailed'
+        '404':
+          description: Interview not found
+
+    put:
+      tags:
+        - Interviews
+      summary: Update interview
+      description: Update an existing interview (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 456
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 5
+                  maxLength: 200
+                description:
+                  type: string
+                  minLength: 20
+                  maxLength: 2000
+                category:
+                  type: string
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                tags:
+                  type: array
+                  items:
+                    type: string
+                is_public:
+                  type: boolean
+      responses:
+        '200':
+          description: Interview updated successfully
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Interview not found
+
+    delete:
+      tags:
+        - Interviews
+      summary: Delete interview
+      description: Delete an interview (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 456
+      responses:
+        '200':
+          description: Interview deleted successfully
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Interview not found
+
+  # Notification Endpoints
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get user notifications
+      description: Retrieve paginated list of user notifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  unread_count:
+                    type: integer
+                    example: 5
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /notifications/{id}/read:
+    put:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      description: Mark a specific notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 789
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  unread_count:
+                    type: integer
+                    example: 4
+
+  /notifications/mark-all-read:
+    put:
+      tags:
+        - Notifications
+      summary: Mark all notifications as read
+      description: Mark all user notifications as read
+      responses:
+        '200':
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  unread_count:
+                    type: integer
+                    example: 0
+
+  # File Upload Endpoints
+  /upload/avatar:
+    post:
+      tags:
+        - Upload
+      summary: Upload user avatar
+      description: Upload and set user profile avatar
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: "Image file (JPEG, PNG, GIF). Max size: 5MB"
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  avatar_url:
+                    type: string
+                    format: uri
+                    example: "https://cdn.interviews.tv/avatars/123.jpg"
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /upload/video:
+    post:
+      tags:
+        - Upload
+      summary: Upload interview video
+      description: Upload video file for interview
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - video
+                - interview_id
+              properties:
+                video:
+                  type: string
+                  format: binary
+                  description: "Video file (MP4, WebM). Max size: 500MB"
+                interview_id:
+                  type: integer
+                  example: 456
+      responses:
+        '200':
+          description: Video uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  video_url:
+                    type: string
+                    format: uri
+                    example: "https://cdn.interviews.tv/videos/456.mp4"
+                  thumbnail_url:
+                    type: string
+                    format: uri
+                    example: "https://cdn.interviews.tv/thumbnails/456.jpg"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        role:
+          type: string
+          example: "user"
+        is_active:
+          type: boolean
+          example: true
+        email_verified:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            bio:
+              type: string
+              example: "Software engineer with 5 years of experience"
+            location:
+              type: string
+              example: "San Francisco, CA"
+            website:
+              type: string
+              format: uri
+              example: "https://johndoe.com"
+            linkedin_url:
+              type: string
+              format: uri
+              example: "https://linkedin.com/in/johndoe"
+            github_url:
+              type: string
+              format: uri
+              example: "https://github.com/johndoe"
+            avatar_url:
+              type: string
+              format: uri
+              example: "https://cdn.interviews.tv/avatars/123.jpg"
+            interview_count:
+              type: integer
+              example: 15
+            follower_count:
+              type: integer
+              example: 250
+            following_count:
+              type: integer
+              example: 180
+
+    Interview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        title:
+          type: string
+          example: "Senior JavaScript Developer Interview"
+        description:
+          type: string
+          example: "Comprehensive interview covering React, Node.js, and system design"
+        category:
+          type: string
+          example: "technology"
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: "intermediate"
+        duration:
+          type: integer
+          description: "Duration in seconds"
+          example: 3600
+        view_count:
+          type: integer
+          example: 1250
+        like_count:
+          type: integer
+          example: 89
+        comment_count:
+          type: integer
+          example: 23
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["javascript", "react", "nodejs"]
+        is_public:
+          type: boolean
+          example: true
+        video_url:
+          type: string
+          format: uri
+          example: "https://cdn.interviews.tv/videos/456.mp4"
+        thumbnail_url:
+          type: string
+          format: uri
+          example: "https://cdn.interviews.tv/thumbnails/456.jpg"
+        user:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    InterviewDetailed:
+      allOf:
+        - $ref: '#/components/schemas/Interview'
+        - type: object
+          properties:
+            transcript:
+              type: string
+              example: "Full interview transcript..."
+            chapters:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: "Introduction"
+                  start_time:
+                    type: integer
+                    example: 0
+                  end_time:
+                    type: integer
+                    example: 300
+            related_interviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/Interview'
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 789
+        content:
+          type: string
+          example: "Great interview! Very insightful questions."
+        user:
+          $ref: '#/components/schemas/User'
+        like_count:
+          type: integer
+          example: 12
+        reply_count:
+          type: integer
+          example: 3
+        is_liked:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        type:
+          type: string
+          enum: [new_follower, new_like, new_comment, interview_approved, system_announcement]
+          example: "new_follower"
+        title:
+          type: string
+          example: "New Follower"
+        message:
+          type: string
+          example: "Jane Smith started following you"
+        is_read:
+          type: boolean
+          example: false
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+          example: "normal"
+        action_url:
+          type: string
+          format: uri
+          example: "/profile/jane-smith"
+        data:
+          type: object
+          additionalProperties: true
+          example:
+            user_id: 456
+            user_name: "Jane Smith"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 150
+        total_pages:
+          type: integer
+          example: 8
+        has_more:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error description"
+        error_code:
+          type: string
+          example: "ERROR_CODE"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            message: "Authentication required"
+            error_code: "UNAUTHORIZED"
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            message: "Insufficient permissions"
+            error_code: "FORBIDDEN"
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            message: "Validation failed"
+            error_code: "VALIDATION_FAILED"
+            errors:
+              email: ["The email field is required"]
+              password: ["Password must be at least 8 characters"]
+
+    RateLimitError:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            message: "Rate limit exceeded"
+            error_code: "RATE_LIMIT_EXCEEDED"

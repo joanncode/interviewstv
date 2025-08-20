@@ -239,6 +239,82 @@ class AuthService {
         }
     }
 
+    // Remove avatar
+    async removeAvatar() {
+        try {
+            const response = await API.delete('/api/upload/avatar');
+
+            if (response.success) {
+                this.user.avatar_url = null;
+
+                // Dispatch auth state change event
+                window.dispatchEvent(new CustomEvent('authStateChange', {
+                    detail: { user: this.user }
+                }));
+            }
+
+            return response;
+
+        } catch (error) {
+            console.error('Avatar removal error:', error);
+            throw error;
+        }
+    }
+
+    // Change password
+    async changePassword(passwordData) {
+        try {
+            const response = await API.post('/api/auth/change-password', passwordData);
+            return response;
+
+        } catch (error) {
+            console.error('Change password error:', error);
+            throw error;
+        }
+    }
+
+    // Delete account
+    async deleteAccount(deleteData) {
+        try {
+            const response = await API.post('/api/users/delete-account', deleteData);
+
+            if (response.success) {
+                // Clear all user data and logout
+                this.logout();
+            }
+
+            return response;
+
+        } catch (error) {
+            console.error('Delete account error:', error);
+            throw error;
+        }
+    }
+
+    // Follow user
+    async followUser(username) {
+        try {
+            const response = await API.post(`/api/users/${username}/follow`);
+            return response;
+
+        } catch (error) {
+            console.error('Follow user error:', error);
+            throw error;
+        }
+    }
+
+    // Unfollow user
+    async unfollowUser(username) {
+        try {
+            const response = await API.delete(`/api/users/${username}/follow`);
+            return response;
+
+        } catch (error) {
+            console.error('Unfollow user error:', error);
+            throw error;
+        }
+    }
+
     // Check if current user is following another user
     async isFollowing(username) {
         if (!this.isAuthenticated()) return false;

@@ -102,10 +102,114 @@ services:
     profiles:
       - development
 
+  # Queue Worker
+  queue:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    volumes:
+      - ./api:/var/www/html
+      - ./config:/var/www/config
+    environment:
+      - APP_ENV=development
+      - DB_HOST=database
+      - REDIS_HOST=redis
+    depends_on:
+      - database
+      - redis
+    networks:
+      - interviews-network
+    command: php artisan queue:work --sleep=3 --tries=3
+    profiles:
+      - production
+
+  # Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    volumes:
+      - ./api:/var/www/html
+      - ./config:/var/www/config
+    environment:
+      - APP_ENV=development
+      - DB_HOST=database
+      - REDIS_HOST=redis
+    depends_on:
+      - database
+      - redis
+    networks:
+      - interviews-network
+    command: php artisan schedule:work
+    profiles:
+      - production
+
+  # MailHog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - interviews-network
+    profiles:
+      - development
+
+  # Elasticsearch for Search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - interviews-network
+    profiles:
+      - production
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - interviews-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    profiles:
+      - production
+
+  # Grafana for Metrics
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - interviews-network
+    profiles:
+      - production
+
 volumes:
   mysql_data:
   redis_data:
   minio_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   interviews-network:

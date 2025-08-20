@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+         bootstrap="api/tests/bootstrap.php"
+         colors="true"
+         executionOrder="depends,defects"
+         failOnRisky="true"
+         failOnWarning="true"
+         stopOnFailure="false"
+         cacheDirectory="api/tests/.phpunit.cache"
+         backupGlobals="false"
+         backupStaticAttributes="false">
+    
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>api/tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>api/tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>api/tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>api/src</directory>
+        </include>
+        <exclude>
+            <directory>api/src/Config</directory>
+            <file>api/src/bootstrap.php</file>
+        </exclude>
+    </source>
+
+    <coverage>
+        <report>
+            <html outputDirectory="api/tests/coverage/html"/>
+            <clover outputFile="api/tests/coverage/clover.xml"/>
+            <text outputFile="api/tests/coverage/coverage.txt"/>
+        </report>
+        <thresholds>
+            <coverage>
+                <line>80</line>
+                <method>80</method>
+                <class>80</class>
+            </coverage>
+        </thresholds>
+    </coverage>
+
+    <logging>
+        <junit outputFile="api/tests/results/junit.xml"/>
+        <testdoxHtml outputFile="api/tests/results/testdox.html"/>
+        <testdoxText outputFile="api/tests/results/testdox.txt"/>
+    </logging>
+
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="OPENAI_API_KEY" value="test-key"/>
+        <env name="LINKEDIN_CLIENT_ID" value="test-linkedin-id"/>
+        <env name="GITHUB_CLIENT_ID" value="test-github-id"/>
+        <env name="SLACK_CLIENT_ID" value="test-slack-id"/>
+    </php>
+
+    <extensions>
+        <extension class="PHPUnit\Runner\Extension\Xdebug"/>
+    </extensions>
+</phpunit>

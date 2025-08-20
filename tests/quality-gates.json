@@ -1,0 +1,350 @@
+{
+  "quality_gates": {
+    "description": "Quality gates configuration for Interviews.tv testing pipeline",
+    "version": "1.0.0",
+    "gates": {
+      "code_coverage": {
+        "enabled": true,
+        "thresholds": {
+          "line_coverage": {
+            "minimum": 80,
+            "target": 90,
+            "description": "Minimum line coverage percentage required"
+          },
+          "branch_coverage": {
+            "minimum": 75,
+            "target": 85,
+            "description": "Minimum branch coverage percentage required"
+          },
+          "function_coverage": {
+            "minimum": 85,
+            "target": 95,
+            "description": "Minimum function coverage percentage required"
+          }
+        },
+        "exclusions": [
+          "*/tests/*",
+          "*/vendor/*",
+          "*/node_modules/*",
+          "*/config/*",
+          "*/migrations/*"
+        ]
+      },
+      "test_results": {
+        "enabled": true,
+        "thresholds": {
+          "unit_tests": {
+            "pass_rate": 100,
+            "description": "All unit tests must pass"
+          },
+          "integration_tests": {
+            "pass_rate": 100,
+            "description": "All integration tests must pass"
+          },
+          "e2e_tests": {
+            "pass_rate": 95,
+            "description": "Minimum E2E test pass rate"
+          },
+          "api_tests": {
+            "pass_rate": 100,
+            "description": "All API tests must pass"
+          }
+        }
+      },
+      "performance": {
+        "enabled": true,
+        "thresholds": {
+          "lighthouse_performance": {
+            "minimum": 80,
+            "target": 90,
+            "description": "Lighthouse performance score"
+          },
+          "lighthouse_accessibility": {
+            "minimum": 95,
+            "target": 100,
+            "description": "Lighthouse accessibility score"
+          },
+          "lighthouse_best_practices": {
+            "minimum": 90,
+            "target": 100,
+            "description": "Lighthouse best practices score"
+          },
+          "lighthouse_seo": {
+            "minimum": 85,
+            "target": 95,
+            "description": "Lighthouse SEO score"
+          },
+          "page_load_time": {
+            "maximum": 3000,
+            "target": 2000,
+            "unit": "milliseconds",
+            "description": "Maximum page load time"
+          },
+          "first_contentful_paint": {
+            "maximum": 1500,
+            "target": 1000,
+            "unit": "milliseconds",
+            "description": "First Contentful Paint time"
+          },
+          "largest_contentful_paint": {
+            "maximum": 2500,
+            "target": 2000,
+            "unit": "milliseconds",
+            "description": "Largest Contentful Paint time"
+          },
+          "cumulative_layout_shift": {
+            "maximum": 0.1,
+            "target": 0.05,
+            "description": "Cumulative Layout Shift score"
+          }
+        }
+      },
+      "security": {
+        "enabled": true,
+        "thresholds": {
+          "vulnerability_scan": {
+            "critical": 0,
+            "high": 0,
+            "medium": 5,
+            "low": 10,
+            "description": "Maximum allowed vulnerabilities by severity"
+          },
+          "dependency_audit": {
+            "critical": 0,
+            "high": 0,
+            "moderate": 3,
+            "description": "Maximum allowed dependency vulnerabilities"
+          },
+          "owasp_zap": {
+            "high": 0,
+            "medium": 2,
+            "low": 5,
+            "description": "OWASP ZAP security scan results"
+          }
+        }
+      },
+      "code_quality": {
+        "enabled": true,
+        "thresholds": {
+          "phpstan_level": {
+            "minimum": 8,
+            "description": "PHPStan analysis level"
+          },
+          "eslint_errors": {
+            "maximum": 0,
+            "description": "ESLint errors count"
+          },
+          "eslint_warnings": {
+            "maximum": 10,
+            "description": "ESLint warnings count"
+          },
+          "code_duplication": {
+            "maximum": 5,
+            "unit": "percentage",
+            "description": "Maximum code duplication percentage"
+          },
+          "cyclomatic_complexity": {
+            "maximum": 10,
+            "description": "Maximum cyclomatic complexity per function"
+          },
+          "maintainability_index": {
+            "minimum": 70,
+            "description": "Minimum maintainability index"
+          }
+        }
+      },
+      "accessibility": {
+        "enabled": true,
+        "thresholds": {
+          "axe_violations": {
+            "critical": 0,
+            "serious": 0,
+            "moderate": 2,
+            "minor": 5,
+            "description": "Axe accessibility violations by impact level"
+          },
+          "wcag_compliance": {
+            "level": "AA",
+            "conformance": 95,
+            "description": "WCAG compliance level and percentage"
+          },
+          "color_contrast": {
+            "minimum_ratio": 4.5,
+            "description": "Minimum color contrast ratio"
+          }
+        }
+      },
+      "api_quality": {
+        "enabled": true,
+        "thresholds": {
+          "response_time": {
+            "p95": 500,
+            "p99": 1000,
+            "unit": "milliseconds",
+            "description": "API response time percentiles"
+          },
+          "error_rate": {
+            "maximum": 1,
+            "unit": "percentage",
+            "description": "Maximum API error rate"
+          },
+          "availability": {
+            "minimum": 99.9,
+            "unit": "percentage",
+            "description": "Minimum API availability"
+          }
+        }
+      }
+    },
+    "enforcement": {
+      "blocking_gates": [
+        "test_results.unit_tests",
+        "test_results.integration_tests",
+        "test_results.api_tests",
+        "security.vulnerability_scan.critical",
+        "security.vulnerability_scan.high",
+        "code_quality.eslint_errors",
+        "accessibility.axe_violations.critical",
+        "accessibility.axe_violations.serious"
+      ],
+      "warning_gates": [
+        "code_coverage.line_coverage",
+        "performance.lighthouse_performance",
+        "security.dependency_audit.moderate",
+        "code_quality.eslint_warnings",
+        "accessibility.axe_violations.moderate"
+      ],
+      "informational_gates": [
+        "performance.page_load_time",
+        "code_quality.code_duplication",
+        "accessibility.axe_violations.minor"
+      ]
+    },
+    "notifications": {
+      "slack": {
+        "enabled": true,
+        "webhook_url": "${SLACK_WEBHOOK_URL}",
+        "channels": {
+          "success": "#dev-success",
+          "failure": "#dev-alerts",
+          "warnings": "#dev-warnings"
+        }
+      },
+      "email": {
+        "enabled": false,
+        "recipients": [
+          "dev-team@interviews.tv"
+        ]
+      },
+      "github": {
+        "enabled": true,
+        "create_issues": true,
+        "label_prefix": "quality-gate"
+      }
+    },
+    "reporting": {
+      "formats": [
+        "html",
+        "json",
+        "junit",
+        "markdown"
+      ],
+      "output_directory": "tests/quality-reports",
+      "retention_days": 30,
+      "include_trends": true,
+      "include_comparisons": true
+    }
+  },
+  "environments": {
+    "development": {
+      "inherit_from": "default",
+      "overrides": {
+        "code_coverage.line_coverage.minimum": 70,
+        "performance.lighthouse_performance.minimum": 70,
+        "security.vulnerability_scan.medium": 10
+      }
+    },
+    "staging": {
+      "inherit_from": "default",
+      "overrides": {
+        "performance.lighthouse_performance.minimum": 85,
+        "api_quality.response_time.p95": 300
+      }
+    },
+    "production": {
+      "inherit_from": "default",
+      "overrides": {
+        "code_coverage.line_coverage.minimum": 90,
+        "performance.lighthouse_performance.minimum": 90,
+        "security.vulnerability_scan.medium": 0,
+        "api_quality.response_time.p95": 200,
+        "api_quality.availability.minimum": 99.95
+      }
+    }
+  },
+  "integrations": {
+    "sonarqube": {
+      "enabled": true,
+      "server_url": "${SONARQUBE_URL}",
+      "project_key": "interviews-tv",
+      "quality_gate_id": "interviews-tv-gate"
+    },
+    "codecov": {
+      "enabled": true,
+      "token": "${CODECOV_TOKEN}",
+      "target_coverage": 85
+    },
+    "lighthouse_ci": {
+      "enabled": true,
+      "server_url": "${LHCI_SERVER_URL}",
+      "build_context": {
+        "github_repo": "interviews-tv/platform"
+      }
+    }
+  },
+  "custom_checks": [
+    {
+      "name": "database_migration_safety",
+      "description": "Ensure database migrations are safe and reversible",
+      "script": "scripts/check-migrations.sh",
+      "threshold": "pass",
+      "blocking": true
+    },
+    {
+      "name": "api_documentation_coverage",
+      "description": "Ensure all API endpoints are documented",
+      "script": "scripts/check-api-docs.sh",
+      "threshold": 95,
+      "unit": "percentage",
+      "blocking": false
+    },
+    {
+      "name": "translation_completeness",
+      "description": "Ensure all UI text is translatable",
+      "script": "scripts/check-translations.sh",
+      "threshold": 100,
+      "unit": "percentage",
+      "blocking": false
+    },
+    {
+      "name": "component_test_coverage",
+      "description": "Ensure all Vue components have tests",
+      "script": "scripts/check-component-tests.sh",
+      "threshold": 90,
+      "unit": "percentage",
+      "blocking": false
+    }
+  ],
+  "metadata": {
+    "created_by": "Interviews.tv Development Team",
+    "created_date": "2024-01-01",
+    "last_updated": "2024-01-01",
+    "version_history": [
+      {
+        "version": "1.0.0",
+        "date": "2024-01-01",
+        "changes": "Initial quality gates configuration"
+      }
+    ]
+  }
+}

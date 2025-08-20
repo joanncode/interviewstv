@@ -75,17 +75,43 @@ class UploadController
             
             // Upload to storage
             $uploadResult = $this->uploadService->uploadMedia($file, $currentUser['id'], $type);
-            
+
             if (!$uploadResult['success']) {
                 return Response::error($uploadResult['error'], 500);
             }
-            
-            return Response::success([
+
+            // Process media if it's video or audio
+            $processedData = null;
+            if (in_array($uploadResult['type'], ['video', 'audio'])) {
+                $mediaProcessor = new \App\Services\MediaProcessingService();
+                if ($mediaProcessor->isAvailable()) {
+                    if ($uploadResult['type'] === 'video') {
+                        $processedData = $mediaProcessor->processVideo($uploadResult['path']);
+                    } else {
+                        $processedData = $mediaProcessor->processAudio($uploadResult['path']);
+                    }
+                }
+            }
+
+            $responseData = [
                 'url' => $uploadResult['url'],
                 'type' => $uploadResult['type'],
                 'size' => $uploadResult['size'],
                 'duration' => $uploadResult['duration'] ?? null
-            ], 'Media uploaded successfully');
+            ];
+
+            // Add processed media data
+            if ($processedData && $processedData['success']) {
+                $responseData['processed'] = [
+                    'thumbnail' => $processedData['thumbnail'] ?? null,
+                    'waveform' => $processedData['waveform'] ?? null,
+                    'preview' => $processedData['preview'] ?? null,
+                    'compressed' => $processedData['compressed'] ?? null,
+                    'metadata' => $processedData['metadata'] ?? null
+                ];
+            }
+
+            return Response::success($responseData, 'Media uploaded successfully');
             
         } catch (\Exception $e) {
             return Response::error('Media upload failed: ' . $e->getMessage());
@@ -124,6 +150,39 @@ class UploadController
             
         } catch (\Exception $e) {
             return Response::error('Thumbnail upload failed: ' . $e->getMessage());
+        }
+    }
+
+    public function removeAvatar(Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+
+            // Get current avatar URL to delete from storage
+            $user = User::findById($currentUser['id']);
+            $currentAvatarUrl = $user['avatar_url'];
+
+            // Update user to remove avatar URL
+            $updatedUser = User::update($currentUser['id'], [
+                'avatar_url' => null
+            ]);
+
+            // Delete file from storage if it exists
+            if ($currentAvatarUrl) {
+                try {
+                    $this->uploadService->deleteFile($currentAvatarUrl);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the request
+                    error_log('Failed to delete avatar file: ' . $e->getMessage());
+                }
+            }
+
+            return Response::success([
+                'user' => User::sanitize($updatedUser)
+            ], 'Avatar removed successfully');
+
+        } catch (\Exception $e) {
+            return Response::error('Avatar removal failed: ' . $e->getMessage());
         }
     }
 }

@@ -1,6 +1,7 @@
 import Auth from '../../services/auth.js';
 import API from '../../services/api.js';
 import Router from '../../utils/router.js';
+import ProfileSharing from '../../components/ProfileSharing.js';
 
 class ProfilePage {
     constructor() {
@@ -10,6 +11,10 @@ class ProfilePage {
         this.isLoading = false;
         this.followers = [];
         this.following = [];
+        this.interviews = [];
+        this.interviewsLoading = false;
+        this.interviewsTotal = 0;
+        this.profileSharing = null;
     }
 
     async render(container, props = {}) {
@@ -28,7 +33,13 @@ class ProfilePage {
             this.setupEventListeners(container);
         } catch (error) {
             console.error('Failed to load profile:', error);
-            container.innerHTML = this.getErrorHTML();
+
+            // Handle privacy-related errors
+            if (error.message && error.message.includes('private')) {
+                container.innerHTML = this.getPrivateProfileHTML();
+            } else {
+                container.innerHTML = this.getErrorHTML();
+            }
         }
     }
 
@@ -66,6 +77,31 @@ class ProfilePage {
                         <h1 class="display-4 text-danger">Profile Not Found</h1>
                         <p class="lead">The user profile you're looking for doesn't exist.</p>
                         <a href="/explore" class="btn btn-primary">Explore Users</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    getPrivateProfileHTML() {
+        return `
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 text-center">
+                        <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                        <h3>Private Profile</h3>
+                        <p class="text-muted">This user's profile is private. You need to follow them to view their content.</p>
+                        ${this.currentUser ? `
+                            <div class="mt-4">
+                                <p class="small text-muted">Want to connect? Try following them first!</p>
+                                <a href="/discover" class="btn btn-primary">Discover Users</a>
+                            </div>
+                        ` : `
+                            <div class="mt-4">
+                                <p class="small text-muted">Sign in to follow users and view their content</p>
+                                <a href="/login" class="btn btn-primary">Sign In</a>
+                            </div>
+                        `}
                     </div>
                 </div>
             </div>
@@ -114,7 +150,7 @@ class ProfilePage {
                                 ${user.verified ? '<span class="badge bg-success me-2"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
                             </div>
                             
-                            <div class="profile-counts d-flex gap-4 mb-3">
+                            <div class="profile-counts d-flex gap-3 mb-3 flex-wrap">
                                 <div class="text-center">
                                     <div class="fw-bold">${user.follower_count || 0}</div>
                                     <small class="text-muted">Followers</small>
@@ -124,8 +160,16 @@ class ProfilePage {
                                     <small class="text-muted">Following</small>
                                 </div>
                                 <div class="text-center">
-                                    <div class="fw-bold">0</div>
+                                    <div class="fw-bold" id="interview-count">${user.interview_count || 0}</div>
                                     <small class="text-muted">Interviews</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">${this.formatNumber(user.total_views || 0)}</div>
+                                    <small class="text-muted">Total Views</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">${this.formatNumber(user.total_likes || 0)}</div>
+                                    <small class="text-muted">Total Likes</small>
                                 </div>
                             </div>
                             
@@ -134,6 +178,7 @@ class ProfilePage {
                         
                         <div class="col-md-3 text-center">
                             ${this.getProfileActions(isFollowing)}
+                            <div id="profile-sharing-container" class="mt-2"></div>
                         </div>
                     </div>
                 </div>
@@ -186,6 +231,7 @@ class ProfilePage {
                         ${this.getInterviewsSection()}
                     </div>
                     <div class="col-md-4">
+                        ${this.getStatsSection()}
                         ${this.getFollowersSection()}
                         ${this.getFollowingSection()}
                     </div>
@@ -198,13 +244,87 @@ class ProfilePage {
         return `
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Interviews</h5>
-                    ${this.isOwnProfile ? '<a href="/create" class="btn btn-sm btn-primary">Create New</a>' : ''}
+                    <h5 class="mb-0">Interviews (${this.interviewsTotal || 0})</h5>
+                    <div class="d-flex gap-2">
+                        ${this.isOwnProfile ? `
+                            <select class="form-select form-select-sm" id="interview-status-filter" style="width: auto;">
+                                <option value="published">Published</option>
+                                <option value="draft">Drafts</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        ` : ''}
+                        ${this.isOwnProfile ? '<a href="/create" class="btn btn-sm btn-primary">Create New</a>' : ''}
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">Coming Soon</h6>
-                        <p class="mb-0">Interview listings and management will be available in the next update.</p>
+                    <div id="interviews-list">
+                        ${this.interviewsLoading ? this.getInterviewsLoadingHTML() : this.getInterviewsListHTML()}
+                    </div>
+                    ${this.interviews.length > 0 && this.interviews.length < this.interviewsTotal ? `
+                        <div class="text-center mt-3">
+                            <button class="btn btn-outline-primary" id="load-more-interviews">
+                                Load More Interviews
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    getStatsSection() {
+        const user = this.user;
+        const joinDate = new Date(user.join_date || user.created_at);
+        const lastActive = user.last_active ? new Date(user.last_active) : null;
+
+        return `
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Profile Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center p-2 bg-light rounded">
+                                <div class="fw-bold text-primary">${this.formatNumber(user.total_views || 0)}</div>
+                                <small class="text-muted">Total Views</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-2 bg-light rounded">
+                                <div class="fw-bold text-danger">${this.formatNumber(user.total_likes || 0)}</div>
+                                <small class="text-muted">Total Likes</small>
+                            </div>
+                        </div>
+                        ${user.interview_count > 0 ? `
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-success">${this.formatNumber(user.avg_views_per_interview || 0)}</div>
+                                    <small class="text-muted">Avg Views</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-warning">${user.engagement_rate || 0}%</div>
+                                    <small class="text-muted">Engagement</small>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="small text-muted">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Member since:</span>
+                            <span>${joinDate.toLocaleDateString()}</span>
+                        </div>
+                        ${lastActive ? `
+                            <div class="d-flex justify-content-between">
+                                <span>Last active:</span>
+                                <span>${this.getRelativeTime(lastActive)}</span>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -274,6 +394,24 @@ class ProfilePage {
         // Load followers and following
         this.loadFollowers();
         this.loadFollowing();
+
+        // Load interviews
+        this.loadInterviews();
+
+        // Interview status filter (for own profile)
+        const statusFilter = container.querySelector('#interview-status-filter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', () => this.handleStatusFilterChange());
+        }
+
+        // Load more interviews button
+        const loadMoreBtn = container.querySelector('#load-more-interviews');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => this.loadMoreInterviews());
+        }
+
+        // Initialize profile sharing
+        this.initializeProfileSharing(container);
     }
 
     async handleFollowToggle(button) {
@@ -323,13 +461,14 @@ class ProfilePage {
 
         try {
             const response = await Auth.uploadAvatar(file);
-            
+
             if (response.success) {
                 // Update avatar image
                 const avatarImg = document.querySelector('.profile-avatar');
                 if (avatarImg) {
                     avatarImg.src = response.data.url;
                 }
+                this.user.avatar_url = response.data.url;
             }
 
         } catch (error) {
@@ -408,6 +547,246 @@ class ProfilePage {
         const countElement = document.querySelector('.profile-counts .fw-bold');
         if (countElement) {
             countElement.textContent = this.user.follower_count || 0;
+        }
+    }
+
+    async loadInterviews(status = 'published', page = 1) {
+        try {
+            this.interviewsLoading = true;
+            this.updateInterviewsList();
+
+            const params = { page, limit: 6 };
+            if (this.isOwnProfile && status) {
+                params.status = status;
+            }
+
+            const response = await API.getUserInterviews(this.user.username, params);
+
+            if (response.success) {
+                if (page === 1) {
+                    this.interviews = response.data.items || [];
+                } else {
+                    this.interviews = [...this.interviews, ...(response.data.items || [])];
+                }
+                this.interviewsTotal = response.data.total || 0;
+                this.updateInterviewCount();
+                this.updateInterviewsList();
+            }
+        } catch (error) {
+            console.error('Failed to load interviews:', error);
+
+            // Handle privacy errors
+            if (error.message && error.message.includes('private')) {
+                this.interviews = [];
+                this.interviewsTotal = 0;
+                this.updateInterviewsList();
+            }
+        } finally {
+            this.interviewsLoading = false;
+        }
+    }
+
+    getInterviewsLoadingHTML() {
+        return `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading interviews...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading interviews...</p>
+            </div>
+        `;
+    }
+
+    getInterviewsListHTML() {
+        if (this.interviews.length === 0) {
+            // Check if this might be due to privacy settings
+            const isPrivacyRestricted = !this.isOwnProfile && this.user &&
+                                      (this.user.interview_visibility === 'private' ||
+                                       this.user.interview_visibility === 'followers');
+
+            if (isPrivacyRestricted) {
+                return `
+                    <div class="text-center py-4">
+                        <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Private Interviews</h6>
+                        <p class="text-muted mb-0">
+                            This user's interviews are ${this.user.interview_visibility === 'private' ? 'private' : 'only visible to followers'}.
+                        </p>
+                        ${this.user.interview_visibility === 'followers' && this.currentUser ? `
+                            <p class="text-muted small mt-2">Follow this user to see their interviews!</p>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="text-center py-4">
+                    <i class="fas fa-microphone-alt fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No interviews yet</h6>
+                    <p class="text-muted mb-0">
+                        ${this.isOwnProfile ? 'Create your first interview to get started!' : 'This user hasn\'t published any interviews yet.'}
+                    </p>
+                    ${this.isOwnProfile ? '<a href="/create" class="btn btn-primary mt-3">Create Interview</a>' : ''}
+                </div>
+            `;
+        }
+
+        return `
+            <div class="row">
+                ${this.interviews.map(interview => this.getInterviewCardHTML(interview)).join('')}
+            </div>
+        `;
+    }
+
+    getInterviewCardHTML(interview) {
+        const statusBadge = interview.status !== 'published' ? `
+            <span class="badge bg-${interview.status === 'draft' ? 'warning' : 'secondary'} position-absolute top-0 end-0 m-2">
+                ${interview.status}
+            </span>
+        ` : '';
+
+        return `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 interview-card position-relative">
+                    ${statusBadge}
+                    <div class="card-img-top position-relative" style="height: 200px; background: #f8f9fa;">
+                        ${interview.thumbnail_url ? `
+                            <img src="${interview.thumbnail_url}"
+                                 alt="${interview.title}"
+                                 class="w-100 h-100 object-fit-cover">
+                        ` : `
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="fas fa-${interview.type === 'video' ? 'video' : interview.type === 'audio' ? 'microphone' : 'file-text'} fa-3x text-muted"></i>
+                            </div>
+                        `}
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                            <span class="badge bg-dark bg-opacity-75">
+                                <i class="fas fa-${interview.type === 'video' ? 'video' : interview.type === 'audio' ? 'microphone' : 'file-text'} me-1"></i>
+                                ${interview.type}
+                            </span>
+                        </div>
+                        ${interview.duration ? `
+                            <div class="position-absolute bottom-0 end-0 m-2">
+                                <span class="badge bg-dark bg-opacity-75">
+                                    ${this.formatDuration(interview.duration)}
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">${interview.title}</h6>
+                        <p class="card-text text-muted small">
+                            ${interview.description ? interview.description.substring(0, 100) + (interview.description.length > 100 ? '...' : '') : 'No description'}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                ${new Date(interview.created_at).toLocaleDateString()}
+                            </small>
+                            <div class="d-flex gap-2">
+                                ${interview.like_count ? `
+                                    <small class="text-muted">
+                                        <i class="fas fa-heart me-1"></i>${interview.like_count}
+                                    </small>
+                                ` : ''}
+                                ${interview.view_count ? `
+                                    <small class="text-muted">
+                                        <i class="fas fa-eye me-1"></i>${interview.view_count}
+                                    </small>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex gap-2">
+                            <a href="/interview/${interview.id}" class="btn btn-sm btn-outline-primary flex-fill">
+                                <i class="fas fa-play me-1"></i>View
+                            </a>
+                            ${this.isOwnProfile ? `
+                                <a href="/interview/${interview.id}/edit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    updateInterviewsList() {
+        const container = document.getElementById('interviews-list');
+        if (container) {
+            container.innerHTML = this.interviewsLoading ? this.getInterviewsLoadingHTML() : this.getInterviewsListHTML();
+        }
+    }
+
+    updateInterviewCount() {
+        const countElement = document.getElementById('interview-count');
+        if (countElement) {
+            countElement.textContent = this.interviewsTotal || this.user.interview_count || 0;
+        }
+    }
+
+    async handleStatusFilterChange() {
+        const statusFilter = document.getElementById('interview-status-filter');
+        if (statusFilter) {
+            await this.loadInterviews(statusFilter.value, 1);
+        }
+    }
+
+    async loadMoreInterviews() {
+        const statusFilter = document.getElementById('interview-status-filter');
+        const status = statusFilter ? statusFilter.value : 'published';
+        const nextPage = Math.floor(this.interviews.length / 6) + 1;
+
+        await this.loadInterviews(status, nextPage);
+    }
+
+    formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    getRelativeTime(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) {
+            return 'Just now';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else if (diffInSeconds < 2592000) {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        } else {
+            return date.toLocaleDateString();
+        }
+    }
+
+    initializeProfileSharing(container) {
+        const sharingContainer = container.querySelector('#profile-sharing-container');
+        if (sharingContainer && this.user) {
+            this.profileSharing = new ProfileSharing(this.user);
+            this.profileSharing.render(sharingContainer);
         }
     }
 }
