@@ -116,35 +116,45 @@ class User
         return $stmt->execute([$id]);
     }
     
-    public static function getAll($page = 1, $limit = 20, $search = null)
+    public static function getAll($page = 1, $limit = 20, $search = null, $role = null)
     {
         $pdo = self::getConnection();
         $offset = ($page - 1) * $limit;
-        
-        $whereClause = '';
+
+        $whereConditions = [];
         $params = [];
-        
+
         if ($search) {
-            $whereClause = "WHERE username LIKE ? OR email LIKE ? OR bio LIKE ?";
+            $whereConditions[] = "(username LIKE ? OR email LIKE ? OR bio LIKE ?)";
             $searchTerm = "%{$search}%";
-            $params = [$searchTerm, $searchTerm, $searchTerm];
+            $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
         }
-        
+
+        if ($role) {
+            $whereConditions[] = "role = ?";
+            $params[] = $role;
+        }
+
+        $whereClause = '';
+        if (!empty($whereConditions)) {
+            $whereClause = "WHERE " . implode(' AND ', $whereConditions);
+        }
+
         // Get total count
         $countSql = "SELECT COUNT(*) FROM users {$whereClause}";
         $countStmt = $pdo->prepare($countSql);
         $countStmt->execute($params);
         $total = $countStmt->fetchColumn();
-        
+
         // Get users
         $sql = "SELECT * FROM users {$whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         return [
             'users' => array_map([self::class, 'sanitize'], $users),
             'total' => $total

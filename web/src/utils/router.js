@@ -3,6 +3,8 @@ import HomePage from '../pages/Home/HomePage.js';
 import LoginPage from '../pages/Auth/LoginPage.js';
 import RegisterPage from '../pages/Auth/RegisterPage.js';
 import ExplorePage from '../pages/Explore/ExplorePage.js';
+import ProfilePage from '../pages/Profile/ProfilePage.js';
+import EditProfilePage from '../pages/Profile/EditProfilePage.js';
 import NotFoundPage from '../pages/NotFound/NotFoundPage.js';
 
 class Router {
@@ -20,7 +22,9 @@ class Router {
             { path: '/register', component: RegisterPage, title: 'Sign Up - Interviews.tv' },
             { path: '/explore', component: ExplorePage, title: 'Explore - Interviews.tv' },
             { path: '/trending', component: ExplorePage, title: 'Trending - Interviews.tv', props: { filter: 'trending' } },
-            { path: '/categories', component: ExplorePage, title: 'Categories - Interviews.tv', props: { filter: 'categories' } }
+            { path: '/categories', component: ExplorePage, title: 'Categories - Interviews.tv', props: { filter: 'categories' } },
+            { path: '/profile/:username', component: ProfilePage, title: 'Profile - Interviews.tv' },
+            { path: '/profile/:username/edit', component: EditProfilePage, title: 'Edit Profile - Interviews.tv', requireAuth: true }
         ];
     }
 
