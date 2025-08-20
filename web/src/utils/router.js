@@ -11,6 +11,7 @@ import InterviewCreatePage from '../pages/Interview/InterviewCreatePage.js';
 import InterviewEditPage from '../pages/Interview/InterviewEditPage.js';
 import GalleryListPage from '../pages/Gallery/GalleryListPage.js';
 import GalleryViewPage from '../pages/Gallery/GalleryViewPage.js';
+import SearchResultsPage from '../pages/Search/SearchResultsPage.js';
 import NotFoundPage from '../pages/NotFound/NotFoundPage.js';
 
 class Router {
@@ -35,6 +36,7 @@ class Router {
             { path: '/interviews/:id/edit', component: InterviewEditPage, title: 'Edit Interview - Interviews.tv', requireAuth: true },
             { path: '/gallery', component: GalleryListPage, title: 'Galleries - Interviews.tv' },
             { path: '/gallery/:id', component: GalleryViewPage, title: 'Gallery - Interviews.tv' },
+            { path: '/search', component: SearchResultsPage, title: 'Search - Interviews.tv' },
             { path: '/profile/:username', component: ProfilePage, title: 'Profile - Interviews.tv' },
             { path: '/profile/:username/edit', component: EditProfilePage, title: 'Edit Profile - Interviews.tv', requireAuth: true }
         ];

@@ -290,6 +290,43 @@ class APIService {
         return this.get(`/api/comments/${id}/replies`, params);
     }
 
+    // Search endpoints
+    async search(params = {}) {
+        return this.get('/api/search', params);
+    }
+
+    async getSearchSuggestions(query) {
+        return this.get('/api/search/suggestions', { q: query });
+    }
+
+    async getPopularContent(type = null, limit = 10, timeframe = '7 days') {
+        return this.get('/api/search/popular', { type, limit, timeframe });
+    }
+
+    async getTrendingContent(type = null, limit = 10) {
+        return this.get('/api/search/trending', { type, limit });
+    }
+
+    async getRecommendations(limit = 10) {
+        return this.get('/api/search/recommendations', { limit });
+    }
+
+    async getSearchCategories(type = null) {
+        return this.get('/api/search/categories', { type });
+    }
+
+    async getSearchTags(query = '', type = null, limit = 10) {
+        return this.get('/api/search/tags', { q: query, type, limit });
+    }
+
+    async indexContent(type, id, data) {
+        return this.post('/api/search/index', { type, id, ...data });
+    }
+
+    async removeFromSearchIndex(type, id) {
+        return this.delete(`/api/search/index/${type}/${id}`);
+    }
+
     // Health check
     async healthCheck() {
         return this.get('/api/health');

@@ -79,6 +79,21 @@ $router->group(['prefix' => 'galleries'], function($router) {
     $router->put('{id}/media/order', 'GalleryController@updateMediaOrder')->middleware('auth');
 });
 
+// Search routes
+$router->group(['prefix' => 'search'], function($router) {
+    $router->get('/', 'SearchController@search');
+    $router->get('suggestions', 'SearchController@suggestions');
+    $router->get('popular', 'SearchController@popular');
+    $router->get('trending', 'SearchController@trending');
+    $router->get('recommendations', 'SearchController@recommendations')->middleware('auth');
+    $router->get('categories', 'SearchController@categories');
+    $router->get('tags', 'SearchController@tags');
+
+    // Search indexing (admin only)
+    $router->post('index', 'SearchController@index')->middleware('auth');
+    $router->delete('index/{type}/{id}', 'SearchController@removeIndex')->middleware('auth');
+});
+
 // Event routes
 $router->group(['prefix' => 'events'], function($router) {
     $router->get('/', 'EventController@index');

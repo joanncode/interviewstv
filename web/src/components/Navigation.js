@@ -1,14 +1,17 @@
 import Auth from '../services/auth.js';
 import Router from '../utils/router.js';
+import SearchBox from './SearchBox.js';
 
 class Navigation {
     constructor() {
         this.user = Auth.getCurrentUser();
+        this.searchBox = null;
     }
 
     render(container) {
         container.innerHTML = this.getNavigationHTML();
         this.setupEventListeners(container);
+        this.initializeSearchBox(container);
     }
 
     getNavigationHTML() {
@@ -59,7 +62,11 @@ class Navigation {
                                 </li>
                             ` : ''}
                         </ul>
-                        
+
+                        <div class="navbar-nav mx-auto" style="max-width: 400px;">
+                            <div id="nav-search-container" class="w-100"></div>
+                        </div>
+
                         <ul class="navbar-nav">
                             ${isAuthenticated ? this.getAuthenticatedNav(user) : this.getGuestNav()}
                         </ul>
@@ -71,14 +78,7 @@ class Navigation {
 
     getAuthenticatedNav(user) {
         return `
-            <li class="nav-item">
-                <form class="d-flex me-3" role="search">
-                    <input class="form-control" type="search" placeholder="Search..." id="navbar-search">
-                    <button class="btn btn-outline-light ms-2" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </li>
+
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                     <img src="${user?.avatar_url || '/assets/default-avatar.png'}" 
@@ -193,6 +193,21 @@ class Navigation {
             // Force logout even if API call fails
             Auth.clearToken();
             Router.navigate('/');
+        }
+    }
+
+    initializeSearchBox(container) {
+        const searchContainer = container.querySelector('#nav-search-container');
+
+        if (searchContainer) {
+            this.searchBox = new SearchBox(searchContainer, {
+                placeholder: 'Search...',
+                showSuggestions: true,
+                showFilters: false,
+                autoFocus: false
+            });
+
+            this.searchBox.render();
         }
     }
 }
