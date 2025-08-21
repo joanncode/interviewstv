@@ -731,6 +731,10 @@ class Comments {
             likeButton.destroy();
         });
         this.likeButtons.clear();
+
+        // Clean up real-time listeners
+        this.realtimeUnsubscribers.forEach(unsubscribe => unsubscribe());
+        this.realtimeUnsubscribers = [];
     }
 }
 

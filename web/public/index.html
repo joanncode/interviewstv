@@ -736,6 +736,105 @@
             box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
         }
 
+        /* Profile Hero Banner Styles */
+        .profile-hero-banner, .business-hero-banner {
+            margin-bottom: 0;
+        }
+
+        .profile-hero-banner .hero-background,
+        .business-hero-banner .hero-background {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar-container img,
+        #avatarPreview {
+            width: 200px !important;
+            height: 200px !important;
+            object-fit: cover;
+            border-radius: 50% !important;
+            transition: transform 0.3s ease;
+        }
+
+        /* Settings page avatar preview */
+        #avatarPreview {
+            width: 150px !important;
+            height: 150px !important;
+        }
+
+        .business-logo-container .business-logo {
+            transition: transform 0.3s ease;
+        }
+
+        .profile-avatar-container:hover img,
+        .business-logo-container:hover .business-logo {
+            transform: scale(1.05);
+        }
+
+        .stat-item {
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .text-white-75 {
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        .profile-actions .btn,
+        .business-actions .btn {
+            transition: all 0.3s ease;
+        }
+
+        .profile-actions .btn:hover,
+        .business-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Progress Steps Styles */
+        .progress-steps .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-steps .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .progress-steps .step.active .step-number {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .progress-steps .step.completed .step-number {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .progress-steps .step-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .progress-steps .step.active .step-title,
+        .progress-steps .step.completed .step-title {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .hero {
                 padding: 60px 0;
@@ -747,6 +846,27 @@
 
             .gallery-thumbnail {
                 height: 150px;
+            }
+
+            .profile-header h1,
+            .business-header h1 {
+                font-size: 2rem !important;
+            }
+
+            .profile-stats,
+            .business-stats {
+                gap: 2rem !important;
+            }
+
+            .profile-actions,
+            .business-actions {
+                flex-direction: column;
+                gap: 1rem !important;
+            }
+
+            .profile-actions .btn,
+            .business-actions .btn {
+                width: 100%;
             }
         }
     </style>
@@ -774,6 +894,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
 
     <!-- Application JS -->
-    <script type="module" src="/src/index.js"></script>
+    <script src="/js/app.js"></script>
 </body>
 </html>
