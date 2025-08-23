@@ -1,10 +1,141 @@
 # 🎬 Interviews.tv
 
-**Enterprise-Grade Interview Platform** - A comprehensive social networking platform designed to create, share, discover, and engage with professional interviews. Built with modern architecture, AI-powered analysis, and enterprise-level security.
+**Enterprise-Grade Interview Platform** - A comprehensive social networking platform designed to create, share, discover, and engage with professional interviews. Built with modern architecture, MariaDB backend, and enterprise-level security.
+
+## 🗄️ **NEW: MariaDB Backend Implementation**
+
+The platform now includes a complete MariaDB backend with:
+- **User Role System**: Admin, Creator, Business, and User roles with specific permissions
+- **RESTful API**: Complete PHP backend with JWT authentication
+- **Database-Driven**: Persistent data storage replacing localStorage
+- **File Upload System**: Hero banners, avatars, and media content
+- **Business Directory**: Full CRUD operations with search and filtering
 
 [![Build Status](https://github.com/joanncode/interviewstv/workflows/CI/badge.svg)](https://github.com/joanncode/interviewstv/actions)
 [![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](https://github.com/joanncode/interviewstv)
 [![Security Score](https://img.shields.io/badge/security-A%2B-brightgreen.svg)](https://github.com/joanncode/interviewstv)
+
+## 🚀 **Quick Start with MariaDB Backend**
+
+### Prerequisites
+- PHP 8.0 or higher
+- MariaDB/MySQL 5.7 or higher
+- Web server (Apache/Nginx) or PHP built-in server
+
+### Installation
+
+#### **Option 1: Quick Start (Recommended)**
+```bash
+# Linux/Mac
+./start.sh
+
+# Windows
+start.bat
+```
+
+#### **Option 2: Manual Setup**
+1. **Set up the database**
+   ```bash
+   php setup.php
+   ```
+
+2. **Start the API server**
+   ```bash
+   php -S localhost:8001 -t api/
+   ```
+
+3. **Start the web server**
+   ```bash
+   php -S localhost:8000 -t web/public/
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:8000
+   - API Documentation: http://localhost:8001/api
+
+### 🔐 **Login Credentials**
+
+| Role | Email | Password | Features |
+|------|-------|----------|----------|
+| **Admin** | admin@interviews.tv | admin123 | Full system access, user management |
+| **Creator** | creator@interviews.tv | creator123 | Create interviews, manage content |
+| **Business** | business@interviews.tv | business123 | Manage business profile, respond to interviews |
+| **User** | user@interviews.tv | user123 | View content, follow businesses |
+
+## 🔧 **Troubleshooting**
+
+### **Admin Panel Shows "Loading..." or Errors**
+
+If the admin panel at http://localhost:8000/admin is stuck loading or shows errors:
+
+1. **Check API Server Status**
+   ```bash
+   # Test if API server is running
+   curl http://localhost:8001/api/test.php
+   ```
+
+2. **Common Issues & Solutions**
+
+   **❌ "Cannot connect to API server"**
+   - **Solution**: Start the API server
+   ```bash
+   php -S localhost:8001 -t api/
+   ```
+
+   **❌ "Database connection failed"**
+   - **Solution**: Ensure MariaDB/MySQL is running and run setup
+   ```bash
+   # Start MySQL/MariaDB service
+   sudo systemctl start mariadb  # Linux
+   brew services start mariadb   # Mac
+
+   # Run database setup
+   php setup.php
+   ```
+
+   **❌ "Access denied. Admin privileges required"**
+   - **Solution**: Login with admin credentials first
+   ```
+   Email: admin@interviews.tv
+   Password: admin123
+   ```
+
+3. **View Demo Data**
+   - If API is not working, click "Show Demo Data" in the admin panel
+   - This displays sample admin interface without database connection
+
+### **Database Setup Issues**
+
+**❌ "Connection error" when running setup.php**
+```bash
+# Check if MySQL/MariaDB is running
+sudo systemctl status mariadb  # Linux
+brew services list | grep mariadb  # Mac
+
+# Start the service if not running
+sudo systemctl start mariadb   # Linux
+brew services start mariadb    # Mac
+```
+
+**❌ "Access denied for user 'root'"**
+- Update database credentials in `api/config/database.php`
+- Or reset MySQL root password
+
+### **Port Conflicts**
+
+**❌ "Address already in use"**
+```bash
+# Check what's using the ports
+lsof -i :8000  # Web server port
+lsof -i :8001  # API server port
+
+# Kill processes if needed
+kill -9 <PID>
+
+# Or use different ports
+php -S localhost:8002 -t web/public/
+php -S localhost:8003 -t api/
+```
 [![Performance](https://img.shields.io/badge/performance-95%2B-brightgreen.svg)](https://github.com/joanncode/interviewstv)
 
 ## Project Structure (Industry Standard)
