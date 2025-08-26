@@ -24,26 +24,27 @@ class User
     {
         $pdo = self::getConnection();
 
-        $sql = "INSERT INTO users (username, email, password, bio, avatar_url, role, verified,
-                profile_visibility, interview_visibility, activity_visibility, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO users (name, email, password_hash, bio, avatar_url, role, email_verified,
+                location, website, phone, company, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
-            $data['username'],
+            $data['name'] ?? $data['username'] ?? 'User',
             $data['email'],
             $data['password'],
             $data['bio'] ?? null,
             $data['avatar_url'] ?? null,
             $data['role'] ?? 'user',
             $data['verified'] ?? false,
-            $data['profile_visibility'] ?? 'public',
-            $data['interview_visibility'] ?? 'public',
-            $data['activity_visibility'] ?? 'followers'
+            $data['location'] ?? null,
+            $data['website'] ?? null,
+            $data['phone'] ?? null,
+            $data['company'] ?? null
         ]);
 
         $userId = $pdo->lastInsertId();
-        return self::findById($userId);
+        return self::findByIdStatic($userId);
     }
     
     public static function findById($id)
@@ -86,8 +87,8 @@ class User
         $fields = [];
         $values = [];
         
-        $allowedFields = ['username', 'email', 'password', 'bio', 'avatar_url', 'role', 'verified',
-                         'profile_visibility', 'interview_visibility', 'activity_visibility'];
+        $allowedFields = ['name', 'email', 'password_hash', 'bio', 'avatar_url', 'hero_banner_url', 'role', 'email_verified',
+                         'location', 'website', 'phone', 'company', 'is_active'];
         
         foreach ($data as $key => $value) {
             if (in_array($key, $allowedFields)) {

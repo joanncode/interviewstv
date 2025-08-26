@@ -77,6 +77,30 @@ CREATE TABLE businesses (
     FULLTEXT idx_search (name, description, location)
 );
 
+-- Categories table - Content categorization
+CREATE TABLE categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT NULL,
+    type ENUM('interview', 'gallery', 'event', 'business') DEFAULT 'interview',
+    color VARCHAR(7) DEFAULT '#007bff',
+    icon VARCHAR(100) DEFAULT 'fas fa-folder',
+    parent_id INT NULL,
+    sort_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    meta_title VARCHAR(255) NULL,
+    meta_description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+    INDEX idx_categories_type (type),
+    INDEX idx_categories_parent (parent_id),
+    INDEX idx_categories_slug (slug),
+    INDEX idx_categories_active (is_active)
+);
+
 -- Interviews table - Interview content
 CREATE TABLE interviews (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -96,6 +120,7 @@ CREATE TABLE interviews (
     is_featured BOOLEAN DEFAULT FALSE,
     is_published BOOLEAN DEFAULT FALSE,
     published_at TIMESTAMP NULL,
+    moderation_status ENUM('pending', 'approved', 'rejected', 'flagged', 'hidden', 'deleted', 'auto_hidden') DEFAULT 'approved',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -128,6 +153,159 @@ CREATE TABLE comments (
     INDEX idx_user (user_id),
     INDEX idx_parent (parent_id),
     INDEX idx_created (created_at)
+);
+
+-- Content flags table - User reports and moderation flags
+CREATE TABLE content_flags (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    content_id INT NOT NULL,
+    content_type ENUM('interview', 'comment', 'gallery', 'user') NOT NULL,
+    reason ENUM('spam', 'inappropriate', 'copyright', 'harassment', 'fake', 'other') NOT NULL,
+    reported_by INT NOT NULL,
+    description TEXT NULL,
+    status ENUM('pending', 'resolved', 'dismissed') DEFAULT 'pending',
+    resolved_by INT NULL,
+    resolved_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (reported_by) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_content_flags_content (content_id, content_type),
+    INDEX idx_content_flags_status (status),
+    INDEX idx_content_flags_reporter (reported_by)
+);
+
+-- Moderation actions table - Track moderator actions
+CREATE TABLE moderation_actions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    content_id INT NOT NULL,
+    content_type ENUM('interview', 'comment', 'gallery', 'user') NOT NULL,
+    moderator_id INT NOT NULL,
+    action ENUM('approve', 'reject', 'hide', 'delete', 'warn', 'ban') NOT NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (moderator_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_moderation_content (content_id, content_type),
+    INDEX idx_moderation_moderator (moderator_id),
+    INDEX idx_moderation_action (action)
+);
+
+-- Interview views table - Track content views for analytics
+CREATE TABLE interview_views (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    interview_id INT NOT NULL,
+    user_id INT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    referrer VARCHAR(500) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_interview_views_interview (interview_id),
+    INDEX idx_interview_views_user (user_id),
+    INDEX idx_interview_views_date (created_at)
+);
+
+-- Security tables for validation and monitoring
+
+-- Rate limiting table
+CREATE TABLE rate_limits (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    identifier VARCHAR(255) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_rate_limits_identifier (identifier),
+    INDEX idx_rate_limits_action (action),
+    INDEX idx_rate_limits_created (created_at)
+);
+
+-- Failed login attempts tracking
+CREATE TABLE failed_login_attempts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    identifier VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    is_locked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_failed_attempts_identifier (identifier),
+    INDEX idx_failed_attempts_ip (ip_address),
+    INDEX idx_failed_attempts_created (created_at)
+);
+
+-- Security event logging
+CREATE TABLE security_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    event_type VARCHAR(100) NOT NULL,
+    event_data JSON NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    user_id INT NULL,
+    severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_security_logs_event (event_type),
+    INDEX idx_security_logs_ip (ip_address),
+    INDEX idx_security_logs_severity (severity),
+    INDEX idx_security_logs_created (created_at)
+);
+
+-- Banned IPs table
+CREATE TABLE banned_ips (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    ip_address VARCHAR(45) NOT NULL UNIQUE,
+    reason TEXT NULL,
+    banned_by INT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (banned_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_banned_ips_active (is_active),
+    INDEX idx_banned_ips_expires (expires_at)
+);
+
+-- CSRF tokens table
+CREATE TABLE csrf_tokens (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    action VARCHAR(100) NOT NULL,
+    user_id INT NULL,
+    session_id VARCHAR(255) NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_csrf_tokens_token (token),
+    INDEX idx_csrf_tokens_expires (expires_at),
+    INDEX idx_csrf_tokens_session (session_id)
+);
+
+-- API keys table for secure API access
+CREATE TABLE api_keys (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    key_hash VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    user_id INT NOT NULL,
+    permissions JSON NULL,
+    rate_limit_per_hour INT DEFAULT 1000,
+    last_used_at TIMESTAMP NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_api_keys_user (user_id),
+    INDEX idx_api_keys_active (is_active),
+    INDEX idx_api_keys_expires (expires_at)
 );
 
 -- Follows table - User following relationships

@@ -314,11 +314,286 @@ export default class SecurityService {
                 'api.' + window.location.hostname,
                 'cdn.' + window.location.hostname
             ];
-            
+
             return allowedDomains.includes(urlObj.hostname);
         } catch (error) {
             return false;
         }
+    }
+
+    /**
+     * Enhanced input validation
+     */
+    validateInput(input, type = 'general', options = {}) {
+        if (typeof input !== 'string') {
+            return { valid: false, error: 'Input must be a string' };
+        }
+
+        // Check length limits
+        const maxLength = options.maxLength || 10000;
+        if (input.length > maxLength) {
+            return { valid: false, error: `Input exceeds maximum length of ${maxLength}` };
+        }
+
+        // Type-specific validation
+        switch (type) {
+            case 'email':
+                return this.validateEmail(input);
+            case 'password':
+                return this.validatePassword(input, options);
+            case 'url':
+                return this.validateURL(input);
+            case 'filename':
+                return this.validateFilename(input);
+            case 'json':
+                return this.validateJSON(input);
+            default:
+                return this.validateGeneral(input);
+        }
+    }
+
+    /**
+     * Validate email address
+     */
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            return { valid: false, error: 'Invalid email format' };
+        }
+
+        // Check for suspicious patterns
+        if (this.containsSuspiciousPatterns(email)) {
+            return { valid: false, error: 'Email contains suspicious content' };
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Validate password strength
+     */
+    validatePassword(password, options = {}) {
+        const requirements = {
+            minLength: options.minLength || 8,
+            requireUppercase: options.requireUppercase !== false,
+            requireLowercase: options.requireLowercase !== false,
+            requireNumbers: options.requireNumbers !== false,
+            requireSpecialChars: options.requireSpecialChars !== false
+        };
+
+        const errors = [];
+
+        if (password.length < requirements.minLength) {
+            errors.push(`Password must be at least ${requirements.minLength} characters long`);
+        }
+
+        if (requirements.requireUppercase && !/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        }
+
+        if (requirements.requireLowercase && !/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        }
+
+        if (requirements.requireNumbers && !/\d/.test(password)) {
+            errors.push('Password must contain at least one number');
+        }
+
+        if (requirements.requireSpecialChars && !/[@$!%*?&]/.test(password)) {
+            errors.push('Password must contain at least one special character');
+        }
+
+        // Check for common weak patterns
+        if (this.isWeakPassword(password)) {
+            errors.push('Password is too common or weak');
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors: errors,
+            strength: this.calculatePasswordStrength(password)
+        };
+    }
+
+    /**
+     * Validate URL
+     */
+    validateURL(url) {
+        try {
+            const urlObj = new URL(url);
+
+            // Check for allowed protocols
+            const allowedProtocols = ['http:', 'https:', 'ftp:', 'ftps:'];
+            if (!allowedProtocols.includes(urlObj.protocol)) {
+                return { valid: false, error: 'URL protocol not allowed' };
+            }
+
+            // Check for suspicious patterns
+            if (this.containsSuspiciousPatterns(url)) {
+                return { valid: false, error: 'URL contains suspicious content' };
+            }
+
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, error: 'Invalid URL format' };
+        }
+    }
+
+    /**
+     * Validate filename
+     */
+    validateFilename(filename) {
+        // Remove path traversal attempts
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return { valid: false, error: 'Filename contains invalid characters' };
+        }
+
+        // Check for dangerous extensions
+        const dangerousExtensions = ['.exe', '.bat', '.cmd', '.com', '.pif', '.scr', '.vbs', '.js', '.jar', '.php'];
+        const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+
+        if (dangerousExtensions.includes(extension)) {
+            return { valid: false, error: 'File type not allowed' };
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Validate JSON
+     */
+    validateJSON(jsonString) {
+        try {
+            JSON.parse(jsonString);
+            return { valid: true };
+        } catch (error) {
+            return { valid: false, error: 'Invalid JSON format' };
+        }
+    }
+
+    /**
+     * General input validation
+     */
+    validateGeneral(input) {
+        // Check for suspicious patterns
+        if (this.containsSuspiciousPatterns(input)) {
+            return { valid: false, error: 'Input contains suspicious content' };
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Check for suspicious patterns
+     */
+    containsSuspiciousPatterns(input) {
+        const suspiciousPatterns = [
+            /<script[^>]*>.*?<\/script>/gi,
+            /javascript\s*:/gi,
+            /on\w+\s*=/gi,
+            /eval\s*\(/gi,
+            /exec\s*\(/gi,
+            /union\s+select/gi,
+            /drop\s+table/gi,
+            /insert\s+into/gi,
+            /delete\s+from/gi
+        ];
+
+        return suspiciousPatterns.some(pattern => pattern.test(input));
+    }
+
+    /**
+     * Check if password is weak
+     */
+    isWeakPassword(password) {
+        const weakPasswords = [
+            'password', '123456', 'password123', 'admin', 'qwerty',
+            'letmein', 'welcome', 'monkey', '1234567890', 'abc123'
+        ];
+
+        const lowerPassword = password.toLowerCase();
+        return weakPasswords.some(weak => lowerPassword.includes(weak));
+    }
+
+    /**
+     * Calculate password strength score
+     */
+    calculatePasswordStrength(password) {
+        let score = 0;
+
+        // Length bonus
+        score += Math.min(password.length * 2, 20);
+
+        // Character variety bonus
+        if (/[a-z]/.test(password)) score += 5;
+        if (/[A-Z]/.test(password)) score += 5;
+        if (/\d/.test(password)) score += 5;
+        if (/[@$!%*?&]/.test(password)) score += 10;
+
+        // Penalty for common patterns
+        if (this.isWeakPassword(password)) score -= 20;
+        if (/(.)\1{2,}/.test(password)) score -= 10; // Repeated characters
+        if (/123|abc|qwe/i.test(password)) score -= 10; // Sequential characters
+
+        return Math.max(0, Math.min(100, score));
+    }
+
+    /**
+     * Validate file upload security
+     */
+    validateFileUpload(file, options = {}) {
+        const maxSize = options.maxSize || 10485760; // 10MB default
+        const allowedTypes = options.allowedTypes || [];
+        const allowedExtensions = options.allowedExtensions || [];
+
+        // Check file size
+        if (file.size > maxSize) {
+            return {
+                valid: false,
+                error: `File size exceeds maximum allowed size of ${this.formatFileSize(maxSize)}`
+            };
+        }
+
+        // Check MIME type
+        if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
+            return {
+                valid: false,
+                error: 'File type not allowed'
+            };
+        }
+
+        // Check file extension
+        if (allowedExtensions.length > 0) {
+            const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            if (!allowedExtensions.includes(extension)) {
+                return {
+                    valid: false,
+                    error: 'File extension not allowed'
+                };
+            }
+        }
+
+        // Validate filename
+        const filenameValidation = this.validateFilename(file.name);
+        if (!filenameValidation.valid) {
+            return filenameValidation;
+        }
+
+        return { valid: true };
+    }
+
+    /**
+     * Format file size for display
+     */
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     /**

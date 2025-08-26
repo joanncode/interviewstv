@@ -200,8 +200,68 @@ $router->group(['prefix' => 'notifications', 'middleware' => 'auth'], function($
 $router->group(['prefix' => 'upload', 'middleware' => 'auth'], function($router) {
     $router->post('avatar', 'UploadController@avatar');
     $router->delete('avatar', 'UploadController@removeAvatar');
+    $router->post('hero-banner', 'UploadController@heroBanner');
+    $router->post('business-logo', 'UploadController@businessLogo');
     $router->post('media', 'UploadController@media');
     $router->post('thumbnail', 'UploadController@thumbnail');
+});
+
+// Category routes
+$router->group(['prefix' => 'categories'], function($router) {
+    $router->get('', 'CategoryController@index');
+    $router->get('popular', 'CategoryController@popular');
+    $router->get('search', 'CategoryController@search');
+    $router->get('{id}', 'CategoryController@show');
+
+    // Admin only routes
+    $router->group(['middleware' => 'auth'], function($router) {
+        $router->post('', 'CategoryController@create');
+        $router->put('{id}', 'CategoryController@update');
+        $router->delete('{id}', 'CategoryController@delete');
+        $router->post('bulk-update', 'CategoryController@bulkUpdate');
+    });
+});
+
+// Content Management routes
+$router->group(['prefix' => 'content-management', 'middleware' => 'auth'], function($router) {
+    $router->get('dashboard', 'ContentManagementController@dashboard');
+    $router->get('analytics', 'ContentManagementController@analytics');
+    $router->get('search', 'ContentManagementController@searchContent');
+    $router->post('bulk-actions', 'ContentManagementController@bulkActions');
+    $router->post('flag', 'ContentManagementController@flagContent');
+
+    // Moderation routes (admin/moderator only)
+    $router->get('moderation-queue', 'ContentManagementController@moderationQueue');
+    $router->post('moderate', 'ContentManagementController@moderateContent');
+});
+
+// Security routes
+$router->group(['prefix' => 'security'], function($router) {
+    // Public security endpoints
+    $router->post('report', 'SecurityController@reportEvent');
+
+    // Admin only security endpoints
+    $router->group(['middleware' => 'auth'], function($router) {
+        $router->get('dashboard', 'SecurityController@dashboard');
+        $router->get('config', 'SecurityController@getConfig');
+        $router->get('export-report', 'SecurityController@exportReport');
+        $router->post('ban-ip', 'SecurityController@banIP');
+        $router->delete('ban-ip/{ip}', 'SecurityController@unbanIP');
+        $router->post('clear-logs', 'SecurityController@clearOldLogs');
+    });
+});
+
+// Admin routes (require admin role)
+$router->group(['prefix' => 'admin', 'middleware' => 'auth'], function($router) {
+    // Interview management
+    $router->get('interviews/statistics', 'AdminInterviewController@getStatistics');
+    $router->get('interviews', 'AdminInterviewController@index');
+    $router->patch('interviews/{id}', 'AdminInterviewController@update');
+    $router->post('interviews/{id}/moderate', 'AdminInterviewController@moderate');
+    $router->post('interviews/bulk-action', 'AdminInterviewController@bulkAction');
+    $router->get('interviews/export', 'AdminInterviewController@export');
+    $router->get('interviews/{id}/flags', 'AdminInterviewController@getFlags');
+    $router->get('interviews/{id}/moderation-history', 'AdminInterviewController@getModerationHistory');
 });
 
 // Health check

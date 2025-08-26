@@ -160,9 +160,33 @@ class LoginPage {
                 this.showFieldError(field, response.errors[field]);
             });
         } else {
-            // Show general error
-            this.showAlert('error', response.message || 'Login failed');
+            const message = response.message || 'Login failed';
+
+            // Check if this is an email verification error
+            if (message.includes('verify your email') || message.includes('verification')) {
+                this.showEmailVerificationError(message);
+            } else {
+                // Show general error
+                this.showAlert('error', message);
+            }
         }
+    }
+
+    showEmailVerificationError(message) {
+        const container = document.getElementById('alert-container');
+
+        container.innerHTML = `
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>Email Verification Required</strong><br>
+                ${message}
+                <div class="mt-2">
+                    <a href="/verify-email" class="btn btn-sm btn-outline-primary">
+                        Resend Verification Email
+                    </a>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
     }
 
     setLoadingState(button, loading) {

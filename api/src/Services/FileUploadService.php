@@ -200,22 +200,22 @@ class FileUploadService
             $filename = "thumb_{$userId}_" . time() . ".{$extension}";
             $relativePath = "thumbnails/{$filename}";
             $fullPath = $this->uploadPath . "/thumbnails";
-            
+
             // Create thumbnails directory
             if (!is_dir($fullPath)) {
                 mkdir($fullPath, 0755, true);
             }
-            
+
             $filePath = $fullPath . "/{$filename}";
-            
+
             // Move uploaded file
             if (!move_uploaded_file($file['tmp_name'], $filePath)) {
                 throw new \Exception('Failed to move uploaded file');
             }
-            
+
             // Get image dimensions
             $imageInfo = getimagesize($filePath);
-            
+
             return [
                 'success' => true,
                 'url' => "/uploads/{$relativePath}",
@@ -224,7 +224,127 @@ class FileUploadService
                 'width' => $imageInfo[0] ?? null,
                 'height' => $imageInfo[1] ?? null
             ];
-            
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function uploadHeroBanner($file, $userId)
+    {
+        try {
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $filename = "hero_{$userId}_" . time() . ".{$extension}";
+            $relativePath = "hero-banners/{$filename}";
+            $fullPath = $this->uploadPath . "/hero-banners";
+
+            // Create hero-banners directory
+            if (!is_dir($fullPath)) {
+                mkdir($fullPath, 0755, true);
+            }
+
+            $filePath = $fullPath . "/{$filename}";
+
+            // Move uploaded file
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                throw new \Exception('Failed to move uploaded file');
+            }
+
+            // Resize image for hero banner (recommended: 1200x400px)
+            $this->resizeImage($filePath, 1200, 400);
+
+            // Get image dimensions after resize
+            $imageInfo = getimagesize($filePath);
+
+            $fileUrl = "/uploads/{$relativePath}";
+
+            // Upload to S3 if configured
+            if (env('STORAGE_DRIVER') === 's3') {
+                try {
+                    $s3Url = $this->uploadToS3($filePath, $relativePath);
+                    $fileUrl = $s3Url;
+
+                    // Optionally delete local file after S3 upload
+                    if (env('DELETE_LOCAL_AFTER_S3', false)) {
+                        unlink($filePath);
+                    }
+                } catch (\Exception $e) {
+                    error_log('S3 upload failed, using local storage: ' . $e->getMessage());
+                }
+            }
+
+            return [
+                'success' => true,
+                'url' => $fileUrl,
+                'path' => $filePath,
+                'filename' => $filename,
+                'width' => $imageInfo[0] ?? null,
+                'height' => $imageInfo[1] ?? null
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function uploadBusinessLogo($file, $userId)
+    {
+        try {
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $filename = "logo_{$userId}_" . time() . ".{$extension}";
+            $relativePath = "business-logos/{$filename}";
+            $fullPath = $this->uploadPath . "/business-logos";
+
+            // Create business-logos directory
+            if (!is_dir($fullPath)) {
+                mkdir($fullPath, 0755, true);
+            }
+
+            $filePath = $fullPath . "/{$filename}";
+
+            // Move uploaded file
+            if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+                throw new \Exception('Failed to move uploaded file');
+            }
+
+            // Resize image for business logo (recommended: 300x300px)
+            $this->resizeImage($filePath, 300, 300);
+
+            // Get image dimensions after resize
+            $imageInfo = getimagesize($filePath);
+
+            $fileUrl = "/uploads/{$relativePath}";
+
+            // Upload to S3 if configured
+            if (env('STORAGE_DRIVER') === 's3') {
+                try {
+                    $s3Url = $this->uploadToS3($filePath, $relativePath);
+                    $fileUrl = $s3Url;
+
+                    // Optionally delete local file after S3 upload
+                    if (env('DELETE_LOCAL_AFTER_S3', false)) {
+                        unlink($filePath);
+                    }
+                } catch (\Exception $e) {
+                    error_log('S3 upload failed, using local storage: ' . $e->getMessage());
+                }
+            }
+
+            return [
+                'success' => true,
+                'url' => $fileUrl,
+                'path' => $filePath,
+                'filename' => $filename,
+                'width' => $imageInfo[0] ?? null,
+                'height' => $imageInfo[1] ?? null
+            ];
+
         } catch (\Exception $e) {
             return [
                 'success' => false,

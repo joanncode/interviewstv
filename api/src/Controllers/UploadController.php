@@ -185,4 +185,80 @@ class UploadController
             return Response::error('Avatar removal failed: ' . $e->getMessage());
         }
     }
+
+    public function heroBanner(Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+
+            if (!$request->hasFile('hero_banner')) {
+                return Response::error('No hero banner file provided', 400);
+            }
+
+            $file = $request->file('hero_banner');
+
+            // Validate file
+            $validation = $this->uploadService->validateImage($file);
+            if (!$validation['valid']) {
+                return Response::error($validation['error'], 400);
+            }
+
+            // Upload to storage
+            $uploadResult = $this->uploadService->uploadHeroBanner($file, $currentUser['id']);
+
+            if (!$uploadResult['success']) {
+                return Response::error($uploadResult['error'], 500);
+            }
+
+            // Update user hero banner URL
+            $updatedUser = User::update($currentUser['id'], [
+                'hero_banner_url' => $uploadResult['url']
+            ]);
+
+            return Response::success([
+                'url' => $uploadResult['url'],
+                'width' => $uploadResult['width'],
+                'height' => $uploadResult['height'],
+                'user' => User::sanitize($updatedUser)
+            ], 'Hero banner uploaded successfully');
+
+        } catch (\Exception $e) {
+            return Response::error('Hero banner upload failed: ' . $e->getMessage());
+        }
+    }
+
+    public function businessLogo(Request $request)
+    {
+        try {
+            $currentUser = $request->user();
+
+            if (!$request->hasFile('business_logo')) {
+                return Response::error('No business logo file provided', 400);
+            }
+
+            $file = $request->file('business_logo');
+
+            // Validate file
+            $validation = $this->uploadService->validateImage($file);
+            if (!$validation['valid']) {
+                return Response::error($validation['error'], 400);
+            }
+
+            // Upload to storage
+            $uploadResult = $this->uploadService->uploadBusinessLogo($file, $currentUser['id']);
+
+            if (!$uploadResult['success']) {
+                return Response::error($uploadResult['error'], 500);
+            }
+
+            return Response::success([
+                'url' => $uploadResult['url'],
+                'width' => $uploadResult['width'],
+                'height' => $uploadResult['height']
+            ], 'Business logo uploaded successfully');
+
+        } catch (\Exception $e) {
+            return Response::error('Business logo upload failed: ' . $e->getMessage());
+        }
+    }
 }

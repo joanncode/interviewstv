@@ -396,4 +396,174 @@ class Interview
         
         return $slug;
     }
+
+    /**
+     * Get admin statistics for interviews
+     */
+    public static function getAdminStatistics()
+    {
+        $pdo = self::getConnection();
+
+        $sql = "SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
+                    SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+                    SUM(CASE WHEN status = 'private' THEN 1 ELSE 0 END) as private,
+                    SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived,
+                    SUM(CASE WHEN featured = 1 THEN 1 ELSE 0 END) as featured,
+                    SUM(CASE WHEN moderation_status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN moderation_status = 'flagged' THEN 1 ELSE 0 END) as flagged,
+                    SUM(CASE WHEN moderation_status = 'approved' THEN 1 ELSE 0 END) as approved,
+                    SUM(CASE WHEN moderation_status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                    SUM(CASE WHEN type = 'video' THEN 1 ELSE 0 END) as video_count,
+                    SUM(CASE WHEN type = 'audio' THEN 1 ELSE 0 END) as audio_count,
+                    SUM(CASE WHEN type = 'text' THEN 1 ELSE 0 END) as text_count,
+                    AVG(views) as avg_views,
+                    SUM(views) as total_views
+                FROM interviews";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get all interviews for admin management with enhanced filtering
+     */
+    public static function getAllForAdmin($page = 1, $limit = 20, $filters = [])
+    {
+        $pdo = self::getConnection();
+        $offset = ($page - 1) * $limit;
+
+        $whereConditions = [];
+        $params = [];
+
+        // Build WHERE conditions based on filters
+        if (isset($filters['status'])) {
+            $whereConditions[] = "i.status = ?";
+            $params[] = $filters['status'];
+        }
+
+        if (isset($filters['type'])) {
+            $whereConditions[] = "i.type = ?";
+            $params[] = $filters['type'];
+        }
+
+        if (isset($filters['category'])) {
+            $whereConditions[] = "i.category = ?";
+            $params[] = $filters['category'];
+        }
+
+        if (isset($filters['moderation'])) {
+            $whereConditions[] = "i.moderation_status = ?";
+            $params[] = $filters['moderation'];
+        }
+
+        if (isset($filters['featured'])) {
+            $whereConditions[] = "i.featured = ?";
+            $params[] = $filters['featured'] === 'yes' ? 1 : 0;
+        }
+
+        if (isset($filters['interviewer'])) {
+            $whereConditions[] = "i.interviewer_id = ?";
+            $params[] = $filters['interviewer'];
+        }
+
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $whereConditions[] = "(i.title LIKE ? OR i.description LIKE ? OR u.name LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        if (isset($filters['dateRange'])) {
+            switch ($filters['dateRange']) {
+                case 'today':
+                    $whereConditions[] = "DATE(i.created_at) = CURDATE()";
+                    break;
+                case 'week':
+                    $whereConditions[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+                    break;
+                case 'month':
+                    $whereConditions[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+                    break;
+                case 'quarter':
+                    $whereConditions[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+                    break;
+                case 'year':
+                    $whereConditions[] = "i.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+                    break;
+            }
+        }
+
+        $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+
+        // Build ORDER BY clause
+        $orderBy = 'i.created_at';
+        $orderDirection = 'DESC';
+
+        if (isset($filters['sort'])) {
+            switch ($filters['sort']) {
+                case 'title':
+                    $orderBy = 'i.title';
+                    break;
+                case 'views':
+                    $orderBy = 'i.views';
+                    break;
+                case 'rating':
+                    $orderBy = 'i.rating';
+                    break;
+                case 'updated_at':
+                    $orderBy = 'i.updated_at';
+                    break;
+                default:
+                    $orderBy = 'i.created_at';
+            }
+        }
+
+        if (isset($filters['order']) && strtoupper($filters['order']) === 'ASC') {
+            $orderDirection = 'ASC';
+        }
+
+        // Get total count
+        $countSql = "SELECT COUNT(*) as total
+                     FROM interviews i
+                     LEFT JOIN users u ON i.interviewer_id = u.id
+                     $whereClause";
+
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute($params);
+        $total = $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+        // Get interviews with pagination
+        $sql = "SELECT
+                    i.*,
+                    u.name as interviewer_name,
+                    u.avatar_url as interviewer_avatar,
+                    (SELECT COUNT(*) FROM content_flags WHERE content_id = i.id AND content_type = 'interview') as flags_count,
+                    (SELECT COUNT(*) FROM comments WHERE interview_id = i.id) as comments_count
+                FROM interviews i
+                LEFT JOIN users u ON i.interviewer_id = u.id
+                $whereClause
+                ORDER BY $orderBy $orderDirection
+                LIMIT ? OFFSET ?";
+
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        $interviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return [
+            'interviews' => $interviews,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
+            'pages' => ceil($total / $limit)
+        ];
+    }
 }

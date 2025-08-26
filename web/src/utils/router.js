@@ -2,6 +2,13 @@
 import HomePage from '../pages/Home/HomePage.js';
 import LoginPage from '../pages/Auth/LoginPage.js';
 import RegisterPage from '../pages/Auth/RegisterPage.js';
+import EmailVerificationPage from '../pages/Auth/EmailVerificationPage.js';
+import ContentManagementPage from '../pages/Admin/ContentManagementPage.js';
+import SecurityDashboardPage from '../pages/Admin/SecurityDashboardPage.js';
+import InterviewsManagementPage from '../pages/Admin/InterviewsManagementPage.js';
+import NotFoundPage from '../pages/Error/NotFoundPage.js';
+import ForbiddenPage from '../pages/Error/ForbiddenPage.js';
+import ServerErrorPage from '../pages/Error/ServerErrorPage.js';
 import ExplorePage from '../pages/Explore/ExplorePage.js';
 import ProfilePage from '../pages/Profile/ProfilePage.js';
 import EditProfilePage from '../pages/Profile/EditProfilePage.js';
@@ -34,7 +41,17 @@ class Router {
     constructor() {
         this.routes = [];
         this.currentPage = null;
+        this.currentRoute = null;
+        this.isNavigating = false;
+        this.beforeNavigateCallbacks = [];
+        this.afterNavigateCallbacks = [];
+        this.notFoundHandler = null;
+        this.errorHandler = null;
+        this.routeCache = new Map();
+        this.routeAnalytics = new Map();
+        this.preloadedComponents = new Map();
         this.setupRoutes();
+        this.setupErrorHandlers();
     }
 
     setupRoutes() {
@@ -44,6 +61,15 @@ class Router {
             { path: '/feed', component: PersonalFeedPage, title: 'Your Feed - Interviews.tv', requireAuth: true },
             { path: '/login', component: LoginPage, title: 'Login - Interviews.tv' },
             { path: '/register', component: RegisterPage, title: 'Sign Up - Interviews.tv' },
+            { path: '/verify-email', component: EmailVerificationPage, title: 'Verify Email - Interviews.tv' },
+            { path: '/admin/content', component: ContentManagementPage, title: 'Content Management - Interviews.tv', requiresAuth: true },
+            { path: '/admin/interviews', component: InterviewsManagementPage, title: 'Interviews Management - Interviews.tv', requiresAuth: true },
+            { path: '/admin/security', component: SecurityDashboardPage, title: 'Security Dashboard - Interviews.tv', requiresAuth: true },
+
+            // Error pages
+            { path: '/404', component: NotFoundPage, title: 'Page Not Found - Interviews.tv' },
+            { path: '/403', component: ForbiddenPage, title: 'Access Forbidden - Interviews.tv' },
+            { path: '/500', component: ServerErrorPage, title: 'Server Error - Interviews.tv' },
             { path: '/explore', component: DiscoveryPage, title: 'Discover - Interviews.tv' },
             { path: '/discover', component: DiscoveryPage, title: 'Discover - Interviews.tv' },
             { path: '/trending', component: ExplorePage, title: 'Trending - Interviews.tv', props: { filter: 'trending' } },
@@ -72,6 +98,30 @@ class Router {
             { path: '/profile/:username', component: ProfilePage, title: 'Profile - Interviews.tv' },
             { path: '/profile/:username/edit', component: EditProfilePage, title: 'Edit Profile - Interviews.tv', requireAuth: true }
         ];
+    }
+
+    setupErrorHandlers() {
+        // Set up global error handlers
+        this.notFoundHandler = () => {
+            this.navigateToError('404');
+        };
+
+        this.errorHandler = (error) => {
+            console.error('Router error:', error);
+            this.navigateToError('500', { error });
+        };
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            this.errorHandler(event.reason);
+        });
+
+        // Handle JavaScript errors
+        window.addEventListener('error', (event) => {
+            console.error('JavaScript error:', event.error);
+            this.errorHandler(event.error);
+        });
     }
 
     init() {
@@ -233,16 +283,283 @@ class Router {
         return this.currentPage;
     }
 
+    // Enhanced routing methods
+
+    /**
+     * Navigate to error page
+     */
+    navigateToError(errorType, data = {}) {
+        const errorPages = {
+            '404': NotFoundPage,
+            '403': ForbiddenPage,
+            '500': ServerErrorPage
+        };
+
+        const ErrorPageClass = errorPages[errorType] || NotFoundPage;
+        const container = document.getElementById('main-content') || document.getElementById('app');
+
+        if (container) {
+            const errorPage = new ErrorPageClass();
+            errorPage.render(container, data);
+        }
+
+        // Update URL for error pages
+        if (window.location.pathname !== `/${errorType}`) {
+            window.history.replaceState({}, '', `/${errorType}`);
+        }
+    }
+
+    /**
+     * Normalize path (remove trailing slashes, etc.)
+     */
+    normalizePath(path) {
+        // Remove trailing slash except for root
+        if (path !== '/' && path.endsWith('/')) {
+            path = path.slice(0, -1);
+        }
+
+        // Ensure path starts with /
+        if (!path.startsWith('/')) {
+            path = '/' + path;
+        }
+
+        return path;
+    }
+
+    /**
+     * Check for URL redirects
+     */
+    checkRedirects(path) {
+        const redirects = {
+            '/user': '/profile',
+            '/admin/dashboard': '/admin',
+            '/admin/content-management': '/admin/content',
+            '/admin/security-dashboard': '/admin/security'
+        };
+
+        return redirects[path] || null;
+    }
+
+    /**
+     * Check if user has required role
+     */
+    hasRequiredRole(user, requiredRole) {
+        if (Array.isArray(requiredRole)) {
+            return requiredRole.includes(user.role);
+        }
+        return user.role === requiredRole;
+    }
+
+    /**
+     * Update page meta tags
+     */
+    updatePageMeta(route, path) {
+        // Update title
+        if (route.title) {
+            document.title = route.title;
+        }
+
+        // Update meta description
+        if (route.description) {
+            this.updateMetaTag('description', route.description);
+        }
+
+        // Update Open Graph tags
+        if (route.ogTitle) {
+            this.updateMetaTag('og:title', route.ogTitle, 'property');
+        }
+        if (route.ogDescription) {
+            this.updateMetaTag('og:description', route.ogDescription, 'property');
+        }
+        if (route.ogImage) {
+            this.updateMetaTag('og:image', route.ogImage, 'property');
+        }
+
+        // Update canonical URL
+        this.updateCanonicalUrl(path);
+    }
+
+    /**
+     * Update meta tag
+     */
+    updateMetaTag(name, content, attribute = 'name') {
+        let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attribute, name);
+            document.head.appendChild(meta);
+        }
+
+        meta.setAttribute('content', content);
+    }
+
+    /**
+     * Update canonical URL
+     */
+    updateCanonicalUrl(path) {
+        let canonical = document.querySelector('link[rel="canonical"]');
+
+        if (!canonical) {
+            canonical = document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonical);
+        }
+
+        canonical.setAttribute('href', window.location.origin + path);
+    }
+
+    /**
+     * Get cache key for route
+     */
+    getCacheKey(path, params) {
+        return path + JSON.stringify(params);
+    }
+
+    /**
+     * Record route analytics
+     */
+    recordRouteAnalytics(path, status, loadTime, error = null) {
+        const analytics = {
+            path,
+            status,
+            loadTime,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer
+        };
+
+        if (error) {
+            analytics.error = {
+                message: error.message,
+                stack: error.stack
+            };
+        }
+
+        // Store in analytics map
+        if (!this.routeAnalytics.has(path)) {
+            this.routeAnalytics.set(path, []);
+        }
+
+        this.routeAnalytics.get(path).push(analytics);
+
+        // Send to analytics service if available
+        if (window.gtag) {
+            window.gtag('event', 'page_view', {
+                page_path: path,
+                page_title: document.title,
+                custom_map: {
+                    load_time: loadTime,
+                    status: status
+                }
+            });
+        }
+
+        // Log to console in development
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Route Analytics:', analytics);
+        }
+    }
+
+    /**
+     * Preload related routes
+     */
+    async preloadRelatedRoutes(currentRoute) {
+        // Define related routes based on current route
+        const relatedRoutes = this.getRelatedRoutes(currentRoute);
+
+        for (const routePath of relatedRoutes) {
+            if (!this.preloadedComponents.has(routePath)) {
+                try {
+                    const route = this.findRoute(routePath);
+                    if (route && route.component) {
+                        // Preload component
+                        const component = new route.component();
+                        this.preloadedComponents.set(routePath, component);
+                    }
+                } catch (error) {
+                    console.warn('Failed to preload route:', routePath, error);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get related routes for preloading
+     */
+    getRelatedRoutes(currentRoute) {
+        const relatedRoutes = [];
+
+        // Add common navigation routes
+        if (currentRoute.path !== '/') {
+            relatedRoutes.push('/');
+        }
+
+        if (currentRoute.path !== '/explore') {
+            relatedRoutes.push('/explore');
+        }
+
+        // Add contextual routes based on current route
+        if (currentRoute.path.startsWith('/profile/')) {
+            relatedRoutes.push('/settings');
+        }
+
+        if (currentRoute.path.startsWith('/interviews/')) {
+            relatedRoutes.push('/interviews');
+        }
+
+        return relatedRoutes;
+    }
+
+    /**
+     * Get route analytics
+     */
+    getRouteAnalytics(path = null) {
+        if (path) {
+            return this.routeAnalytics.get(path) || [];
+        }
+
+        return Object.fromEntries(this.routeAnalytics);
+    }
+
+    /**
+     * Clear route cache
+     */
+    clearCache(path = null) {
+        if (path) {
+            // Clear specific route cache
+            for (const [key] of this.routeCache) {
+                if (key.startsWith(path)) {
+                    this.routeCache.delete(key);
+                }
+            }
+        } else {
+            // Clear all cache
+            this.routeCache.clear();
+        }
+    }
+
+    /**
+     * Add navigation callbacks
+     */
+    beforeNavigate(callback) {
+        this.beforeNavigateCallbacks.push(callback);
+    }
+
+    afterNavigate(callback) {
+        this.afterNavigateCallbacks.push(callback);
+    }
+
     // Utility method to build URLs with query parameters
     buildUrl(path, params = {}) {
         const url = new URL(path, window.location.origin);
-        
+
         Object.keys(params).forEach(key => {
             if (params[key] !== null && params[key] !== undefined) {
                 url.searchParams.set(key, params[key]);
             }
         });
-        
+
         return url.pathname + url.search;
     }
 }

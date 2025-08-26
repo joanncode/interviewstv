@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registration System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-form {
+            display: grid;
+            gap: 10px;
+            max-width: 400px;
+        }
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interviews.tv Registration System Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test User Registration</h2>
+        <form class="test-form" id="register-form">
+            <input type="text" id="username" placeholder="Username" value="testuser123" required>
+            <input type="email" id="email" placeholder="Email" value="test@example.com" required>
+            <input type="password" id="password" placeholder="Password" value="TestPassword123!" required>
+            <select id="role" required>
+                <option value="">Select Role</option>
+                <option value="user" selected>User</option>
+                <option value="creator">Creator</option>
+                <option value="business">Business</option>
+            </select>
+            <input type="text" id="bio" placeholder="Bio (optional)" value="Test user bio">
+            <button type="submit">Register User</button>
+        </form>
+        <div id="register-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Test Email Verification</h2>
+        <form class="test-form" id="verify-form">
+            <input type="text" id="verify-token" placeholder="Verification Token" required>
+            <button type="submit">Verify Email</button>
+        </form>
+        <div id="verify-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Resend Verification</h2>
+        <form class="test-form" id="resend-form">
+            <input type="email" id="resend-email" placeholder="Email" value="test@example.com" required>
+            <button type="submit">Resend Verification</button>
+        </form>
+        <div id="resend-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Test Login (Before Verification)</h2>
+        <form class="test-form" id="login-form">
+            <input type="email" id="login-email" placeholder="Email" value="test@example.com" required>
+            <input type="password" id="login-password" placeholder="Password" value="TestPassword123!" required>
+            <button type="submit">Login</button>
+        </form>
+        <div id="login-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(API_BASE + url, options);
+                const result = await response.json();
+                return { success: response.ok, ...result };
+            } catch (error) {
+                return { success: false, message: error.message };
+            }
+        }
+
+        function showResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${result.success ? 'success' : 'error'}`;
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+
+        // Registration test
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value,
+                bio: document.getElementById('bio').value
+            };
+
+            const result = await makeRequest('/auth/register', 'POST', data);
+            showResult('register-result', result);
+
+            // If successful, populate verification token
+            if (result.success && result.data && result.data.verification_token) {
+                document.getElementById('verify-token').value = result.data.verification_token;
+            }
+        });
+
+        // Email verification test
+        document.getElementById('verify-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                token: document.getElementById('verify-token').value
+            };
+
+            const result = await makeRequest('/auth/verify-email', 'POST', data);
+            showResult('verify-result', result);
+        });
+
+        // Resend verification test
+        document.getElementById('resend-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                email: document.getElementById('resend-email').value
+            };
+
+            const result = await makeRequest('/auth/resend-verification', 'POST', data);
+            showResult('resend-result', result);
+
+            // If successful, populate verification token
+            if (result.success && result.data && result.data.verification_token) {
+                document.getElementById('verify-token').value = result.data.verification_token;
+            }
+        });
+
+        // Login test
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+
+            const result = await makeRequest('/auth/login', 'POST', data);
+            showResult('login-result', result);
+        });
+    </script>
+</body>
+</html>

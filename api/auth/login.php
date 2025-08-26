@@ -52,6 +52,11 @@ try {
             if ($user->verifyPassword($password)) {
                 // Check if user is active
                 if ($user->is_active) {
+                    // Check if email is verified
+                    if (!$user->email_verified) {
+                        ApiResponse::error('Please verify your email address before logging in. Check your inbox for a verification link.', 403);
+                    }
+
                     // Update last login
                     $user->updateLastLogin();
 
@@ -69,6 +74,11 @@ try {
 
         if ($user && password_verify($password, $user['password_hash'])) {
             if ($user['is_active']) {
+                // Check if email is verified
+                if (!isset($user['email_verified']) || !$user['email_verified']) {
+                    ApiResponse::error('Please verify your email address before logging in. Check your inbox for a verification link.', 403);
+                }
+
                 // Update last login
                 $jsonDb->updateUser($user['id'], ['last_login' => date('c')]);
 

@@ -36,6 +36,9 @@ try {
         case 'upload':
             handleUploadRoutes($segments, $request_method);
             break;
+        case 'uploads':
+            handleFileServing($segments);
+            break;
         case 'admin':
             handleAdminRoutes($segments, $request_method);
             break;
@@ -71,6 +74,12 @@ function handleAuthRoutes($segments, $method) {
             break;
         case 'verify':
             require_once 'auth/verify.php';
+            break;
+        case 'verify-email':
+            require_once 'auth/verify-email.php';
+            break;
+        case 'resend-verification':
+            require_once 'auth/resend-verification.php';
             break;
         default:
             ApiResponse::notFound('Auth endpoint not found');
@@ -173,6 +182,56 @@ function handleUploadRoutes($segments, $method) {
         default:
             ApiResponse::notFound('Upload endpoint not found');
     }
+}
+
+/**
+ * Handle file serving for uploaded files
+ */
+function handleFileServing($segments) {
+    // Remove 'uploads' from segments to get the file path
+    array_shift($segments);
+    $filePath = implode('/', $segments);
+
+    if (empty($filePath)) {
+        http_response_code(404);
+        echo 'File not found';
+        return;
+    }
+
+    // Construct full file path
+    $fullPath = __DIR__ . '/storage/uploads/' . $filePath;
+
+    // Security check - ensure file is within uploads directory
+    $realPath = realpath($fullPath);
+    $uploadsPath = realpath(__DIR__ . '/storage/uploads');
+
+    if (!$realPath || strpos($realPath, $uploadsPath) !== 0) {
+        http_response_code(403);
+        echo 'Access denied';
+        return;
+    }
+
+    // Check if file exists
+    if (!file_exists($realPath)) {
+        http_response_code(404);
+        echo 'File not found';
+        return;
+    }
+
+    // Get file info
+    $mimeType = mime_content_type($realPath);
+    $fileSize = filesize($realPath);
+    $fileName = basename($realPath);
+
+    // Set appropriate headers
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . $fileSize);
+    header('Content-Disposition: inline; filename="' . $fileName . '"');
+    header('Cache-Control: public, max-age=31536000'); // Cache for 1 year
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+
+    // Output file
+    readfile($realPath);
 }
 
 /**

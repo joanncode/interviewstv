@@ -401,6 +401,12 @@ class InterviewsApp {
                 return this.renderBusinessProfilePage();
             case 'admin':
                 return this.renderAdminPage();
+            case 'admin-interviews':
+                return this.renderAdminInterviewsPage();
+            case 'admin-content':
+                return this.renderAdminContentPage();
+            case 'admin-security':
+                return this.renderAdminSecurityPage();
             case 'search':
                 return this.renderSearchPage();
             default:
@@ -1115,6 +1121,22 @@ class InterviewsApp {
 
     showAdminPanel() {
         this.navigateTo('admin');
+    }
+
+    navigateToAdminSection(section) {
+        switch (section) {
+            case 'interviews':
+                this.navigateTo('admin-interviews');
+                break;
+            case 'content':
+                this.navigateTo('admin-content');
+                break;
+            case 'security':
+                this.navigateTo('admin-security');
+                break;
+            default:
+                this.navigateTo('admin');
+        }
     }
 
     fillDemoLogin(role) {
@@ -3541,7 +3563,7 @@ class InterviewsApp {
         reader.readAsDataURL(file);
     }
 
-    handleHeroBannerUpload(input) {
+    async handleHeroBannerUpload(input) {
         console.log('Hero banner upload started', input.files);
         const file = input.files[0];
         if (!file) {
@@ -3565,40 +3587,36 @@ class InterviewsApp {
             return;
         }
 
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            console.log('File read successfully, data length:', e.target.result.length);
+        try {
+            // Show loading state
+            this.showToast('Uploading hero banner...', 'info');
 
-            const heroBannerPreview = document.getElementById('heroBannerPreview');
-            if (heroBannerPreview) {
+            // Upload to server
+            const response = await Auth.uploadHeroBanner(file);
+
+            if (response.success) {
                 // Update preview
-                heroBannerPreview.style.backgroundImage = `url(${e.target.result})`;
-                heroBannerPreview.style.backgroundSize = 'cover';
-                heroBannerPreview.style.backgroundPosition = 'center';
-                heroBannerPreview.innerHTML = ''; // Remove placeholder content
-
-                // Store hero banner in profile data
-                const profileData = JSON.parse(localStorage.getItem('profile_data') || '{}');
-                profileData.heroBanner = e.target.result;
-                localStorage.setItem('profile_data', JSON.stringify(profileData));
-
-                console.log('Hero banner saved to localStorage:', profileData.heroBanner ? 'YES' : 'NO');
-                console.log('Profile data saved:', profileData);
+                const heroBannerPreview = document.getElementById('heroBannerPreview');
+                if (heroBannerPreview) {
+                    heroBannerPreview.style.backgroundImage = `url(${response.data.url})`;
+                    heroBannerPreview.style.backgroundSize = 'cover';
+                    heroBannerPreview.style.backgroundPosition = 'center';
+                    heroBannerPreview.innerHTML = ''; // Remove placeholder content
+                }
 
                 // Show success message
-                this.showToast('Hero banner updated successfully! Visit your profile to see the changes.', 'success');
+                this.showToast('Hero banner uploaded successfully!', 'success');
             } else {
-                console.error('Hero banner preview element not found');
+                this.showToast(response.message || 'Failed to upload hero banner', 'error');
             }
-        };
 
-        reader.onerror = (e) => {
-            console.error('Error reading file:', e);
-            this.showToast('Error reading file. Please try again.', 'error');
-        };
+        } catch (error) {
+            console.error('Hero banner upload error:', error);
+            this.showToast('Error uploading hero banner. Please try again.', 'error');
+        }
 
-        reader.readAsDataURL(file);
+        // Clear input
+        input.value = '';
     }
 
     debugHeroBanner() {
@@ -3801,6 +3819,42 @@ class InterviewsApp {
                                 <button class="btn btn-danger" onclick="app.showCreateUserModal()">
                                     <i class="fas fa-plus me-2"></i>Add User
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Navigation -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <a href="javascript:void(0)" onclick="app.navigateTo('admin')"
+                                           class="btn btn-outline-primary w-100 ${this.currentPage === 'admin' ? 'active' : ''}">
+                                            <i class="fas fa-users me-2"></i>User Management
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="javascript:void(0)" onclick="app.navigateToAdminSection('interviews')"
+                                           class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-video me-2"></i>Interviews Management
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="javascript:void(0)" onclick="app.navigateToAdminSection('content')"
+                                           class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-file-alt me-2"></i>Content Management
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="javascript:void(0)" onclick="app.navigateToAdminSection('security')"
+                                           class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-shield-alt me-2"></i>Security Dashboard
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -6152,3 +6206,365 @@ class InterviewsApp {
 
 // Application class definition complete
 // Initialization is handled in index.html
+
+// Enhanced routing system for URL management and SEO
+class EnhancedRouter {
+    constructor() {
+        this.analytics = new Map();
+        this.redirects = new Map();
+        this.seoData = new Map();
+        this.setupDefaultRoutes();
+        this.setupEventListeners();
+    }
+
+    setupDefaultRoutes() {
+        // Setup redirects
+        this.redirects.set('user', 'profile');
+        this.redirects.set('admin-dashboard', 'admin');
+        this.redirects.set('content-management', 'admin');
+        this.redirects.set('security-dashboard', 'admin');
+
+        // Setup SEO data
+        this.seoData.set('home', {
+            title: 'Interviews.tv - Join the Ultimate Interview Network',
+            description: 'Create, share, discover, and engage with interviews from artists, musicians, politicians, business owners, and everyday people sharing their stories.',
+            keywords: 'interviews, social network, video, audio, conversations, stories'
+        });
+
+        this.seoData.set('explore', {
+            title: 'Explore Interviews - Interviews.tv',
+            description: 'Discover amazing interviews from diverse voices and perspectives across all categories.',
+            keywords: 'explore interviews, discover content, video interviews, audio interviews'
+        });
+
+        this.seoData.set('business', {
+            title: 'Business Directory - Interviews.tv',
+            description: 'Connect with businesses and entrepreneurs sharing their stories and insights.',
+            keywords: 'business directory, entrepreneurs, business interviews, company profiles'
+        });
+    }
+
+    setupEventListeners() {
+        // Handle browser navigation
+        window.addEventListener('popstate', (event) => {
+            const path = window.location.pathname;
+            const page = this.getPageFromPath(path);
+
+            if (page && window.app) {
+                window.app.currentPage = page;
+                window.app.render();
+                this.updateSEO(page);
+            } else {
+                this.show404();
+            }
+        });
+
+        // Track page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.trackPageView(window.app?.currentPage || 'unknown');
+            }
+        });
+    }
+
+    navigate(page, options = {}) {
+        // Check for redirects
+        const redirectPage = this.redirects.get(page) || page;
+
+        // Track navigation
+        this.trackPageView(redirectPage);
+
+        // Update SEO
+        this.updateSEO(redirectPage);
+
+        // Update URL
+        if (!options.skipHistoryUpdate) {
+            const url = redirectPage === 'home' ? '/' : `/${redirectPage}`;
+            window.history.pushState({page: redirectPage}, '', url);
+        }
+
+        return redirectPage;
+    }
+
+    trackPageView(page) {
+        const viewData = {
+            page,
+            timestamp: Date.now(),
+            referrer: document.referrer,
+            userAgent: navigator.userAgent,
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            }
+        };
+
+        // Store analytics
+        if (!this.analytics.has(page)) {
+            this.analytics.set(page, []);
+        }
+        this.analytics.get(page).push(viewData);
+
+        // Send to external analytics
+        if (window.gtag) {
+            window.gtag('event', 'page_view', {
+                page_title: document.title,
+                page_location: window.location.href
+            });
+        }
+    }
+
+    updateSEO(page) {
+        const seoData = this.seoData.get(page) || this.seoData.get('home');
+
+        // Update title
+        document.title = seoData.title;
+
+        // Update meta tags
+        this.updateMetaTag('description', seoData.description);
+        this.updateMetaTag('keywords', seoData.keywords);
+        this.updateMetaTag('og:title', seoData.title, 'property');
+        this.updateMetaTag('og:description', seoData.description, 'property');
+        this.updateMetaTag('og:url', window.location.href, 'property');
+    }
+
+    updateMetaTag(name, content, attribute = 'name') {
+        let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute(attribute, name);
+            document.head.appendChild(meta);
+        }
+
+        meta.setAttribute('content', content);
+    }
+
+    getPageFromPath(path) {
+        const pathMap = {
+            '/': 'home',
+            '/explore': 'explore',
+            '/gallery': 'gallery',
+            '/business': 'business',
+            '/profile': 'profile',
+            '/settings': 'settings',
+            '/create': 'create',
+            '/admin': 'admin',
+            '/login': 'login',
+            '/register': 'register'
+        };
+
+        return pathMap[path] || null;
+    }
+
+    show404() {
+        if (window.app && window.app.container) {
+            window.app.container.innerHTML = `
+                <div class="error-page-container">
+                    <div class="container py-5">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8 text-center">
+                                <div class="error-hero mb-5">
+                                    <div class="error-code">404</div>
+                                    <h1 class="error-title">Page Not Found</h1>
+                                    <p class="error-description">
+                                        Sorry, we couldn't find the page you're looking for.
+                                    </p>
+                                </div>
+
+                                <div class="error-actions">
+                                    <button class="btn btn-primary me-3" onclick="window.app.navigateTo('home')">
+                                        <i class="fas fa-home me-2"></i>Go Home
+                                    </button>
+                                    <button class="btn btn-outline-primary me-3" onclick="window.app.navigateTo('explore')">
+                                        <i class="fas fa-compass me-2"></i>Explore
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="history.back()">
+                                        <i class="fas fa-arrow-left me-2"></i>Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    getAnalytics(page = null) {
+        if (page) {
+            return this.analytics.get(page) || [];
+        }
+        return Object.fromEntries(this.analytics);
+    }
+
+    renderAdminInterviewsPage() {
+        if (!this.isAdmin()) {
+            return `
+                <div class="container mt-5">
+                    <div class="alert alert-danger">
+                        <h4>Access Denied</h4>
+                        <p>You need administrator privileges to access this page.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container-fluid mt-4 bg-primary-dark" style="background-color: #1a1a1a !important; color: #ffffff !important; min-height: 100vh;">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="text-primary-light mb-1">
+                                    <i class="fas fa-video text-danger me-2"></i>Interviews Management
+                                </h1>
+                                <p class="text-secondary-light mb-0">Manage all interviews, moderation, and content quality</p>
+                            </div>
+                            <div>
+                                <a href="/admin" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Admin
+                                </a>
+                                <button class="btn btn-danger" onclick="app.refreshInterviewsData()">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body text-center py-5">
+                                <i class="fas fa-video fa-3x text-primary mb-3"></i>
+                                <h5 class="text-white">Interviews Management Dashboard</h5>
+                                <p class="text-muted">This feature is being loaded from the dedicated Interviews Management component.</p>
+                                <div class="mt-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Loading interviews management interface...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderAdminContentPage() {
+        if (!this.isAdmin()) {
+            return `
+                <div class="container mt-5">
+                    <div class="alert alert-danger">
+                        <h4>Access Denied</h4>
+                        <p>You need administrator privileges to access this page.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container-fluid mt-4 bg-primary-dark" style="background-color: #1a1a1a !important; color: #ffffff !important; min-height: 100vh;">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="text-primary-light mb-1">
+                                    <i class="fas fa-file-alt text-danger me-2"></i>Content Management
+                                </h1>
+                                <p class="text-secondary-light mb-0">Manage all content, moderation, and analytics</p>
+                            </div>
+                            <div>
+                                <a href="/admin" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Admin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body text-center py-5">
+                                <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="text-white">Content Management Dashboard</h5>
+                                <p class="text-muted">This feature is being loaded from the dedicated Content Management component.</p>
+                                <div class="mt-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Loading content management interface...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderAdminSecurityPage() {
+        if (!this.isAdmin()) {
+            return `
+                <div class="container mt-5">
+                    <div class="alert alert-danger">
+                        <h4>Access Denied</h4>
+                        <p>You need administrator privileges to access this page.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container-fluid mt-4 bg-primary-dark" style="background-color: #1a1a1a !important; color: #ffffff !important; min-height: 100vh;">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="text-primary-light mb-1">
+                                    <i class="fas fa-shield-alt text-danger me-2"></i>Security Dashboard
+                                </h1>
+                                <p class="text-secondary-light mb-0">Monitor security events and system protection</p>
+                            </div>
+                            <div>
+                                <a href="/admin" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Admin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body text-center py-5">
+                                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="text-white">Security Dashboard</h5>
+                                <p class="text-muted">This feature is being loaded from the dedicated Security Dashboard component.</p>
+                                <div class="mt-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Loading security dashboard interface...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    refreshInterviewsData() {
+        // This would trigger a refresh of the interviews management data
+        this.showToast('Refreshing interviews data...', 'info');
+        // In a real implementation, this would call the interviews management component
+    }
+}
+
+// Initialize enhanced router
+window.enhancedRouter = new EnhancedRouter();

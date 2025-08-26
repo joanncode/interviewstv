@@ -110,6 +110,26 @@ class User {
     }
 
     /**
+     * Find user by ID (static version that returns user data)
+     */
+    public static function findByIdStatic($id) {
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $query = "SELECT * FROM users WHERE id = :id AND is_active = 1 LIMIT 1";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(":id", $id);
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return false;
+    }
+
+    /**
      * Update user profile
      */
     public function update() {
@@ -148,11 +168,51 @@ class User {
      */
     public function updateLastLogin() {
         $query = "UPDATE " . $this->table_name . " SET last_login=CURRENT_TIMESTAMP WHERE id=:id";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id", $this->id);
-        
+
         return $stmt->execute();
+    }
+
+    /**
+     * Update user avatar URL
+     */
+    public static function updateAvatar($userId, $avatarUrl) {
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $query = "UPDATE users SET avatar_url=:avatar_url, updated_at=CURRENT_TIMESTAMP WHERE id=:id";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(":avatar_url", $avatarUrl);
+        $stmt->bindParam(":id", $userId);
+
+        if ($stmt->execute()) {
+            return self::findByIdStatic($userId);
+        }
+
+        return false;
+    }
+
+    /**
+     * Update user hero banner URL
+     */
+    public static function updateHeroBanner($userId, $heroBannerUrl) {
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $query = "UPDATE users SET hero_banner_url=:hero_banner_url, updated_at=CURRENT_TIMESTAMP WHERE id=:id";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(":hero_banner_url", $heroBannerUrl);
+        $stmt->bindParam(":id", $userId);
+
+        if ($stmt->execute()) {
+            return self::findByIdStatic($userId);
+        }
+
+        return false;
     }
 
     /**
@@ -478,6 +538,41 @@ class Business {
         $this->is_active = $data['is_active'];
         $this->created_at = $data['created_at'];
         $this->updated_at = $data['updated_at'];
+    }
+
+    /**
+     * Validate JWT token and return user data
+     */
+    public static function validateToken($token) {
+        // Use the JWTHelper from cors.php
+        $decoded = JWTHelper::validateToken($token);
+
+        if (!$decoded) {
+            return false;
+        }
+
+        // Get fresh user data from database
+        if (isset($decoded['user_id'])) {
+            return self::findByIdStatic($decoded['user_id']);
+        }
+
+        return false;
+    }
+
+    /**
+     * Sanitize user data by removing sensitive fields
+     */
+    public static function sanitize($user) {
+        if (!$user) return null;
+
+        // Remove sensitive fields
+        unset($user['password']);
+        unset($user['password_hash']);
+        unset($user['email_verification_token']);
+        unset($user['password_reset_token']);
+        unset($user['password_reset_expires']);
+
+        return $user;
     }
 }
 ?>

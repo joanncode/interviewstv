@@ -42,7 +42,7 @@ class AuthController
             
             // Create user
             $userData = [
-                'username' => $data['username'],
+                'name' => $data['username'] ?? $data['name'] ?? 'User',
                 'email' => $data['email'],
                 'password' => $this->authService->hashPassword($data['password']),
                 'role' => $data['role'] ?? 'user',
@@ -54,13 +54,20 @@ class AuthController
             
             // Generate email verification token
             $verificationToken = $this->authService->generateEmailVerificationToken($user['id']);
-            
-            // TODO: Send verification email
-            
+
+            // Send verification email
+            try {
+                $emailService = new \App\Services\EmailNotificationService();
+                $emailService->sendVerificationEmail($user['id'], $verificationToken);
+            } catch (\Exception $e) {
+                // Log email error but don't fail registration
+                error_log('Failed to send verification email: ' . $e->getMessage());
+            }
+
             return Response::success([
                 'user' => User::sanitize($user),
                 'verification_token' => $verificationToken
-            ], 'User registered successfully. Please verify your email.');
+            ], 'User registered successfully. Please check your email to verify your account.');
             
         } catch (ValidationException $e) {
             return Response::validationError($e->getErrors());
@@ -152,7 +159,7 @@ class AuthController
                 return Response::error('Invalid or expired verification token', 400);
             }
             
-            User::update($userId, ['verified' => true]);
+            User::update($userId, ['email_verified' => true]);
             
             return Response::success(null, 'Email verified successfully');
             
@@ -180,17 +187,25 @@ class AuthController
                 return Response::error('User not found', 404);
             }
             
-            if ($user['verified']) {
+            if ($user['email_verified']) {
                 return Response::error('Email already verified', 400);
             }
             
             $verificationToken = $this->authService->generateEmailVerificationToken($user['id']);
-            
-            // TODO: Send verification email
-            
+
+            // Send verification email
+            try {
+                $emailService = new \App\Services\EmailNotificationService();
+                $emailService->sendVerificationEmail($user['id'], $verificationToken);
+            } catch (\Exception $e) {
+                // Log email error but don't fail the request
+                error_log('Failed to send verification email: ' . $e->getMessage());
+                return Response::error('Failed to send verification email. Please try again later.', 500);
+            }
+
             return Response::success([
                 'verification_token' => $verificationToken
-            ], 'Verification email sent');
+            ], 'Verification email sent successfully');
             
         } catch (\Exception $e) {
             return Response::error('Failed to resend verification: ' . $e->getMessage());

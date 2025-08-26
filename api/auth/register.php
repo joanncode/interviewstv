@@ -104,29 +104,31 @@ try {
             $perm_stmt->execute();
         }
 
-        // Generate JWT token for immediate login
-        $token_payload = [
+        // Generate email verification token
+        $verification_payload = [
+            'type' => 'email_verification',
             'user_id' => $user->id,
-            'email' => $user->email,
-            'name' => $user->name,
-            'role' => $user->role,
             'iat' => time(),
             'exp' => time() + (24 * 60 * 60) // 24 hours
         ];
 
-        $jwt_token = JWTHelper::encode($token_payload);
+        $verification_token = JWTHelper::encode($verification_payload);
+
+        // TODO: Send verification email
+        // For now, we'll return the token for testing
+        // In production, this should send an email and not return the token
 
         // Prepare response data
         $response_data = [
-            'token' => $jwt_token,
-            'user' => $user->getPrivateProfile(),
-            'expires_in' => 24 * 60 * 60 // 24 hours in seconds
+            'user' => $user->getPublicProfile(),
+            'verification_token' => $verification_token, // Remove this in production
+            'message' => 'Please verify your email address to complete registration'
         ];
 
         // Log successful registration
         error_log("New user registered: " . $user->email . " (ID: " . $user->id . ", Role: " . $user->role . ")");
 
-        ApiResponse::success($response_data, 'Registration successful! Welcome to Interviews.tv', 201);
+        ApiResponse::success($response_data, 'Registration successful! Please check your email to verify your account.', 201);
 
     } else {
         ApiResponse::serverError('Registration failed. Please try again.');

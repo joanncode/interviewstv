@@ -261,6 +261,47 @@ class AuthService {
         }
     }
 
+    // Upload hero banner
+    async uploadHeroBanner(file) {
+        try {
+            const formData = new FormData();
+            formData.append('hero_banner', file);
+
+            const response = await API.upload('/api/upload/hero-banner', formData);
+
+            if (response.success) {
+                this.user.hero_banner_url = response.data.url;
+
+                // Dispatch auth state change event
+                window.dispatchEvent(new CustomEvent('authStateChange', {
+                    detail: { user: this.user }
+                }));
+            }
+
+            return response;
+
+        } catch (error) {
+            console.error('Hero banner upload error:', error);
+            throw error;
+        }
+    }
+
+    // Upload business logo
+    async uploadBusinessLogo(file) {
+        try {
+            const formData = new FormData();
+            formData.append('business_logo', file);
+
+            const response = await API.upload('/api/upload/business-logo', formData);
+
+            return response;
+
+        } catch (error) {
+            console.error('Business logo upload error:', error);
+            throw error;
+        }
+    }
+
     // Change password
     async changePassword(passwordData) {
         try {
