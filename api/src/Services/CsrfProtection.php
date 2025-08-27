@@ -23,49 +23,72 @@ class CsrfProtection
     }
     
     /**
-     * Generate a new CSRF token
+     * Generate a new CSRF token with enhanced security
      */
-    public function generateToken($action = 'default')
+    public function generateToken($action = 'default', $bindToIP = true)
     {
         $token = bin2hex(random_bytes(32));
         $tokenData = [
             'token' => $token,
             'action' => $action,
             'created_at' => time(),
-            'expires_at' => time() + $this->tokenLifetime
+            'expires_at' => time() + $this->tokenLifetime,
+            'user_agent_hash' => hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? ''),
+            'session_id' => session_id()
         ];
-        
+
+        // Optionally bind token to IP address
+        if ($bindToIP) {
+            $tokenData['ip'] = $this->getClientIP();
+        }
+
         $this->storeToken($tokenData);
         $this->cleanupExpiredTokens();
-        
+
         return $token;
     }
     
     /**
-     * Validate CSRF token
+     * Validate CSRF token with enhanced security
      */
     public function validateToken($token, $action = 'default')
     {
         if (empty($token)) {
+            $this->logCsrfEvent('empty_token', $action);
             return false;
         }
-        
+
+        // Check token format
+        if (!$this->isValidTokenFormat($token)) {
+            $this->logCsrfEvent('invalid_token_format', $action);
+            return false;
+        }
+
         $tokens = $this->getStoredTokens();
-        
+
         foreach ($tokens as $index => $tokenData) {
-            if ($tokenData['token'] === $token && $tokenData['action'] === $action) {
+            if (hash_equals($tokenData['token'], $token) && $tokenData['action'] === $action) {
                 // Check if token is expired
                 if (time() > $tokenData['expires_at']) {
                     $this->removeToken($index);
+                    $this->logCsrfEvent('expired_token', $action);
                     return false;
                 }
-                
+
+                // Check IP address if stored
+                if (isset($tokenData['ip']) && $tokenData['ip'] !== $this->getClientIP()) {
+                    $this->logCsrfEvent('ip_mismatch', $action);
+                    return false;
+                }
+
                 // Token is valid, remove it (one-time use)
                 $this->removeToken($index);
+                $this->logCsrfEvent('token_validated', $action);
                 return true;
             }
         }
-        
+
+        $this->logCsrfEvent('token_not_found', $action);
         return false;
     }
     
@@ -340,15 +363,90 @@ class CsrfProtection
         if (empty($token)) {
             return false;
         }
-        
+
         $tokens = $this->getStoredTokens();
-        
+
         foreach ($tokens as $tokenData) {
             if ($tokenData['token'] === $token && $tokenData['action'] === $action) {
                 return time() <= $tokenData['expires_at'];
             }
         }
-        
+
         return false;
+    }
+
+    /**
+     * Validate token format
+     */
+    private function isValidTokenFormat($token)
+    {
+        return is_string($token) && strlen($token) === 64 && ctype_xdigit($token);
+    }
+
+    /**
+     * Log CSRF events for security monitoring
+     */
+    private function logCsrfEvent($event, $action)
+    {
+        $logData = [
+            'event' => $event,
+            'action' => $action,
+            'ip' => $this->getClientIp(),
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+            'session_id' => session_id(),
+            'timestamp' => time()
+        ];
+
+        // Log to file
+        error_log('CSRF Event: ' . json_encode($logData));
+
+        // If we have a database connection, log there too
+        if (class_exists('App\Services\SecurityValidationService')) {
+            try {
+                $securityService = new \App\Services\SecurityValidationService();
+                $securityService->logSecurityEvent('csrf_' . $event, $logData);
+            } catch (\Exception $e) {
+                // Ignore database logging errors
+            }
+        }
+    }
+
+    /**
+     * Generate double-submit cookie token
+     */
+    public function generateDoubleSubmitToken($action = 'default')
+    {
+        $token = $this->generateToken($action);
+
+        // Set secure cookie
+        $cookieName = 'csrf_token_' . hash('sha256', $action);
+        $cookieOptions = [
+            'expires' => time() + $this->tokenLifetime,
+            'path' => '/',
+            'domain' => '',
+            'secure' => isset($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ];
+
+        setcookie($cookieName, $token, $cookieOptions);
+
+        return $token;
+    }
+
+    /**
+     * Validate double-submit cookie token
+     */
+    public function validateDoubleSubmitToken($token, $action = 'default')
+    {
+        $cookieName = 'csrf_token_' . hash('sha256', $action);
+        $cookieToken = $_COOKIE[$cookieName] ?? '';
+
+        if (empty($cookieToken) || !hash_equals($cookieToken, $token)) {
+            $this->logCsrfEvent('double_submit_mismatch', $action);
+            return false;
+        }
+
+        return $this->validateToken($token, $action);
     }
 }

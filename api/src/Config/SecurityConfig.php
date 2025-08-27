@@ -185,6 +185,63 @@ class SecurityConfig
                 'key_rotation_days' => 30,
                 'hash_algorithm' => 'sha256',
                 'salt_rounds' => 12
+            ],
+
+            // Advanced security features
+            'advanced_features' => [
+                'enable_honeypots' => true,
+                'enable_canary_tokens' => true,
+                'enable_behavioral_analysis' => true,
+                'enable_geolocation_blocking' => false,
+                'enable_device_fingerprinting' => true,
+                'enable_session_hijacking_detection' => true
+            ],
+
+            // File upload security
+            'file_upload' => [
+                'max_file_size' => 50 * 1024 * 1024, // 50MB
+                'allowed_mime_types' => [
+                    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                    'video/mp4', 'video/webm', 'video/quicktime',
+                    'audio/mpeg', 'audio/wav', 'audio/mp4',
+                    'application/pdf', 'text/plain',
+                    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ],
+                'scan_for_malware' => true,
+                'quarantine_suspicious' => true,
+                'generate_thumbnails' => true
+            ],
+
+            // API security
+            'api_security' => [
+                'require_api_key' => false,
+                'enable_request_signing' => false,
+                'max_request_size' => 10 * 1024 * 1024, // 10MB
+                'enable_response_compression' => true,
+                'enable_request_logging' => true
+            ],
+
+            // Session security
+            'session_security' => [
+                'regenerate_id_interval' => 300, // 5 minutes
+                'max_concurrent_sessions' => 3,
+                'track_user_agent' => true,
+                'track_ip_changes' => true,
+                'session_timeout' => 3600, // 1 hour
+                'remember_me_timeout' => 2592000 // 30 days
+            ],
+
+            // Monitoring and alerting
+            'monitoring' => [
+                'enable_real_time_alerts' => true,
+                'alert_thresholds' => [
+                    'failed_logins_per_minute' => 10,
+                    'rate_limit_violations_per_minute' => 50,
+                    'suspicious_file_uploads_per_hour' => 5,
+                    'security_events_per_minute' => 20
+                ],
+                'notification_channels' => ['email', 'slack', 'webhook'],
+                'log_retention_days' => 90
             ]
         ];
     }

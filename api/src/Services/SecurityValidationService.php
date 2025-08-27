@@ -37,6 +37,9 @@ class SecurityValidationService
         // Remove null bytes
         $input = str_replace("\0", '', $input);
 
+        // Check for common attack patterns first
+        $this->detectAttackPatterns($input, $type);
+
         switch ($type) {
             case 'email':
                 return $this->sanitizeEmail($input);
@@ -50,6 +53,26 @@ class SecurityValidationService
                 return $this->sanitizeHtml($input);
             case 'json':
                 return $this->sanitizeJson($input);
+            case 'password':
+                return $this->sanitizePassword($input);
+            case 'username':
+                return $this->sanitizeUsername($input);
+            case 'phone':
+                return $this->sanitizePhone($input);
+            case 'alphanumeric':
+                return $this->sanitizeAlphanumeric($input);
+            case 'slug':
+                return $this->sanitizeSlug($input);
+            case 'textarea':
+                return $this->sanitizeTextarea($input);
+            case 'search':
+                return $this->sanitizeSearchQuery($input);
+            case 'integer':
+                return $this->sanitizeInteger($input);
+            case 'float':
+                return $this->sanitizeFloat($input);
+            case 'boolean':
+                return $this->sanitizeBoolean($input);
             default:
                 return $this->sanitizeGeneral($input);
         }
@@ -193,11 +216,236 @@ class SecurityValidationService
     {
         // Remove control characters except newlines and tabs
         $input = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $input);
-        
+
         // Remove potential XSS
         $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        
+
         return trim($input);
+    }
+
+    /**
+     * Detect common attack patterns
+     */
+    private function detectAttackPatterns($input, $type)
+    {
+        // Skip detection for certain safe types
+        if (in_array($type, ['integer', 'float', 'boolean'])) {
+            return;
+        }
+
+        $attackPatterns = [
+            'xss' => [
+                '/<script[^>]*>.*?<\/script>/is',
+                '/javascript\s*:/i',
+                '/on(load|error|click|mouseover|focus|blur|submit|change)\s*=/i',
+                '/<iframe[^>]*>.*?<\/iframe>/is',
+                '/<object[^>]*>.*?<\/object>/is',
+                '/<embed[^>]*>/i'
+            ],
+            'sql_injection' => [
+                '/(\s|^)(union|select|insert|update|delete|drop|create|alter|exec|execute)\s/i',
+                '/(\s|^)(or|and)\s+\d+\s*=\s*\d+/i',
+                '/(\s|^)(or|and)\s+[\'"].*[\'"](\s*=\s*[\'"].*[\'"])?/i',
+                '/[\'"];?\s*(union|select|insert|update|delete|drop)/i'
+            ],
+            'command_injection' => [
+                '/(\||&|;|`|\$\(|\${)/i',
+                '/\b(cmd|powershell|bash|sh|nc|netcat|wget|curl)\b/i',
+                '/(\.\.\/|\.\.\\\\)/i'
+            ],
+            'php_injection' => [
+                '/<\?php/i',
+                '/\b(eval|exec|system|shell_exec|passthru|file_get_contents|fopen|fwrite)\s*\(/i',
+                '/base64_decode\s*\(/i'
+            ]
+        ];
+
+        foreach ($attackPatterns as $attackType => $patterns) {
+            foreach ($patterns as $pattern) {
+                if (preg_match($pattern, $input)) {
+                    $this->logSecurityEvent('attack_pattern_detected', [
+                        'type' => $attackType,
+                        'pattern' => $pattern,
+                        'input_type' => $type,
+                        'input_sample' => substr($input, 0, 100)
+                    ]);
+                    throw new \InvalidArgumentException("Input contains potential {$attackType} attack pattern");
+                }
+            }
+        }
+    }
+
+    /**
+     * Sanitize password input
+     */
+    private function sanitizePassword($password)
+    {
+        // Don't modify passwords, just validate length and characters
+        if (strlen($password) < 8) {
+            throw new \InvalidArgumentException('Password must be at least 8 characters long');
+        }
+
+        if (strlen($password) > 128) {
+            throw new \InvalidArgumentException('Password is too long');
+        }
+
+        // Check for null bytes and control characters
+        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $password)) {
+            throw new \InvalidArgumentException('Password contains invalid characters');
+        }
+
+        return $password;
+    }
+
+    /**
+     * Sanitize username input
+     */
+    private function sanitizeUsername($username)
+    {
+        $username = trim($username);
+
+        // Only allow alphanumeric, underscore, hyphen, and dot
+        if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+            throw new \InvalidArgumentException('Username contains invalid characters');
+        }
+
+        if (strlen($username) < 3 || strlen($username) > 30) {
+            throw new \InvalidArgumentException('Username must be between 3 and 30 characters');
+        }
+
+        // Prevent reserved usernames
+        $reserved = ['admin', 'administrator', 'root', 'api', 'www', 'mail', 'ftp', 'test'];
+        if (in_array(strtolower($username), $reserved)) {
+            throw new \InvalidArgumentException('Username is reserved');
+        }
+
+        return $username;
+    }
+
+    /**
+     * Sanitize phone number
+     */
+    private function sanitizePhone($phone)
+    {
+        // Remove all non-numeric characters except + and spaces
+        $phone = preg_replace('/[^0-9+\s-()]/', '', $phone);
+        $phone = trim($phone);
+
+        // Basic phone number validation
+        if (!preg_match('/^[\+]?[0-9\s\-\(\)]{7,20}$/', $phone)) {
+            throw new \InvalidArgumentException('Invalid phone number format');
+        }
+
+        return $phone;
+    }
+
+    /**
+     * Sanitize alphanumeric input
+     */
+    private function sanitizeAlphanumeric($input)
+    {
+        $input = preg_replace('/[^a-zA-Z0-9]/', '', $input);
+        return trim($input);
+    }
+
+    /**
+     * Sanitize slug input
+     */
+    private function sanitizeSlug($slug)
+    {
+        $slug = strtolower(trim($slug));
+        $slug = preg_replace('/[^a-z0-9-]/', '-', $slug);
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+
+        if (strlen($slug) > 100) {
+            $slug = substr($slug, 0, 100);
+            $slug = rtrim($slug, '-');
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Sanitize textarea input
+     */
+    private function sanitizeTextarea($input)
+    {
+        // Allow newlines but remove other control characters
+        $input = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $input);
+
+        // Basic XSS protection while preserving formatting
+        $input = htmlspecialchars($input, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return trim($input);
+    }
+
+    /**
+     * Sanitize search query
+     */
+    private function sanitizeSearchQuery($query)
+    {
+        $query = trim($query);
+
+        // Remove potential injection attempts
+        $query = preg_replace('/[<>"\']/', '', $query);
+
+        // Limit length
+        if (strlen($query) > 200) {
+            $query = substr($query, 0, 200);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Sanitize integer input
+     */
+    private function sanitizeInteger($input)
+    {
+        if (!is_numeric($input)) {
+            throw new \InvalidArgumentException('Input must be a valid integer');
+        }
+
+        return (int) $input;
+    }
+
+    /**
+     * Sanitize float input
+     */
+    private function sanitizeFloat($input)
+    {
+        if (!is_numeric($input)) {
+            throw new \InvalidArgumentException('Input must be a valid number');
+        }
+
+        return (float) $input;
+    }
+
+    /**
+     * Sanitize boolean input
+     */
+    private function sanitizeBoolean($input)
+    {
+        if (is_bool($input)) {
+            return $input;
+        }
+
+        if (is_string($input)) {
+            $input = strtolower(trim($input));
+            if (in_array($input, ['true', '1', 'yes', 'on'])) {
+                return true;
+            }
+            if (in_array($input, ['false', '0', 'no', 'off', ''])) {
+                return false;
+            }
+        }
+
+        if (is_numeric($input)) {
+            return (bool) $input;
+        }
+
+        throw new \InvalidArgumentException('Input must be a valid boolean value');
     }
 
     /**

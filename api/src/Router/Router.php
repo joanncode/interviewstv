@@ -19,10 +19,15 @@ class Router
     private array $namedRoutes = [];
     private array $routeCache = [];
     private bool $cacheEnabled = true;
+    private $parameterValidator;
+    private $errorHandler404;
+    private $securityValidator;
 
     public function __construct()
     {
         $this->loadConfiguredRoutes();
+        $this->parameterValidator = new \App\Services\UrlParameterValidator();
+        $this->securityValidator = new \App\Services\SecurityValidationService();
     }
 
     /**
@@ -129,43 +134,50 @@ class Router
     }
 
     /**
-     * Resolve route from request
+     * Resolve route from request with enhanced security
      */
     public function resolve(string $method, string $path): ?RouteMatch
     {
         $cacheKey = $method . ':' . $path;
-        
+
         // Check cache first
         if ($this->cacheEnabled && isset($this->routeCache[$cacheKey])) {
             return $this->routeCache[$cacheKey];
         }
-        
-        // Clean path
+
+        // Clean and validate path
         $path = $this->cleanPath($path);
-        
+        $this->validatePath($path);
+
         // Try to match routes
         foreach ($this->routes as $route) {
             if ($route->getMethod() !== $method) {
                 continue;
             }
-            
+
             $match = $this->matchRoute($route, $path);
             if ($match) {
+                // Validate route parameters
+                $this->validateRouteParameters($match);
+
                 // Cache the result
                 if ($this->cacheEnabled) {
                     $this->routeCache[$cacheKey] = $match;
                 }
-                
+
                 return $match;
             }
         }
-        
+
         // Try URL aliases
         $aliasedPath = $this->resolveAlias($path);
         if ($aliasedPath !== $path) {
             return $this->resolve($method, $aliasedPath);
         }
-        
+
+        // Handle 404 with intelligent suggestions
+        $this->handle404($path);
+
         return null;
     }
 
@@ -461,5 +473,179 @@ class Router
         }
         
         return 'GET';
+    }
+
+    /**
+     * Validate path for security issues
+     */
+    private function validatePath($path)
+    {
+        // Check for path traversal attempts
+        if (strpos($path, '..') !== false) {
+            throw new \InvalidArgumentException('Path traversal attempt detected');
+        }
+
+        // Check for null bytes
+        if (strpos($path, "\0") !== false) {
+            throw new \InvalidArgumentException('Null byte in path');
+        }
+
+        // Check path length
+        if (strlen($path) > 2048) {
+            throw new \InvalidArgumentException('Path too long');
+        }
+
+        // Check for suspicious patterns
+        $suspiciousPatterns = [
+            '/\.(php|asp|jsp|cgi)$/i',
+            '/\.(htaccess|htpasswd)$/i',
+            '/\/\.(env|git|svn)/i',
+            '/\/(admin|config|backup|test)\/.*\.(sql|bak|old)$/i'
+        ];
+
+        foreach ($suspiciousPatterns as $pattern) {
+            if (preg_match($pattern, $path)) {
+                $this->securityValidator->logSecurityEvent('suspicious_path_access', [
+                    'path' => $path,
+                    'pattern' => $pattern
+                ]);
+                throw new \InvalidArgumentException('Suspicious path detected');
+            }
+        }
+    }
+
+    /**
+     * Validate route parameters
+     */
+    private function validateRouteParameters(RouteMatch $match)
+    {
+        $parameters = $match->getParameters();
+        $route = $match->getRoute();
+
+        try {
+            $validatedParams = $this->parameterValidator->validateParameters($parameters, $route->getName());
+            $match->setParameters($validatedParams);
+        } catch (\InvalidArgumentException $e) {
+            $this->securityValidator->logSecurityEvent('invalid_route_parameters', [
+                'route' => $route->getName(),
+                'parameters' => $parameters,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Handle 404 errors with intelligent suggestions
+     */
+    private function handle404($path)
+    {
+        if (!$this->errorHandler404) {
+            $this->errorHandler404 = new \App\Services\Enhanced404Handler(
+                $this->getDatabaseConnection(),
+                $this->getUrlGenerator(),
+                $this->getSeoService()
+            );
+        }
+
+        $this->errorHandler404->handle($path);
+    }
+
+    /**
+     * Get database connection (placeholder - implement based on your DI container)
+     */
+    private function getDatabaseConnection()
+    {
+        // This should be injected via dependency injection
+        // For now, return null and let the 404 handler handle it gracefully
+        return null;
+    }
+
+    /**
+     * Get URL generator (placeholder - implement based on your setup)
+     */
+    private function getUrlGenerator()
+    {
+        // This should be injected via dependency injection
+        return new \App\Services\UrlGeneratorService();
+    }
+
+    /**
+     * Get SEO service (placeholder - implement based on your setup)
+     */
+    private function getSeoService()
+    {
+        // This should be injected via dependency injection
+        return new \App\Services\SeoService($this->getUrlGenerator());
+    }
+
+    /**
+     * Add security middleware to all routes
+     */
+    public function addSecurityMiddleware()
+    {
+        $this->middleware('security', function($request, $response, $next) {
+            // Apply security headers
+            header('X-Content-Type-Options: nosniff');
+            header('X-Frame-Options: DENY');
+            header('X-XSS-Protection: 1; mode=block');
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+
+            if (isset($_SERVER['HTTPS'])) {
+                header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+            }
+
+            return $next($request, $response);
+        });
+    }
+
+    /**
+     * Add rate limiting middleware
+     */
+    public function addRateLimitingMiddleware($rateLimiter = null)
+    {
+        if (!$rateLimiter) {
+            $rateLimiter = new \App\Services\AdvancedRateLimiter($this->getDatabaseConnection());
+        }
+
+        $this->middleware('rate_limit', function($request, $response, $next) use ($rateLimiter) {
+            $identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            $action = 'api_request';
+
+            if (!$rateLimiter->checkLimit($identifier, $action)) {
+                http_response_code(429);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'error' => 'Rate limit exceeded',
+                    'code' => 'RATE_LIMITED'
+                ]);
+                exit;
+            }
+
+            return $next($request, $response);
+        });
+    }
+
+    /**
+     * Generate canonical URL for current route
+     */
+    public function getCanonicalUrl($routeName, $parameters = [])
+    {
+        if (!isset($this->namedRoutes[$routeName])) {
+            return null;
+        }
+
+        $route = $this->namedRoutes[$routeName];
+        $path = $route->getPath();
+
+        // Replace parameters in path
+        foreach ($parameters as $key => $value) {
+            $path = str_replace('{' . $key . '}', $value, $path);
+        }
+
+        $baseUrl = $_SERVER['REQUEST_SCHEME'] ?? 'https';
+        $baseUrl .= '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+
+        return $baseUrl . $path;
     }
 }
