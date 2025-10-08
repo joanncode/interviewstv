@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: interviews-tv
+  labels:
+    name: interviews-tv
+    environment: production
+    app: interviews-tv
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: interviews-tv-monitoring
+  labels:
+    name: interviews-tv-monitoring
+    environment: production
+    app: monitoring

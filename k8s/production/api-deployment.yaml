@@ -1,0 +1,232 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: interviews-tv-api
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-api
+    component: backend
+    environment: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: interviews-tv-api
+  template:
+    metadata:
+      labels:
+        app: interviews-tv-api
+        component: backend
+        environment: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/joanncode/interviewstv:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9000
+          name: metrics
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: APP_DEBUG
+          value: "false"
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: app-key
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: db-host
+        - name: DB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: db-database
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: db-username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: db-password
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: redis-host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: redis-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: jwt-secret
+        - name: MAIL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: mail-host
+        - name: MAIL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: mail-username
+        - name: MAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: mail-password
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: aws-secret-access-key
+        - name: AWS_DEFAULT_REGION
+          value: "us-east-1"
+        - name: AWS_BUCKET
+          value: "interviews-tv-production"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+        - name: config
+          mountPath: /app/config/production
+          readOnly: true
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: interviews-tv-storage
+      - name: config
+        configMap:
+          name: interviews-tv-config
+      imagePullSecrets:
+      - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: interviews-tv-api-service
+  namespace: interviews-tv
+  labels:
+    app: interviews-tv-api
+    component: backend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: interviews-tv-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: interviews-tv-storage
+  namespace: interviews-tv
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: interviews-tv-api-hpa
+  namespace: interviews-tv
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: interviews-tv-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
