@@ -71,7 +71,7 @@ class InterviewsApp {
         };
 
         // API Configuration
-        this.apiBaseUrl = 'http://localhost:8001';
+        this.apiBaseUrl = 'http://localhost:8080';
         this.authToken = localStorage.getItem('auth_token');
     }
 
@@ -101,13 +101,31 @@ class InterviewsApp {
         this.render();
         this.setupEventListeners();
 
+        // Setup hash change listener for client-side routing
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                this.navigateTo(hash);
+            }
+        });
+
         console.log('Interviews.tv application initialized successfully!');
     }
 
     setInitialPage() {
         const path = window.location.pathname;
-        if (path === '/' || path === '') {
-            this.currentPage = 'home';
+        const hash = window.location.hash.substring(1); // Remove # from hash
+
+        // Check if there's a hash-based route
+        if (hash) {
+            this.currentPage = hash;
+        } else if (path === '/' || path === '') {
+            // If user is not authenticated, redirect to login
+            if (!this.isAuthenticated) {
+                this.currentPage = 'login';
+            } else {
+                this.currentPage = 'home';
+            }
         } else {
             this.currentPage = path.substring(1); // Remove leading slash
         }
@@ -240,6 +258,11 @@ class InterviewsApp {
                             <li class="nav-item">
                                 <a class="nav-link ${this.currentPage === 'gallery' ? 'active' : ''}" href="javascript:void(0)" onclick="app.navigateTo('gallery'); return false;">
                                     <i class="fas fa-images me-1"></i>Gallery
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link ${this.currentPage === 'live' ? 'active' : ''}" href="javascript:void(0)" onclick="app.navigateTo('live'); return false;">
+                                    <i class="fas fa-broadcast-tower me-1"></i>Live Stream
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -407,8 +430,14 @@ class InterviewsApp {
                 return this.renderAdminContentPage();
             case 'admin-security':
                 return this.renderAdminSecurityPage();
+            case 'admin-streams':
+                return this.renderAdminStreamsPage();
             case 'search':
                 return this.renderSearchPage();
+            case 'watch':
+                return this.renderWatchPage();
+            case 'live':
+                return this.renderLiveStreamPage();
             default:
                 return this.renderHomePage();
         }
@@ -512,7 +541,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">2 days ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=1')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -533,7 +562,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">5 days ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=2')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -554,7 +583,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">1 week ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=3')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -575,7 +604,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">3 days ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=4')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -596,7 +625,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">4 days ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=5')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -617,7 +646,7 @@ class InterviewsApp {
                                     </small>
                                     <small class="text-light-grey">6 days ago</small>
                                 </div>
-                                <button class="btn btn-danger w-100">
+                                <button class="btn btn-danger w-100" onclick="app.navigateTo('watch?id=6')">
                                     <i class="fas fa-play me-1"></i>Watch Interview
                                 </button>
                             </div>
@@ -1128,8 +1157,14 @@ class InterviewsApp {
             case 'interviews':
                 this.navigateTo('admin-interviews');
                 break;
+            case 'streams':
+                this.navigateTo('admin-streams');
+                break;
             case 'content':
                 this.navigateTo('admin-content');
+                break;
+            case 'analytics':
+                this.navigateTo('admin-analytics');
                 break;
             case 'security':
                 this.navigateTo('admin-security');
@@ -2296,7 +2331,17 @@ class InterviewsApp {
 
     navigateTo(page) {
         console.log('Navigating to:', page);
-        this.currentPage = page;
+
+        // Handle page with parameters (e.g., "watch?id=1")
+        const [pageName, params] = page.split('?');
+        this.currentPage = pageName;
+
+        // Update URL hash without triggering hashchange event
+        const newHash = '#' + page;
+        if (window.location.hash !== newHash) {
+            window.history.replaceState(null, null, newHash);
+        }
+
         this.render();
 
         // Load page-specific data
@@ -2475,7 +2520,7 @@ class InterviewsApp {
             }
         } catch (error) {
             console.error('Registration error:', error);
-            alert('Unable to connect to server. Please ensure the API server is running on port 8001.');
+            alert('Unable to connect to server. Please ensure the API server is running on port 8080.');
         } finally {
             // Reset button state
             submitBtn.textContent = originalText;
@@ -3830,28 +3875,40 @@ class InterviewsApp {
                         <div class="card border-0" style="background-color: #2a2a2a;">
                             <div class="card-body">
                                 <div class="row g-3">
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <a href="javascript:void(0)" onclick="app.navigateTo('admin')"
                                            class="btn btn-outline-primary w-100 ${this.currentPage === 'admin' ? 'active' : ''}">
-                                            <i class="fas fa-users me-2"></i>User Management
+                                            <i class="fas fa-users me-2"></i>Users
                                         </a>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <a href="javascript:void(0)" onclick="app.navigateToAdminSection('interviews')"
                                            class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-video me-2"></i>Interviews Management
+                                            <i class="fas fa-video me-2"></i>Interviews
                                         </a>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
+                                        <a href="javascript:void(0)" onclick="app.navigateToAdminSection('streams')"
+                                           class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-broadcast-tower me-2"></i>Live Streams
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
                                         <a href="javascript:void(0)" onclick="app.navigateToAdminSection('content')"
                                            class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-file-alt me-2"></i>Content Management
+                                            <i class="fas fa-file-alt me-2"></i>Content
                                         </a>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
+                                        <a href="javascript:void(0)" onclick="app.navigateToAdminSection('analytics')"
+                                           class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-chart-line me-2"></i>Analytics
+                                        </a>
+                                    </div>
+                                    <div class="col-md-2">
                                         <a href="javascript:void(0)" onclick="app.navigateToAdminSection('security')"
                                            class="btn btn-outline-primary w-100">
-                                            <i class="fas fa-shield-alt me-2"></i>Security Dashboard
+                                            <i class="fas fa-shield-alt me-2"></i>Security
                                         </a>
                                     </div>
                                 </div>
@@ -4067,7 +4124,7 @@ class InterviewsApp {
 
             // Check if it's a network/API connection error
             if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
-                this.showAdminError('Cannot connect to API server. Please ensure the API server is running on port 8001.');
+                this.showAdminError('Cannot connect to API server. Please ensure the API server is running on port 8080.');
             } else if (error.message.includes('Unauthorized') || error.message.includes('403')) {
                 this.showAdminError('Access denied. Please login as administrator first.');
             } else {
@@ -4078,15 +4135,15 @@ class InterviewsApp {
 
     async testApiConnection() {
         try {
-            const response = await fetch(`${this.apiBaseUrl}/test.php`);
+            const response = await fetch(`${this.apiBaseUrl}/api/status`);
             if (!response.ok) {
                 throw new Error(`API server returned ${response.status}`);
             }
             const data = await response.json();
-            if (!data.success) {
+            if (data.status !== 'healthy') {
                 throw new Error(data.message || 'API test failed');
             }
-            console.log('API connection test passed:', data.data);
+            console.log('API connection test passed:', data);
             console.log('Current auth state:', {
                 isAuthenticated: this.isAuthenticated,
                 currentUser: this.currentUser,
@@ -4094,7 +4151,7 @@ class InterviewsApp {
             });
         } catch (error) {
             console.error('API connection test failed:', error);
-            throw new Error('API server is not accessible. Please start the API server with: php -S localhost:8001 -t api/');
+            throw new Error('API server is not accessible. Please start the API server with: php -S localhost:8080 -t api/');
         }
     }
 
@@ -4152,7 +4209,7 @@ class InterviewsApp {
                                     </li>
                                     <li class="mb-2">
                                         <strong>Start the API server:</strong><br>
-                                        <code class="bg-secondary px-2 py-1 rounded">php -S localhost:8001 -t api/</code>
+                                        <code class="bg-secondary px-2 py-1 rounded">php -S localhost:8080 -t api/</code>
                                     </li>
                                     <li class="mb-2">
                                         <strong>Ensure MariaDB/MySQL is running</strong>
@@ -6058,6 +6115,1006 @@ class InterviewsApp {
         `;
     }
 
+    renderWatchPage() {
+        // Get interview ID from URL hash or default to 1
+        const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        const interviewId = urlParams.get('id') || '1';
+
+        // Get interview data (in a real app, this would come from API)
+        const interview = this.getSampleInterview(interviewId);
+
+        return `
+            <div class="watch-page-dark">
+                <div class="container-fluid py-4">
+                    <div class="row">
+                        <!-- Main Video Player -->
+                        <div class="col-lg-8">
+                            <div class="video-player-container mb-4">
+                                <div class="video-player bg-dark rounded" style="aspect-ratio: 16/9; position: relative;">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <div class="text-center">
+                                            <i class="fas fa-play-circle text-danger" style="font-size: 4rem;"></i>
+                                            <h4 class="text-white mt-3">${interview.title}</h4>
+                                            <p class="text-light">Click to play interview</p>
+                                        </div>
+                                    </div>
+                                    <!-- Video Controls -->
+                                    <div class="video-controls position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <button class="btn btn-danger btn-sm">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <span class="text-white small">0:00 / ${interview.duration}</span>
+                                            <div class="flex-grow-1">
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar bg-danger" style="width: 0%"></div>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-outline-light btn-sm">
+                                                <i class="fas fa-volume-up"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light btn-sm">
+                                                <i class="fas fa-expand"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interview Info -->
+                            <div class="interview-info mb-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h2 class="text-white mb-2">${interview.title}</h2>
+                                        <div class="d-flex align-items-center gap-3 mb-2">
+                                            <span class="badge bg-${interview.categoryColor}">${interview.category}</span>
+                                            <span class="text-light small">
+                                                <i class="fas fa-eye me-1"></i>${interview.views} views
+                                            </span>
+                                            <span class="text-light small">
+                                                <i class="fas fa-calendar me-1"></i>${interview.publishedDate}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-light btn-sm">
+                                            <i class="fas fa-thumbs-up me-1"></i>${interview.likes}
+                                        </button>
+                                        <button class="btn btn-outline-light btn-sm">
+                                            <i class="fas fa-share me-1"></i>Share
+                                        </button>
+                                        <button class="btn btn-outline-light btn-sm">
+                                            <i class="fas fa-bookmark me-1"></i>Save
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Creator Info -->
+                                <div class="creator-info bg-dark rounded p-3 mb-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="${interview.creator.avatar}" alt="${interview.creator.name}"
+                                             class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                        <div class="flex-grow-1">
+                                            <h5 class="text-white mb-1">${interview.creator.name}</h5>
+                                            <p class="text-light small mb-2">${interview.creator.subscribers} subscribers</p>
+                                            <p class="text-light small mb-0">${interview.creator.bio}</p>
+                                        </div>
+                                        <button class="btn btn-danger">
+                                            <i class="fas fa-user-plus me-1"></i>Subscribe
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="description bg-dark rounded p-3">
+                                    <h6 class="text-white mb-2">About this interview</h6>
+                                    <p class="text-light mb-3">${interview.description}</p>
+                                    <div class="tags">
+                                        ${interview.tags.map(tag => `
+                                            <span class="badge bg-secondary me-2 mb-2">#${tag}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Comments Section -->
+                            <div class="comments-section">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="text-white mb-0">
+                                        <i class="fas fa-comments me-2"></i>Comments (${interview.comments.length})
+                                    </h5>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                            Sort by
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-dark">
+                                            <li><a class="dropdown-item" href="#">Top comments</a></li>
+                                            <li><a class="dropdown-item" href="#">Newest first</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Add Comment -->
+                                ${this.isAuthenticated ? `
+                                    <div class="add-comment mb-4">
+                                        <div class="d-flex gap-3">
+                                            <img src="${this.currentUser?.avatar || 'https://via.placeholder.com/40x40/666666/FFFFFF?text=U'}"
+                                                 alt="Your avatar" class="rounded-circle" style="width: 40px; height: 40px;">
+                                            <div class="flex-grow-1">
+                                                <textarea class="form-control bg-dark text-white border-secondary"
+                                                          placeholder="Add a comment..." rows="3"></textarea>
+                                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                                    <button class="btn btn-outline-secondary btn-sm">Cancel</button>
+                                                    <button class="btn btn-danger btn-sm">Comment</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="text-center py-4">
+                                        <p class="text-light mb-3">Sign in to leave a comment</p>
+                                        <button class="btn btn-danger" onclick="app.navigateTo('login')">
+                                            <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                                        </button>
+                                    </div>
+                                `}
+
+                                <!-- Comments List -->
+                                <div class="comments-list">
+                                    ${interview.comments.map(comment => `
+                                        <div class="comment mb-4">
+                                            <div class="d-flex gap-3">
+                                                <img src="${comment.avatar}" alt="${comment.author}"
+                                                     class="rounded-circle" style="width: 40px; height: 40px;">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <strong class="text-white">${comment.author}</strong>
+                                                        <small class="text-muted">${comment.timeAgo}</small>
+                                                    </div>
+                                                    <p class="text-light mb-2">${comment.text}</p>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <button class="btn btn-link btn-sm text-light p-0">
+                                                            <i class="fas fa-thumbs-up me-1"></i>${comment.likes}
+                                                        </button>
+                                                        <button class="btn btn-link btn-sm text-light p-0">
+                                                            <i class="fas fa-thumbs-down me-1"></i>
+                                                        </button>
+                                                        <button class="btn btn-link btn-sm text-light p-0">Reply</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar -->
+                        <div class="col-lg-4">
+                            <!-- Related Interviews -->
+                            <div class="related-interviews">
+                                <h5 class="text-white mb-3">
+                                    <i class="fas fa-list me-2"></i>Related Interviews
+                                </h5>
+                                ${this.getRelatedInterviews().map(related => `
+                                    <div class="related-item mb-3">
+                                        <div class="row g-2">
+                                            <div class="col-5">
+                                                <img src="${related.thumbnail}" alt="${related.title}"
+                                                     class="img-fluid rounded" style="aspect-ratio: 16/9; object-fit: cover;">
+                                            </div>
+                                            <div class="col-7">
+                                                <h6 class="text-white mb-1" style="font-size: 0.9rem; line-height: 1.3;">
+                                                    <a href="#watch?id=${related.id}" class="text-white text-decoration-none">
+                                                        ${related.title}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted small mb-1">${related.creator}</p>
+                                                <div class="d-flex justify-content-between">
+                                                    <small class="text-muted">${related.views} views</small>
+                                                    <small class="text-muted">${related.duration}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderLiveStreamPage() {
+        if (!this.isAuthenticated) {
+            return `
+                <div class="live-stream-page-dark">
+                    <div class="container py-5">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8 text-center">
+                                <div class="card bg-dark border-secondary">
+                                    <div class="card-body py-5">
+                                        <i class="fas fa-broadcast-tower text-danger mb-4" style="font-size: 4rem;"></i>
+                                        <h2 class="text-white mb-3">Live Streaming Studio</h2>
+                                        <p class="text-light mb-4">Sign in to start broadcasting live interviews and connect with your audience in real-time.</p>
+                                        <button class="btn btn-danger btn-lg" onclick="app.navigateTo('login')">
+                                            <i class="fas fa-sign-in-alt me-2"></i>Sign In to Stream
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="live-stream-page-dark">
+                <div class="container-fluid py-4">
+                    <!-- Studio Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h1 class="text-white mb-2">
+                                        <i class="fas fa-broadcast-tower me-2 text-danger"></i>Live Streaming Studio
+                                    </h1>
+                                    <p class="text-light mb-0">Broadcast live interviews to your audience</p>
+                                </div>
+                                <div class="stream-status">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="status-indicator offline">
+                                            <div class="status-dot"></div>
+                                            <span class="text-light">Offline</span>
+                                        </div>
+                                        <button class="btn btn-danger" id="startStreamBtn" onclick="app.startLiveStream()">
+                                            <i class="fas fa-play me-2"></i>Start Stream
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Main Streaming Area -->
+                        <div class="col-lg-8">
+                            <!-- Video Preview -->
+                            <div class="video-preview-container mb-4">
+                                <div class="video-preview bg-dark rounded position-relative" style="aspect-ratio: 16/9;">
+                                    <video id="localVideo" class="w-100 h-100 rounded" autoplay muted playsinline style="object-fit: cover;"></video>
+
+                                    <!-- Video Overlay -->
+                                    <div class="video-overlay position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center">
+                                        <div class="text-center" id="videoPlaceholder">
+                                            <i class="fas fa-video text-danger mb-3" style="font-size: 3rem;"></i>
+                                            <h4 class="text-white mb-2">Camera Preview</h4>
+                                            <p class="text-light">Click "Start Stream" to begin broadcasting</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stream Info Overlay -->
+                                    <div class="stream-info position-absolute top-0 start-0 end-0 p-3" style="background: linear-gradient(rgba(0,0,0,0.8), transparent);">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="stream-stats">
+                                                <div class="d-flex gap-3">
+                                                    <span class="badge bg-danger" id="recordingIndicator" style="display: none;">
+                                                        <i class="fas fa-circle me-1"></i>REC
+                                                    </span>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-eye me-1"></i><span id="viewerCount">0</span> viewers
+                                                    </span>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-clock me-1"></i><span id="streamDuration">00:00</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="stream-quality">
+                                                <span class="badge bg-success" id="qualityIndicator">720p HD</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stream Controls -->
+                                    <div class="stream-controls position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                                        <div class="d-flex justify-content-center gap-3">
+                                            <button class="btn btn-outline-light btn-sm" id="toggleCamera" onclick="app.toggleCamera()">
+                                                <i class="fas fa-video"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light btn-sm" id="toggleMicrophone" onclick="app.toggleMicrophone()">
+                                                <i class="fas fa-microphone"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light btn-sm" onclick="app.toggleScreenShare()">
+                                                <i class="fas fa-desktop"></i>
+                                            </button>
+                                            <button class="btn btn-outline-light btn-sm" onclick="app.openStreamSettings()">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stream Configuration -->
+                            <div class="stream-config card bg-dark border-secondary mb-4">
+                                <div class="card-header">
+                                    <h5 class="text-white mb-0">
+                                        <i class="fas fa-cog me-2"></i>Stream Configuration
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label text-white">Stream Title</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary"
+                                                       id="streamTitle" placeholder="Enter your stream title">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label text-white">Category</label>
+                                                <select class="form-select bg-dark text-white border-secondary" id="streamCategory">
+                                                    <option value="interview">Interview</option>
+                                                    <option value="business">Business</option>
+                                                    <option value="technology">Technology</option>
+                                                    <option value="arts">Arts & Culture</option>
+                                                    <option value="education">Education</option>
+                                                    <option value="entertainment">Entertainment</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label text-white">Quality</label>
+                                                <select class="form-select bg-dark text-white border-secondary" id="streamQuality">
+                                                    <option value="480p">480p (Standard)</option>
+                                                    <option value="720p" selected>720p (HD)</option>
+                                                    <option value="1080p">1080p (Full HD)</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="enableRecording" checked>
+                                                    <label class="form-check-label text-white" for="enableRecording">
+                                                        Record stream for later viewing
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="enableChat" checked>
+                                                    <label class="form-check-label text-white" for="enableChat">
+                                                        Enable live chat
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-white">Description</label>
+                                        <textarea class="form-control bg-dark text-white border-secondary"
+                                                  id="streamDescription" rows="3"
+                                                  placeholder="Describe what your stream will be about..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar -->
+                        <div class="col-lg-4">
+                            <!-- Live Chat -->
+                            <div class="live-chat card bg-dark border-secondary mb-4">
+                                <div class="card-header">
+                                    <h6 class="text-white mb-0">
+                                        <i class="fas fa-comments me-2"></i>Live Chat
+                                    </h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="chat-messages" style="height: 300px; overflow-y: auto;">
+                                        <div class="p-3 text-center text-muted">
+                                            <i class="fas fa-comments mb-2" style="font-size: 2rem;"></i>
+                                            <p class="mb-0">Chat will appear here when you go live</p>
+                                        </div>
+                                    </div>
+                                    <div class="chat-input p-3 border-top border-secondary">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control bg-dark text-white border-secondary"
+                                                   placeholder="Type a message..." disabled>
+                                            <button class="btn btn-outline-danger" disabled>
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stream Statistics -->
+                            <div class="stream-stats card bg-dark border-secondary mb-4">
+                                <div class="card-header">
+                                    <h6 class="text-white mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>Stream Statistics
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-danger mb-1" id="totalViewers">0</h4>
+                                                <small class="text-muted">Total Viewers</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6 mb-3">
+                                            <div class="stat-item">
+                                                <h4 class="text-danger mb-1" id="peakViewers">0</h4>
+                                                <small class="text-muted">Peak Viewers</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="stat-item">
+                                                <h4 class="text-danger mb-1" id="chatMessages">0</h4>
+                                                <small class="text-muted">Chat Messages</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="stat-item">
+                                                <h4 class="text-danger mb-1" id="streamUptime">00:00</h4>
+                                                <small class="text-muted">Uptime</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Streams -->
+                            <div class="recent-streams card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h6 class="text-white mb-0">
+                                        <i class="fas fa-history me-2"></i>Recent Streams
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-broadcast-tower mb-2" style="font-size: 2rem;"></i>
+                                        <p class="mb-0">No previous streams</p>
+                                        <small>Your streaming history will appear here</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stream Settings Modal -->
+                <div class="modal fade" id="streamSettingsModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-dark border-secondary">
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title text-white">
+                                    <i class="fas fa-cog me-2"></i>Advanced Stream Settings
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-white mb-3">Video Settings</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Resolution</label>
+                                            <select class="form-select bg-dark text-white border-secondary">
+                                                <option value="1920x1080">1920x1080 (1080p)</option>
+                                                <option value="1280x720" selected>1280x720 (720p)</option>
+                                                <option value="854x480">854x480 (480p)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Frame Rate</label>
+                                            <select class="form-select bg-dark text-white border-secondary">
+                                                <option value="30">30 FPS</option>
+                                                <option value="60">60 FPS</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Bitrate (kbps)</label>
+                                            <input type="range" class="form-range" min="1000" max="6000" value="2500" id="bitrateSlider">
+                                            <div class="d-flex justify-content-between">
+                                                <small class="text-muted">1000</small>
+                                                <small class="text-white" id="bitrateValue">2500</small>
+                                                <small class="text-muted">6000</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-white mb-3">Audio Settings</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Audio Quality</label>
+                                            <select class="form-select bg-dark text-white border-secondary">
+                                                <option value="128">128 kbps (Standard)</option>
+                                                <option value="192" selected>192 kbps (High)</option>
+                                                <option value="320">320 kbps (Premium)</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="noiseSuppression" checked>
+                                                <label class="form-check-label text-white" for="noiseSuppression">
+                                                    Noise Suppression
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="echoCancellation" checked>
+                                                <label class="form-check-label text-white" for="echoCancellation">
+                                                    Echo Cancellation
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger">Save Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    .status-indicator {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    }
+
+                    .status-dot {
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: #6c757d;
+                    }
+
+                    .status-indicator.live .status-dot {
+                        background: #dc3545;
+                        animation: pulse 2s infinite;
+                    }
+
+                    .status-indicator.offline .status-dot {
+                        background: #6c757d;
+                    }
+
+                    @keyframes pulse {
+                        0% { opacity: 1; }
+                        50% { opacity: 0.5; }
+                        100% { opacity: 1; }
+                    }
+
+                    .video-overlay {
+                        background: rgba(0, 0, 0, 0.7);
+                        transition: opacity 0.3s ease;
+                    }
+
+                    .video-overlay.hidden {
+                        opacity: 0;
+                        pointer-events: none;
+                    }
+
+                    .stream-controls button:hover {
+                        transform: translateY(-1px);
+                    }
+
+                    .stat-item h4 {
+                        font-weight: 700;
+                    }
+                </style>
+            </div>
+        `;
+    }
+
+    getSampleInterview(id) {
+        // Sample interview data - in a real app, this would come from API
+        const interviews = {
+            '1': {
+                id: '1',
+                title: 'Tech Entrepreneur Shares Startup Journey',
+                description: 'Join us for an inspiring conversation with a successful tech entrepreneur who built their company from the ground up. Learn about the challenges, victories, and lessons learned along the way.',
+                duration: '24:35',
+                views: '12.5K',
+                likes: '892',
+                publishedDate: '2 days ago',
+                category: 'Business',
+                categoryColor: 'success',
+                creator: {
+                    name: 'Sarah Johnson',
+                    avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face',
+                    subscribers: '45.2K',
+                    bio: 'Business journalist and interview host specializing in entrepreneurship and innovation.'
+                },
+                tags: ['entrepreneurship', 'startup', 'business', 'technology', 'innovation'],
+                comments: [
+                    {
+                        author: 'Mike Chen',
+                        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
+                        text: 'Amazing insights! This really motivated me to pursue my own startup idea.',
+                        timeAgo: '2 hours ago',
+                        likes: 24
+                    },
+                    {
+                        author: 'Emma Davis',
+                        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
+                        text: 'The part about overcoming early challenges was so relatable. Thank you for sharing!',
+                        timeAgo: '5 hours ago',
+                        likes: 18
+                    },
+                    {
+                        author: 'Alex Rodriguez',
+                        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+                        text: 'Could you do a follow-up interview about scaling strategies?',
+                        timeAgo: '1 day ago',
+                        likes: 12
+                    }
+                ]
+            },
+            '2': {
+                id: '2',
+                title: 'Artist Reveals Creative Process Behind Latest Work',
+                description: 'Dive deep into the mind of a contemporary artist as they walk us through their creative process, inspiration sources, and the story behind their latest masterpiece.',
+                duration: '18:42',
+                views: '8.3K',
+                likes: '567',
+                publishedDate: '5 days ago',
+                category: 'Arts & Culture',
+                categoryColor: 'warning',
+                creator: {
+                    name: 'David Kim',
+                    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face',
+                    subscribers: '28.7K',
+                    bio: 'Art curator and cultural commentator exploring creativity in the modern world.'
+                },
+                tags: ['art', 'creativity', 'process', 'inspiration', 'culture'],
+                comments: [
+                    {
+                        author: 'Lisa Park',
+                        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=40&h=40&fit=crop&crop=face',
+                        text: 'As a fellow artist, this was incredibly insightful. Thank you!',
+                        timeAgo: '3 hours ago',
+                        likes: 31
+                    }
+                ]
+            }
+        };
+
+        return interviews[id] || interviews['1'];
+    }
+
+    getRelatedInterviews() {
+        return [
+            {
+                id: '2',
+                title: 'Artist Reveals Creative Process Behind Latest Work',
+                creator: 'David Kim',
+                thumbnail: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=200&h=112&fit=crop',
+                views: '8.3K',
+                duration: '18:42'
+            },
+            {
+                id: '3',
+                title: 'Chef Shares Secret Recipes and Cooking Tips',
+                creator: 'Maria Garcia',
+                thumbnail: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&h=112&fit=crop',
+                views: '15.7K',
+                duration: '31:28'
+            },
+            {
+                id: '4',
+                title: 'Musician Discusses Latest Album and Tour',
+                creator: 'James Wilson',
+                thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=112&fit=crop',
+                views: '22.1K',
+                duration: '27:15'
+            },
+            {
+                id: '5',
+                title: 'Community Leader Talks Social Impact',
+                creator: 'Angela Thompson',
+                thumbnail: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=200&h=112&fit=crop',
+                views: '9.8K',
+                duration: '19:33'
+            }
+        ];
+    }
+
+    // Live Streaming Methods
+    async startLiveStream() {
+        try {
+            const streamTitle = document.getElementById('streamTitle')?.value;
+            const streamCategory = document.getElementById('streamCategory')?.value;
+            const streamDescription = document.getElementById('streamDescription')?.value;
+            const streamQuality = document.getElementById('streamQuality')?.value;
+            const enableRecording = document.getElementById('enableRecording')?.checked;
+            const enableChat = document.getElementById('enableChat')?.checked;
+
+            if (!streamTitle) {
+                this.showToast('Please enter a stream title', 'error');
+                return;
+            }
+
+            // Update UI to show starting state
+            const startBtn = document.getElementById('startStreamBtn');
+            const statusIndicator = document.querySelector('.status-indicator');
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+
+            if (startBtn) {
+                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting...';
+                startBtn.disabled = true;
+            }
+
+            // Request camera and microphone access
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: streamQuality === '1080p' ? 1920 : streamQuality === '720p' ? 1280 : 854 },
+                    height: { ideal: streamQuality === '1080p' ? 1080 : streamQuality === '720p' ? 720 : 480 },
+                    frameRate: { ideal: 30 }
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+
+            // Display local video
+            const localVideo = document.getElementById('localVideo');
+            if (localVideo) {
+                localVideo.srcObject = stream;
+                localVideo.style.display = 'block';
+            }
+
+            // Hide placeholder
+            if (videoPlaceholder) {
+                videoPlaceholder.style.display = 'none';
+            }
+
+            // Create stream on server
+            const response = await fetch(`${this.apiBaseUrl}/api/streams`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.authToken}`
+                },
+                body: JSON.stringify({
+                    title: streamTitle,
+                    description: streamDescription,
+                    category: streamCategory,
+                    quality: streamQuality,
+                    recording_enabled: enableRecording,
+                    chat_enabled: enableChat
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create stream');
+            }
+
+            const streamData = await response.json();
+
+            // Update UI to show live state
+            if (statusIndicator) {
+                statusIndicator.className = 'status-indicator live';
+                statusIndicator.innerHTML = '<div class="status-dot"></div><span class="text-light">Live</span>';
+            }
+
+            if (startBtn) {
+                startBtn.innerHTML = '<i class="fas fa-stop me-2"></i>Stop Stream';
+                startBtn.onclick = () => this.stopLiveStream();
+                startBtn.disabled = false;
+                startBtn.classList.remove('btn-danger');
+                startBtn.classList.add('btn-outline-danger');
+            }
+
+            // Show recording indicator if enabled
+            if (enableRecording) {
+                const recordingIndicator = document.getElementById('recordingIndicator');
+                if (recordingIndicator) {
+                    recordingIndicator.style.display = 'inline-block';
+                }
+            }
+
+            // Start stream timer
+            this.startStreamTimer();
+
+            // Enable chat if enabled
+            if (enableChat) {
+                this.enableLiveChat();
+            }
+
+            this.showToast('Live stream started successfully!', 'success');
+            this.currentStream = { id: streamData.stream_id, stream };
+
+        } catch (error) {
+            console.error('Failed to start live stream:', error);
+            this.showToast('Failed to start live stream: ' + error.message, 'error');
+
+            // Reset UI
+            const startBtn = document.getElementById('startStreamBtn');
+            if (startBtn) {
+                startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Start Stream';
+                startBtn.disabled = false;
+            }
+        }
+    }
+
+    async stopLiveStream() {
+        try {
+            if (!this.currentStream) {
+                return;
+            }
+
+            // Stop all tracks
+            if (this.currentStream.stream) {
+                this.currentStream.stream.getTracks().forEach(track => track.stop());
+            }
+
+            // Update server
+            const response = await fetch(`${this.apiBaseUrl}/api/streams/${this.currentStream.id}/stop`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.authToken}`
+                }
+            });
+
+            // Update UI
+            const startBtn = document.getElementById('startStreamBtn');
+            const statusIndicator = document.querySelector('.status-indicator');
+            const localVideo = document.getElementById('localVideo');
+            const videoPlaceholder = document.getElementById('videoPlaceholder');
+            const recordingIndicator = document.getElementById('recordingIndicator');
+
+            if (startBtn) {
+                startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Start Stream';
+                startBtn.onclick = () => this.startLiveStream();
+                startBtn.classList.remove('btn-outline-danger');
+                startBtn.classList.add('btn-danger');
+            }
+
+            if (statusIndicator) {
+                statusIndicator.className = 'status-indicator offline';
+                statusIndicator.innerHTML = '<div class="status-dot"></div><span class="text-light">Offline</span>';
+            }
+
+            if (localVideo) {
+                localVideo.srcObject = null;
+                localVideo.style.display = 'none';
+            }
+
+            if (videoPlaceholder) {
+                videoPlaceholder.style.display = 'block';
+            }
+
+            if (recordingIndicator) {
+                recordingIndicator.style.display = 'none';
+            }
+
+            // Stop timer
+            this.stopStreamTimer();
+
+            this.showToast('Live stream stopped', 'info');
+            this.currentStream = null;
+
+        } catch (error) {
+            console.error('Failed to stop live stream:', error);
+            this.showToast('Failed to stop live stream: ' + error.message, 'error');
+        }
+    }
+
+    toggleCamera() {
+        if (!this.currentStream?.stream) {
+            this.showToast('No active stream', 'error');
+            return;
+        }
+
+        const videoTrack = this.currentStream.stream.getVideoTracks()[0];
+        if (videoTrack) {
+            videoTrack.enabled = !videoTrack.enabled;
+            const btn = document.getElementById('toggleCamera');
+            if (btn) {
+                btn.innerHTML = videoTrack.enabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+                btn.classList.toggle('btn-outline-light', videoTrack.enabled);
+                btn.classList.toggle('btn-outline-danger', !videoTrack.enabled);
+            }
+            this.showToast(videoTrack.enabled ? 'Camera enabled' : 'Camera disabled', 'info');
+        }
+    }
+
+    toggleMicrophone() {
+        if (!this.currentStream?.stream) {
+            this.showToast('No active stream', 'error');
+            return;
+        }
+
+        const audioTrack = this.currentStream.stream.getAudioTracks()[0];
+        if (audioTrack) {
+            audioTrack.enabled = !audioTrack.enabled;
+            const btn = document.getElementById('toggleMicrophone');
+            if (btn) {
+                btn.innerHTML = audioTrack.enabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+                btn.classList.toggle('btn-outline-light', audioTrack.enabled);
+                btn.classList.toggle('btn-outline-danger', !audioTrack.enabled);
+            }
+            this.showToast(audioTrack.enabled ? 'Microphone enabled' : 'Microphone disabled', 'info');
+        }
+    }
+
+    async toggleScreenShare() {
+        try {
+            if (!this.currentStream) {
+                this.showToast('No active stream', 'error');
+                return;
+            }
+
+            // Get screen share
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true
+            });
+
+            // Replace video track
+            const videoTrack = screenStream.getVideoTracks()[0];
+            const sender = this.currentStream.peerConnection?.getSenders().find(s =>
+                s.track && s.track.kind === 'video'
+            );
+
+            if (sender) {
+                await sender.replaceTrack(videoTrack);
+            }
+
+            this.showToast('Screen sharing started', 'success');
+
+        } catch (error) {
+            console.error('Screen share failed:', error);
+            this.showToast('Screen sharing failed: ' + error.message, 'error');
+        }
+    }
+
+    openStreamSettings() {
+        const modal = new bootstrap.Modal(document.getElementById('streamSettingsModal'));
+        modal.show();
+    }
+
+    startStreamTimer() {
+        this.streamStartTime = Date.now();
+        this.streamTimer = setInterval(() => {
+            const elapsed = Date.now() - this.streamStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            const durationElement = document.getElementById('streamDuration');
+            const uptimeElement = document.getElementById('streamUptime');
+
+            if (durationElement) durationElement.textContent = timeString;
+            if (uptimeElement) uptimeElement.textContent = timeString;
+        }, 1000);
+    }
+
+    stopStreamTimer() {
+        if (this.streamTimer) {
+            clearInterval(this.streamTimer);
+            this.streamTimer = null;
+        }
+    }
+
+    enableLiveChat() {
+        const chatInput = document.querySelector('.chat-input input');
+        const chatButton = document.querySelector('.chat-input button');
+
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = 'Type a message...';
+        }
+
+        if (chatButton) {
+            chatButton.disabled = false;
+        }
+    }
+
     filterSearchResults(filter) {
         // Implementation for filtering search results
         this.showToast(`Filtering by: ${filter}`, 'info');
@@ -6557,6 +7614,330 @@ class EnhancedRouter {
                 </div>
             </div>
         `;
+    }
+
+    renderAdminStreamsPage() {
+        if (!this.isAdmin()) {
+            return `
+                <div class="container mt-5">
+                    <div class="alert alert-danger">
+                        <h4>Access Denied</h4>
+                        <p>You need administrator privileges to access this page.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container-fluid mt-4 bg-primary-dark" style="background-color: #1a1a1a !important; color: #ffffff !important; min-height: 100vh;">
+                <!-- Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="text-primary-light mb-1">
+                                    <i class="fas fa-broadcast-tower text-danger me-2"></i>Live Streams Management
+                                </h1>
+                                <p class="text-secondary-light mb-0">Monitor and manage all live streaming activities</p>
+                            </div>
+                            <div>
+                                <button class="btn btn-danger me-2" onclick="app.refreshStreamsData()">
+                                    <i class="fas fa-sync me-1"></i>Refresh
+                                </button>
+                                <a href="javascript:void(0)" onclick="app.navigateTo('admin')" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Admin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" style="color: #cccccc; font-size: 0.875rem;">Active Streams</h6>
+                                        <h3 class="mb-0" style="color: #ffffff; font-weight: 600;" id="active-streams">3</h3>
+                                    </div>
+                                    <div class="text-danger">
+                                        <i class="fas fa-broadcast-tower fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" style="color: #cccccc; font-size: 0.875rem;">Total Viewers</h6>
+                                        <h3 class="mb-0" style="color: #ffffff; font-weight: 600;" id="total-viewers">1,247</h3>
+                                    </div>
+                                    <div class="text-primary">
+                                        <i class="fas fa-eye fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" style="color: #cccccc; font-size: 0.875rem;">Streams Today</h6>
+                                        <h3 class="mb-0" style="color: #ffffff; font-weight: 600;" id="streams-today">12</h3>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-calendar-day fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" style="color: #cccccc; font-size: 0.875rem;">Total Hours</h6>
+                                        <h3 class="mb-0" style="color: #ffffff; font-weight: 600;" id="total-hours">156</h3>
+                                    </div>
+                                    <div class="text-warning">
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Streams -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-header" style="background-color: #333333; border-bottom: 1px solid #444444;">
+                                <h5 class="mb-0 text-white">
+                                    <i class="fas fa-broadcast-tower me-2 text-danger"></i>Currently Live Streams
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Stream</th>
+                                                <th>Creator</th>
+                                                <th>Viewers</th>
+                                                <th>Duration</th>
+                                                <th>Quality</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="stream-thumbnail me-3" style="width: 60px; height: 40px; background: #dc3545; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-play text-white"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 text-white">Tech Entrepreneur Interview</h6>
+                                                            <small class="text-muted">Business Category</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face"
+                                                             class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                                                        <span class="text-white">Sarah Johnson</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-eye me-1"></i>847
+                                                    </span>
+                                                </td>
+                                                <td class="text-white">1h 23m</td>
+                                                <td>
+                                                    <span class="badge bg-success">720p HD</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-circle me-1"></i>LIVE
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" title="View Stream">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-warning" title="Moderate">
+                                                            <i class="fas fa-shield-alt"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger" title="End Stream">
+                                                            <i class="fas fa-stop"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="stream-thumbnail me-3" style="width: 60px; height: 40px; background: #28a745; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-play text-white"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 text-white">Artist Creative Process</h6>
+                                                            <small class="text-muted">Arts & Culture</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=32&h=32&fit=crop&crop=face"
+                                                             class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                                                        <span class="text-white">David Kim</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">
+                                                        <i class="fas fa-eye me-1"></i>234
+                                                    </span>
+                                                </td>
+                                                <td class="text-white">45m</td>
+                                                <td>
+                                                    <span class="badge bg-success">1080p</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-circle me-1"></i>LIVE
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" title="View Stream">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-warning" title="Moderate">
+                                                            <i class="fas fa-shield-alt"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger" title="End Stream">
+                                                            <i class="fas fa-stop"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stream History -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0" style="background-color: #2a2a2a;">
+                            <div class="card-header" style="background-color: #333333; border-bottom: 1px solid #444444;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0 text-white">
+                                        <i class="fas fa-history me-2"></i>Recent Stream History
+                                    </h5>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto;">
+                                            <option>All Categories</option>
+                                            <option>Business</option>
+                                            <option>Technology</option>
+                                            <option>Arts & Culture</option>
+                                        </select>
+                                        <select class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto;">
+                                            <option>Last 7 days</option>
+                                            <option>Last 30 days</option>
+                                            <option>Last 3 months</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Stream</th>
+                                                <th>Creator</th>
+                                                <th>Date</th>
+                                                <th>Duration</th>
+                                                <th>Peak Viewers</th>
+                                                <th>Recording</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="stream-thumbnail me-3" style="width: 60px; height: 40px; background: #6f42c1; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-play text-white"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 text-white">Music Producer Session</h6>
+                                                            <small class="text-muted">Music Category</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"
+                                                             class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                                                        <span class="text-white">Alex Rodriguez</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-white">2 hours ago</td>
+                                                <td class="text-white">2h 15m</td>
+                                                <td>
+                                                    <span class="badge bg-info">1,234</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Available
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" title="View Recording">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-info" title="Analytics">
+                                                            <i class="fas fa-chart-line"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-secondary" title="Download">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    refreshStreamsData() {
+        this.showToast('Refreshing streams data...', 'info');
+        // In a real implementation, this would fetch fresh data from the API
     }
 
     refreshInterviewsData() {

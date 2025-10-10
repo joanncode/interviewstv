@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Handle /api/streams/ requests
+RewriteRule ^streams/?(.*)$ streams.php [QSA,L]
+
+# Handle /api/streaming.php requests (existing)
+RewriteRule ^streaming\.php/?(.*)$ streaming.php [QSA,L]
+
+# Handle other API routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ routes/api.php [QSA,L]

@@ -1,0 +1,21 @@
+{
+    "inv_68e94df875816": {
+        "id": "inv_68e94df875816",
+        "room_id": "room_68e94de550cdb",
+        "email": "guest@example.com",
+        "guest_name": "John Doe",
+        "join_code": "3QTFKS",
+        "invitation_token": "8S90JLHAXKOT4EUCM5RFWDGZ2N6I7BPV",
+        "role": "guest",
+        "status": "accepted",
+        "invited_at": "2025-10-10 18:18:32",
+        "expires_at": "2025-10-17 18:18:32",
+        "email_sent": true,
+        "join_attempts": 1,
+        "permissions": [],
+        "custom_message": "Looking forward to our interview!",
+        "email_sent_at": "2025-10-10 18:18:32",
+        "responded_at": "2025-10-10 18:22:14",
+        "last_join_attempt": "2025-10-10 18:22:14"
+    }
+}

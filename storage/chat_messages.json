@@ -1,0 +1,38 @@
+[
+    {
+        "id": "msg_68e9693ce1124",
+        "room_id": "test_room",
+        "participant_id": "system",
+        "participant_name": "System",
+        "message_type": "system",
+        "content": "Test Host joined the chat",
+        "timestamp": "2025-10-10 20:14:52",
+        "is_private": false
+    },
+    {
+        "id": "msg_68e9694795cf1",
+        "room_id": "test_room",
+        "participant_id": "part_68e9693ce01bf",
+        "participant_name": "Test Host",
+        "participant_role": "host",
+        "message_type": "text",
+        "content": "Hello everyone! Welcome to the interview!",
+        "reply_to_id": null,
+        "is_private": false,
+        "private_to_participant_id": null,
+        "timestamp": "2025-10-10 20:15:03",
+        "edited_at": null,
+        "reactions": [],
+        "attachments": []
+    },
+    {
+        "id": "msg_68e9695f218e0",
+        "room_id": "test_room",
+        "participant_id": "system",
+        "participant_name": "System",
+        "message_type": "system",
+        "content": "Demo User joined the chat",
+        "timestamp": "2025-10-10 20:15:27",
+        "is_private": false
+    }
+]

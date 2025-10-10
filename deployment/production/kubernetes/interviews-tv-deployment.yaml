@@ -1,0 +1,475 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: interviews-tv
+  labels:
+    name: interviews-tv
+    environment: production
+
+---
+# ConfigMap for Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: interviews-tv-config
+  namespace: interviews-tv
+data:
+  NODE_ENV: "production"
+  DB_HOST: "mysql-service"
+  REDIS_HOST: "redis-service"
+  RTMP_PORT: "1935"
+  HLS_PORT: "8080"
+  CDN_URL: "https://cdn.interviews.tv"
+
+---
+# Secret for Sensitive Configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: interviews-tv-secrets
+  namespace: interviews-tv
+type: Opaque
+data:
+  DB_PASSWORD: <base64-encoded-password>
+  JWT_SECRET: <base64-encoded-jwt-secret>
+  ENCRYPTION_KEY: <base64-encoded-encryption-key>
+  STRIPE_SECRET_KEY: <base64-encoded-stripe-key>
+  AWS_ACCESS_KEY_ID: <base64-encoded-aws-key>
+  AWS_SECRET_ACCESS_KEY: <base64-encoded-aws-secret>
+
+---
+# API Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: interviews-tv
+  labels:
+    app: api-server
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+        tier: backend
+    spec:
+      containers:
+      - name: api-server
+        image: interviews-tv/api:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: NODE_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: DB_HOST
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: REDIS_HOST
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: DB_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: JWT_SECRET
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: uploads
+          mountPath: /app/uploads
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: api-logs-pvc
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: api-uploads-pvc
+
+---
+# Streaming Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streaming-server
+  namespace: interviews-tv
+  labels:
+    app: streaming-server
+    tier: streaming
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: streaming-server
+  template:
+    metadata:
+      labels:
+        app: streaming-server
+        tier: streaming
+    spec:
+      containers:
+      - name: streaming-server
+        image: interviews-tv/streaming:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 1935
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: NODE_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: DB_HOST
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: REDIS_HOST
+        - name: RTMP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: RTMP_PORT
+        - name: HLS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: interviews-tv-config
+              key: HLS_PORT
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: media
+          mountPath: /app/media
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: media
+        persistentVolumeClaim:
+          claimName: streaming-media-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: streaming-logs-pvc
+
+---
+# MySQL Database Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: interviews-tv
+  labels:
+    app: mysql
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        tier: database
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: DB_PASSWORD
+        - name: MYSQL_DATABASE
+          value: "interviews_tv"
+        - name: MYSQL_USER
+          value: "interviews_user"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: interviews-tv-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data-pvc
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: interviews-tv
+  labels:
+    app: redis
+    tier: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        command: ["redis-server", "--appendonly", "yes"]
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-data-pvc
+
+---
+# API Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: interviews-tv
+  labels:
+    app: api-server
+spec:
+  selector:
+    app: api-server
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Streaming Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: streaming-service
+  namespace: interviews-tv
+  labels:
+    app: streaming-server
+spec:
+  selector:
+    app: streaming-server
+  ports:
+  - name: hls
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: rtmp
+    port: 1935
+    targetPort: 1935
+    protocol: TCP
+  type: ClusterIP
+
+---
+# MySQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: interviews-tv
+  labels:
+    app: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: interviews-tv
+  labels:
+    app: redis
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  type: ClusterIP
+
+---
+# Load Balancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: interviews-tv-lb
+  namespace: interviews-tv
+  labels:
+    app: load-balancer
+spec:
+  selector:
+    app: nginx-lb
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  - name: rtmp
+    port: 1935
+    targetPort: 1935
+    protocol: TCP
+  type: LoadBalancer
+
+---
+# Horizontal Pod Autoscaler for API Servers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-server-hpa
+  namespace: interviews-tv
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Horizontal Pod Autoscaler for Streaming Servers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: streaming-server-hpa
+  namespace: interviews-tv
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: streaming-server
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

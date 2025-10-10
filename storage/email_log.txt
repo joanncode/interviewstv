@@ -1,0 +1,12 @@
+2025-10-10 18:18:32 - TO: guest@example.com
+SUBJECT: You're invited to join an interview on Interviews.tv
+CONTENT: 
+                    <h2>You're Invited!</h2>
+                    <p>You have been invited to join an interview: <strong>Test Interview</strong></p>
+                    
+                    <p><a href='http://localhost:8080/join?code=3QTFKS&token=8S90JLHAXKOT4EUCM5RFWDGZ2N6I7BPV' style='background:#FF0000;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;'>Join Interview</a></p>
+                    <p>Or enter this code: <strong>3QTFKS</strong></p>
+                    <p>Message: Looking forward to our interview!</p>
+                
+---
+

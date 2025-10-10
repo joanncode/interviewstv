@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Live Stream - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: white; }
+        .card { background-color: #2a2a2a; border: 1px solid #444; }
+        .btn-primary { background-color: #FF0000; border-color: #FF0000; }
+        .btn-primary:hover { background-color: #cc0000; border-color: #cc0000; }
+        .form-control { background-color: #3a3a3a; border-color: #555; color: white; }
+        .form-control:focus { background-color: #3a3a3a; border-color: #FF0000; color: white; }
+        .video-container { background: #000; border-radius: 8px; position: relative; }
+        #localVideo { width: 100%; height: 400px; object-fit: cover; }
+        .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; color: white; margin: 0 5px; }
+        .start-btn { background-color: #28a745; }
+        .stop-btn { background-color: #dc3545; }
+        .mute-btn { background-color: #ffc107; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status-offline { background-color: #6c757d; }
+        .status-live { background-color: #28a745; }
+        .alert-success { background-color: rgba(40, 167, 69, 0.1); border-color: rgba(40, 167, 69, 0.3); color: #b3ffb3; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">🎥 Simple Live Stream Test</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Live Stream</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Stream Setup -->
+                        <div id="streamSetup">
+                            <div class="mb-3">
+                                <label class="form-label">Stream Title</label>
+                                <input type="text" class="form-control" id="streamTitle" value="Test Stream" placeholder="Enter stream title">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="streamDescription" rows="2" placeholder="Stream description">Testing live streaming functionality</textarea>
+                            </div>
+                            <button class="btn btn-primary" id="createStreamBtn">Create Stream</button>
+                        </div>
+
+                        <!-- Video Container -->
+                        <div class="video-container mt-4" id="videoContainer" style="display: none;">
+                            <video id="localVideo" autoplay muted playsinline></video>
+                            <div class="controls">
+                                <button class="control-btn start-btn" id="startBtn" title="Start Stream">▶</button>
+                                <button class="control-btn stop-btn" id="stopBtn" title="Stop Stream" style="display: none;">⏹</button>
+                                <button class="control-btn mute-btn" id="muteBtn" title="Mute/Unmute">🎤</button>
+                            </div>
+                        </div>
+
+                        <!-- Stream Status -->
+                        <div class="status status-offline" id="streamStatus">
+                            <strong>Status:</strong> <span id="statusText">Not started</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Stream Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Stream ID:</strong> <span id="streamId">-</span></p>
+                        <p><strong>Stream Key:</strong> <span id="streamKey">-</span></p>
+                        <p><strong>Status:</strong> <span id="streamStatusText">Offline</span></p>
+                        <p><strong>Duration:</strong> <span id="duration">00:00</span></p>
+                        <p><strong>Viewers:</strong> <span id="viewers">0</span></p>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Instructions</h6>
+                    </div>
+                    <div class="card-body">
+                        <ol class="small">
+                            <li>Enter stream title and description</li>
+                            <li>Click "Create Stream"</li>
+                            <li>Allow camera/microphone access</li>
+                            <li>Click play button to start streaming</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div id="messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SimpleStreaming {
+            constructor() {
+                this.localStream = null;
+                this.isStreaming = false;
+                this.streamData = null;
+                this.startTime = null;
+                this.durationInterval = null;
+                this.viewerCount = 0;
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    createStreamBtn: document.getElementById('createStreamBtn'),
+                    streamSetup: document.getElementById('streamSetup'),
+                    videoContainer: document.getElementById('videoContainer'),
+                    localVideo: document.getElementById('localVideo'),
+                    startBtn: document.getElementById('startBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    muteBtn: document.getElementById('muteBtn'),
+                    streamStatus: document.getElementById('streamStatus'),
+                    statusText: document.getElementById('statusText'),
+                    streamId: document.getElementById('streamId'),
+                    streamKey: document.getElementById('streamKey'),
+                    streamStatusText: document.getElementById('streamStatusText'),
+                    duration: document.getElementById('duration'),
+                    viewers: document.getElementById('viewers'),
+                    messages: document.getElementById('messages')
+                };
+            }
+
+            bindEvents() {
+                this.elements.createStreamBtn.addEventListener('click', () => this.createStream());
+                this.elements.startBtn.addEventListener('click', () => this.startStream());
+                this.elements.stopBtn.addEventListener('click', () => this.stopStream());
+                this.elements.muteBtn.addEventListener('click', () => this.toggleMute());
+            }
+
+            async createStream() {
+                const title = document.getElementById('streamTitle').value;
+                const description = document.getElementById('streamDescription').value;
+
+                if (!title.trim()) {
+                    this.showMessage('Please enter a stream title', 'danger');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('Setting up stream...', 'info');
+
+                    // Create stream data
+                    this.streamData = {
+                        id: 'stream_' + Date.now(),
+                        streamKey: 'sk_' + Math.random().toString(36).substr(2, 9),
+                        title: title,
+                        description: description,
+                        status: 'scheduled',
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Update UI
+                    this.elements.streamId.textContent = this.streamData.id;
+                    this.elements.streamKey.textContent = this.streamData.streamKey;
+                    this.elements.streamStatusText.textContent = 'Ready';
+
+                    // Initialize camera
+                    await this.initializeCamera();
+
+                    // Show video container
+                    this.elements.streamSetup.style.display = 'none';
+                    this.elements.videoContainer.style.display = 'block';
+
+                    this.updateStatus('Stream created - Ready to go live!', 'success');
+                    this.showMessage('✅ Stream created successfully! Click the play button to start streaming.', 'success');
+
+                } catch (error) {
+                    console.error('Error creating stream:', error);
+                    this.showMessage('❌ Failed to create stream: ' + error.message, 'danger');
+                    this.updateStatus('Failed to create stream', 'danger');
+                }
+            }
+
+            async initializeCamera() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 1280, height: 720 },
+                        audio: true
+                    });
+                    
+                    this.elements.localVideo.srcObject = this.localStream;
+                    this.showMessage('✅ Camera and microphone access granted', 'success');
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    throw new Error('Camera access denied. Please allow camera and microphone access.');
+                }
+            }
+
+            async startStream() {
+                if (!this.localStream) {
+                    this.showMessage('❌ Camera not initialized', 'danger');
+                    return;
+                }
+
+                try {
+                    this.isStreaming = true;
+                    this.startTime = Date.now();
+                    this.streamData.status = 'live';
+                    this.streamData.started_at = new Date().toISOString();
+
+                    // Update UI
+                    this.elements.startBtn.style.display = 'none';
+                    this.elements.stopBtn.style.display = 'block';
+                    this.elements.streamStatusText.textContent = 'Live';
+                    
+                    this.updateStatus('🔴 LIVE - Broadcasting now!', 'live');
+                    this.showMessage('🎉 Stream started! You are now live!', 'success');
+
+                    // Start duration timer
+                    this.startDurationTimer();
+                    
+                    // Simulate viewer growth
+                    this.simulateViewers();
+
+                } catch (error) {
+                    console.error('Error starting stream:', error);
+                    this.showMessage('❌ Failed to start stream: ' + error.message, 'danger');
+                }
+            }
+
+            stopStream() {
+                this.isStreaming = false;
+                this.streamData.status = 'ended';
+                this.streamData.ended_at = new Date().toISOString();
+
+                // Update UI
+                this.elements.startBtn.style.display = 'block';
+                this.elements.stopBtn.style.display = 'none';
+                this.elements.streamStatusText.textContent = 'Ended';
+
+                this.updateStatus('Stream ended', 'offline');
+                this.showMessage('📺 Stream ended successfully!', 'success');
+
+                // Stop timers
+                if (this.durationInterval) {
+                    clearInterval(this.durationInterval);
+                }
+            }
+
+            toggleMute() {
+                if (this.localStream) {
+                    const audioTrack = this.localStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.enabled = !audioTrack.enabled;
+                        this.elements.muteBtn.textContent = audioTrack.enabled ? '🎤' : '🔇';
+                        this.showMessage(audioTrack.enabled ? '🎤 Microphone unmuted' : '🔇 Microphone muted', 'info');
+                    }
+                }
+            }
+
+            startDurationTimer() {
+                this.durationInterval = setInterval(() => {
+                    if (this.startTime && this.isStreaming) {
+                        const elapsed = Date.now() - this.startTime;
+                        const minutes = Math.floor(elapsed / 60000);
+                        const seconds = Math.floor((elapsed % 60000) / 1000);
+                        this.elements.duration.textContent = 
+                            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            }
+
+            simulateViewers() {
+                if (this.isStreaming) {
+                    // Simulate viewer growth
+                    this.viewerCount = Math.floor(Math.random() * 20) + 1;
+                    this.elements.viewers.textContent = this.viewerCount;
+                    
+                    setTimeout(() => {
+                        if (this.isStreaming) {
+                            this.simulateViewers();
+                        }
+                    }, 3000);
+                }
+            }
+
+            updateStatus(message, type) {
+                this.elements.statusText.textContent = message;
+                this.elements.streamStatus.className = `status status-${type}`;
+            }
+
+            showMessage(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                this.elements.messages.appendChild(alertDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SimpleStreaming();
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

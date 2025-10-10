@@ -1,0 +1,400 @@
+version: '3.8'
+
+services:
+  # Load Balancer (NGINX)
+  nginx:
+    image: nginx:alpine
+    container_name: interviews-tv-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1935:1935"  # RTMP
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - streaming-server-1
+      - streaming-server-2
+      - streaming-server-3
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # Streaming Server Instances (Horizontal Scaling)
+  streaming-server-1:
+    build: .
+    container_name: interviews-tv-streaming-1
+    environment:
+      - NODE_ENV=production
+      - SERVER_ID=streaming-1
+      - PORT=8081
+      - RTMP_PORT=1935
+      - HLS_PORT=8080
+      - REDIS_URL=redis://redis-cluster:6379
+      - MYSQL_HOST=mysql-master
+      - MYSQL_USER=interviews_tv
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=interviews_tv
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - redis-cluster
+      - mysql-master
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  streaming-server-2:
+    build: .
+    container_name: interviews-tv-streaming-2
+    environment:
+      - NODE_ENV=production
+      - SERVER_ID=streaming-2
+      - PORT=8082
+      - RTMP_PORT=1936
+      - HLS_PORT=8081
+      - REDIS_URL=redis://redis-cluster:6379
+      - MYSQL_HOST=mysql-master
+      - MYSQL_USER=interviews_tv
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=interviews_tv
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - redis-cluster
+      - mysql-master
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  streaming-server-3:
+    build: .
+    container_name: interviews-tv-streaming-3
+    environment:
+      - NODE_ENV=production
+      - SERVER_ID=streaming-3
+      - PORT=8083
+      - RTMP_PORT=1937
+      - HLS_PORT=8082
+      - REDIS_URL=redis://redis-cluster:6379
+      - MYSQL_HOST=mysql-master
+      - MYSQL_USER=interviews_tv
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=interviews_tv
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - redis-cluster
+      - mysql-master
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # Redis Cluster for Session Management and Caching
+  redis-cluster:
+    image: redis:7-alpine
+    container_name: interviews-tv-redis
+    command: redis-server --appendonly yes --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  # MySQL Master (Primary Database)
+  mysql-master:
+    image: mysql:8.0
+    container_name: interviews-tv-mysql-master
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=interviews_tv
+      - MYSQL_USER=interviews_tv
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_REPLICATION_MODE=master
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=${MYSQL_REPLICATION_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-master-data:/var/lib/mysql
+      - ./mysql/master.cnf:/etc/mysql/conf.d/master.cnf
+      - ./api/database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+
+  # MySQL Slave (Read Replica)
+  mysql-slave:
+    image: mysql:8.0
+    container_name: interviews-tv-mysql-slave
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=interviews_tv
+      - MYSQL_USER=interviews_tv
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_REPLICATION_MODE=slave
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=${MYSQL_REPLICATION_PASSWORD}
+      - MYSQL_MASTER_HOST=mysql-master
+      - MYSQL_MASTER_PORT=3306
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-slave-data:/var/lib/mysql
+      - ./mysql/slave.cnf:/etc/mysql/conf.d/slave.cnf
+    depends_on:
+      - mysql-master
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+
+  # Elasticsearch for Search and Analytics
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: interviews-tv-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Kibana for Analytics Dashboard
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: interviews-tv-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # Prometheus for Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: interviews-tv-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # Grafana for Monitoring Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: interviews-tv-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # RabbitMQ for Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: interviews-tv-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # MinIO for Object Storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: interviews-tv-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+
+  # FFmpeg Processing Workers
+  ffmpeg-worker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.ffmpeg
+    container_name: interviews-tv-ffmpeg-1
+    environment:
+      - WORKER_ID=ffmpeg-1
+      - REDIS_URL=redis://redis-cluster:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./temp:/app/temp
+    depends_on:
+      - redis-cluster
+      - minio
+      - rabbitmq
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+  ffmpeg-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.ffmpeg
+    container_name: interviews-tv-ffmpeg-2
+    environment:
+      - WORKER_ID=ffmpeg-2
+      - REDIS_URL=redis://redis-cluster:6379
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    volumes:
+      - ./media:/app/media
+      - ./temp:/app/temp
+    depends_on:
+      - redis-cluster
+      - minio
+      - rabbitmq
+    networks:
+      - interviews-tv-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+networks:
+  interviews-tv-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mysql-master-data:
+    driver: local
+  mysql-slave-data:
+    driver: local
+  redis-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  minio-data:
+    driver: local

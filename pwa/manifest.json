@@ -1,0 +1,249 @@
+{
+  "name": "Interviews.tv - Live Interview Streaming",
+  "short_name": "Interviews.tv",
+  "description": "Create, share, discover, and engage with live interviews. The premier platform for professional interview streaming and networking.",
+  "version": "1.0.0",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#FF0000",
+  "background_color": "#1a1a1a",
+  "lang": "en-US",
+  "dir": "ltr",
+  
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Home page showing featured interviews"
+    },
+    {
+      "src": "/screenshots/desktop-streaming.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Live streaming interface"
+    },
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile home page"
+    },
+    {
+      "src": "/screenshots/mobile-watch.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile video player"
+    }
+  ],
+  
+  "categories": [
+    "entertainment",
+    "social",
+    "business",
+    "education",
+    "productivity"
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Start Live Stream",
+      "short_name": "Go Live",
+      "description": "Start broadcasting a live interview",
+      "url": "/stream/create",
+      "icons": [
+        {
+          "src": "/icons/shortcut-stream.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Browse Interviews",
+      "short_name": "Browse",
+      "description": "Discover new interviews and content",
+      "url": "/explore",
+      "icons": [
+        {
+          "src": "/icons/shortcut-browse.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "My Profile",
+      "short_name": "Profile",
+      "description": "View and edit your profile",
+      "url": "/profile",
+      "icons": [
+        {
+          "src": "/icons/shortcut-profile.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Alerts",
+      "description": "View your notifications",
+      "url": "/notifications",
+      "icons": [
+        {
+          "src": "/icons/shortcut-notifications.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": ["image/*", "video/*", "audio/*"]
+        }
+      ]
+    }
+  },
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+interviews",
+      "url": "/handle?protocol=%s"
+    }
+  ],
+  
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "video/*": [".mp4", ".webm", ".mov", ".avi"],
+        "audio/*": [".mp3", ".wav", ".aac", ".ogg"],
+        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+      }
+    }
+  ],
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  
+  "display_override": [
+    "window-controls-overlay",
+    "minimal-ui",
+    "standalone",
+    "browser"
+  ],
+  
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=tv.interviews.app",
+      "id": "tv.interviews.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/interviews-tv/id123456789",
+      "id": "123456789"
+    }
+  ],
+  
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  
+  "permissions": [
+    "camera",
+    "microphone",
+    "notifications",
+    "background-sync",
+    "persistent-storage"
+  ],
+  
+  "features": [
+    "cross-origin-isolated"
+  ]
+}

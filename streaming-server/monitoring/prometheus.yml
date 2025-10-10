@@ -1,0 +1,205 @@
+# Prometheus Configuration for Interviews.tv Monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'interviews-tv-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load alerting rules
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Streaming servers monitoring
+  - job_name: 'streaming-servers'
+    static_configs:
+      - targets: 
+        - 'streaming-server-1:8081'
+        - 'streaming-server-2:8082'
+        - 'streaming-server-3:8083'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # NGINX load balancer monitoring
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:8080']
+    scrape_interval: 30s
+    metrics_path: /nginx_status
+    honor_labels: true
+
+  # Redis monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-cluster:6379']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # MySQL monitoring
+  - job_name: 'mysql-master'
+    static_configs:
+      - targets: ['mysql-master:3306']
+    scrape_interval: 30s
+    params:
+      target: ['mysql-master:3306']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: mysql-exporter:9104
+
+  - job_name: 'mysql-slave'
+    static_configs:
+      - targets: ['mysql-slave:3306']
+    scrape_interval: 30s
+    params:
+      target: ['mysql-slave:3306']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: mysql-exporter:9104
+
+  # Node exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: 
+        - 'node-exporter-1:9100'
+        - 'node-exporter-2:9100'
+        - 'node-exporter-3:9100'
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # FFmpeg workers monitoring
+  - job_name: 'ffmpeg-workers'
+    static_configs:
+      - targets:
+        - 'ffmpeg-worker-1:9101'
+        - 'ffmpeg-worker-2:9101'
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Elasticsearch monitoring
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    scrape_interval: 30s
+    metrics_path: /_prometheus/metrics
+
+  # RabbitMQ monitoring
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # MinIO monitoring
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    scrape_interval: 30s
+    metrics_path: /minio/v2/metrics/cluster
+    bearer_token_file: /etc/prometheus/minio_token
+
+  # Custom application metrics
+  - job_name: 'streaming-metrics'
+    static_configs:
+      - targets: 
+        - 'streaming-server-1:8081'
+        - 'streaming-server-2:8082'
+        - 'streaming-server-3:8083'
+    scrape_interval: 15s
+    metrics_path: /api/metrics
+    honor_labels: true
+
+  # Health checks
+  - job_name: 'health-checks'
+    static_configs:
+      - targets:
+        - 'streaming-server-1:8081'
+        - 'streaming-server-2:8082'
+        - 'streaming-server-3:8083'
+        - 'nginx:80'
+        - 'redis-cluster:6379'
+        - 'mysql-master:3306'
+        - 'mysql-slave:3306'
+    scrape_interval: 10s
+    metrics_path: /health
+    honor_labels: true
+
+  # Blackbox exporter for external monitoring
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://interviews.tv
+        - https://api.interviews.tv
+        - https://cdn.interviews.tv
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # RTMP stream monitoring
+  - job_name: 'rtmp-streams'
+    static_configs:
+      - targets: ['nginx:1935']
+    scrape_interval: 15s
+    metrics_path: /stat
+    honor_labels: true
+
+  # CDN monitoring (if using external CDN)
+  - job_name: 'cdn-monitoring'
+    static_configs:
+      - targets: ['cdn-monitor:8080']
+    scrape_interval: 60s
+    metrics_path: /metrics
+    honor_labels: true
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "https://prometheus-remote-write.interviews.tv/api/v1/write"
+    basic_auth:
+      username: "prometheus"
+      password_file: "/etc/prometheus/remote_write_password"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+
+# Remote read configuration
+remote_read:
+  - url: "https://prometheus-remote-read.interviews.tv/api/v1/read"
+    basic_auth:
+      username: "prometheus"
+      password_file: "/etc/prometheus/remote_read_password"

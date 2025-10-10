@@ -1,5 +1,11 @@
 RewriteEngine On
 
+# Handle /api/streams requests
+RewriteRule ^api/streams/?(.*)$ streams.php [QSA,L]
+
+# Handle direct stream_api.php requests
+RewriteRule ^stream_api\.php$ stream_api.php [QSA,L]
+
 # Handle Angular and other front-end routes
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -398,5 +398,22 @@ class JsonDatabase {
     public function emailExists($email) {
         return $this->findUserByEmail($email) !== null;
     }
+
+    // Database connection compatibility methods
+    public function getConnection() {
+        return $this;
+    }
+
+    public function getAllUsers() {
+        return $this->users;
+    }
+
+    public function getAllInterviews() {
+        return $this->interviews;
+    }
+
+    public function getAllBusinesses() {
+        return $this->businesses;
+    }
 }
 ?>

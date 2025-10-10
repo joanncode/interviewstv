@@ -1,0 +1,100 @@
+# FFmpeg Worker Dockerfile for video processing
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    ffmpeg \
+    ffmpeg-dev
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Production stage with FFmpeg optimizations
+FROM node:18-alpine AS production
+
+# Install FFmpeg with additional codecs and tools
+RUN apk add --no-cache \
+    ffmpeg \
+    x264 \
+    x265 \
+    libvpx \
+    libvorbis \
+    libtheora \
+    libmp3lame \
+    libopus \
+    curl \
+    tini
+
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy built dependencies from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy FFmpeg worker code
+COPY --chown=nodejs:nodejs src/workers/ ./src/workers/
+COPY --chown=nodejs:nodejs src/utils/ ./src/utils/
+COPY --chown=nodejs:nodejs package*.json ./
+
+# Create FFmpeg worker entry point
+COPY --chown=nodejs:nodejs <<EOF ./ffmpeg-worker.js
+const FFmpegWorker = require('./src/workers/FFmpegWorker');
+const logger = require('./src/utils/logger');
+
+const worker = new FFmpegWorker({
+  workerId: process.env.WORKER_ID || 'ffmpeg-worker',
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  minioEndpoint: process.env.MINIO_ENDPOINT || 'localhost:9000',
+  minioAccessKey: process.env.MINIO_ACCESS_KEY,
+  minioSecretKey: process.env.MINIO_SECRET_KEY
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  await worker.shutdown();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  await worker.shutdown();
+  process.exit(0);
+});
+
+// Start worker
+worker.start().catch(error => {
+  logger.error('Failed to start FFmpeg worker:', error);
+  process.exit(1);
+});
+EOF
+
+# Create necessary directories
+RUN mkdir -p /app/media /app/temp /app/logs && \
+    chown -R nodejs:nodejs /app
+
+# Health check for worker
+HEALTHCHECK --interval=60s --timeout=30s --start-period=120s --retries=3 \
+    CMD pgrep -f "ffmpeg-worker" || exit 1
+
+# Switch to non-root user
+USER nodejs
+
+# Use tini as init system
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the FFmpeg worker
+CMD ["node", "ffmpeg-worker.js"]

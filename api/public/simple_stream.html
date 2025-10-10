@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Live Stream - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: white; }
+        .card { background-color: #2a2a2a; border: 1px solid #444; }
+        .btn-primary { background-color: #FF0000; border-color: #FF0000; }
+        .btn-primary:hover { background-color: #cc0000; border-color: #cc0000; }
+        .form-control { background-color: #3a3a3a; border-color: #555; color: white; }
+        .form-control:focus { background-color: #3a3a3a; border-color: #FF0000; color: white; }
+        .video-container { background: #000; border-radius: 8px; position: relative; }
+        #localVideo { width: 100%; height: 400px; object-fit: cover; }
+        .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .control-btn { width: 50px; height: 50px; border-radius: 50%; border: none; color: white; margin: 0 5px; cursor: pointer; }
+        .start-btn { background-color: #28a745; }
+        .stop-btn { background-color: #dc3545; }
+        .record-btn { background-color: #FF0000; }
+        .stop-record-btn { background-color: #ff8c00; }
+        .mute-btn { background-color: #ffc107; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status-offline { background-color: #6c757d; }
+        .status-live { background-color: #28a745; }
+
+        /* Volume Indicator Styles */
+        .volume-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .volume-meter {
+            width: 100px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(to right, #28a745 0%, #ffc107 70%, #dc3545 90%);
+            width: 0%;
+            transition: width 0.1s ease;
+            border-radius: 10px;
+        }
+
+        .volume-text {
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .mic-icon {
+            font-size: 14px;
+        }
+
+        .mic-muted {
+            color: #dc3545;
+        }
+
+        /* Chat Message Styles */
+        .chat-message {
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-message.own {
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #FF0000;
+        }
+
+        .chat-message.system {
+            background: rgba(255, 255, 255, 0.02);
+            text-align: center;
+            font-style: italic;
+        }
+
+        #chatMessages {
+            scrollbar-width: thin;
+            scrollbar-color: #555 #2a2a2a;
+        }
+
+        #chatMessages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatMessages::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+
+        #chatInput:focus {
+            background: #3a3a3a !important;
+            border-color: #FF0000 !important;
+            color: white !important;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25) !important;
+        }
+
+        .audio-controls {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .audio-control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 12px;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #FF0000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #FF0000;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .alert-success { background-color: rgba(40, 167, 69, 0.1); border-color: rgba(40, 167, 69, 0.3); color: #b3ffb3; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">🎥 Simple Live Stream Test</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Live Stream</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Stream Setup -->
+                        <div id="streamSetup">
+                            <div class="mb-3">
+                                <label class="form-label">Stream Title</label>
+                                <input type="text" class="form-control" id="streamTitle" value="Test Stream" placeholder="Enter stream title">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="streamDescription" rows="2" placeholder="Stream description">Testing live streaming functionality</textarea>
+                            </div>
+                            <button class="btn btn-primary" id="createStreamBtn">Create Stream</button>
+                        </div>
+
+                        <!-- Video Container -->
+                        <div class="video-container mt-4" id="videoContainer" style="display: none;">
+                            <video id="localVideo" autoplay muted playsinline></video>
+
+                            <!-- Volume Indicator -->
+                            <div class="volume-indicator" id="volumeIndicator">
+                                <i class="fas fa-microphone mic-icon" id="micIcon"></i>
+                                <div class="volume-meter">
+                                    <div class="volume-bar" id="volumeBar"></div>
+                                </div>
+                                <span class="volume-text" id="volumeText">0%</span>
+                                <button class="btn btn-sm btn-outline-light" id="audioSettingsBtn" title="Audio Settings">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                            </div>
+
+                            <!-- Audio Controls Panel -->
+                            <div class="audio-controls" id="audioControls">
+                                <div class="audio-control-item">
+                                    <label>Microphone Volume:</label>
+                                    <input type="range" class="volume-slider" id="micVolumeSlider" min="0" max="100" value="100">
+                                </div>
+                                <div class="audio-control-item">
+                                    <label>Noise Suppression:</label>
+                                    <input type="checkbox" id="noiseSuppression" checked>
+                                </div>
+                                <div class="audio-control-item">
+                                    <label>Echo Cancellation:</label>
+                                    <input type="checkbox" id="echoCancellation" checked>
+                                </div>
+                                <div class="audio-control-item">
+                                    <label>Auto Gain Control:</label>
+                                    <input type="checkbox" id="autoGainControl" checked>
+                                </div>
+                            </div>
+
+                            <div class="controls">
+                                <button class="control-btn start-btn" id="startBtn" title="Start Stream">▶</button>
+                                <button class="control-btn stop-btn" id="stopBtn" title="Stop Stream" style="display: none;">⏹</button>
+                                <button class="control-btn record-btn" id="recordBtn" title="Start Recording" style="display: none;">🔴</button>
+                                <button class="control-btn stop-record-btn" id="stopRecordBtn" title="Stop Recording" style="display: none;">⏸</button>
+                                <button class="control-btn mute-btn" id="muteBtn" title="Mute/Unmute">🎤</button>
+                            </div>
+                        </div>
+
+                        <!-- Stream Status -->
+                        <div class="status status-offline" id="streamStatus">
+                            <strong>Status:</strong> <span id="statusText">Not started</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Stream Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Stream ID:</strong> <span id="streamId">-</span></p>
+                        <p><strong>Stream Key:</strong> <span id="streamKey">-</span></p>
+                        <p><strong>Status:</strong> <span id="streamStatusText">Offline</span></p>
+                        <p><strong>Duration:</strong> <span id="duration">00:00</span></p>
+                        <p><strong>Viewers:</strong> <span id="viewers">0</span></p>
+                    </div>
+                </div>
+
+                <!-- Live Chat -->
+                <div class="card mt-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6><i class="fas fa-comments"></i> Live Chat</h6>
+                        <span class="badge bg-primary" id="chatParticipantCount">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="chatContainer" style="height: 300px; display: flex; flex-direction: column;">
+                            <!-- Chat Messages -->
+                            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1rem; background: #1a1a1a;">
+                                <div class="chat-message system">
+                                    <small class="text-muted">Welcome to the live chat! Be respectful and professional.</small>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input -->
+                            <div style="padding: 0.75rem; background: #333; border-top: 1px solid #404040;">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="chatInput" placeholder="Type your message..." style="background: #3a3a3a; border-color: #555; color: white;">
+                                    <button class="btn btn-primary" id="chatSendBtn" type="button">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Instructions</h6>
+                    </div>
+                    <div class="card-body">
+                        <ol class="small">
+                            <li>Enter stream title and description</li>
+                            <li>Click "Create Stream"</li>
+                            <li>Allow camera/microphone access</li>
+                            <li>Click play button to start streaming</li>
+                            <li>Use live chat to engage with viewers</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div id="messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SimpleStreaming {
+            constructor() {
+                this.localStream = null;
+                this.isStreaming = false;
+                this.streamData = null;
+                this.startTime = null;
+                this.durationInterval = null;
+                this.viewerCount = 0;
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+                this.isRecording = false;
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.volumeMonitorInterval = null;
+                this.isMuted = false;
+                this.chatParticipantId = null;
+                this.chatPollInterval = null;
+                this.lastChatMessageTime = null;
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    createStreamBtn: document.getElementById('createStreamBtn'),
+                    streamSetup: document.getElementById('streamSetup'),
+                    videoContainer: document.getElementById('videoContainer'),
+                    localVideo: document.getElementById('localVideo'),
+                    startBtn: document.getElementById('startBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    recordBtn: document.getElementById('recordBtn'),
+                    stopRecordBtn: document.getElementById('stopRecordBtn'),
+                    muteBtn: document.getElementById('muteBtn'),
+                    volumeIndicator: document.getElementById('volumeIndicator'),
+                    volumeBar: document.getElementById('volumeBar'),
+                    volumeText: document.getElementById('volumeText'),
+                    micIcon: document.getElementById('micIcon'),
+                    audioSettingsBtn: document.getElementById('audioSettingsBtn'),
+                    audioControls: document.getElementById('audioControls'),
+                    micVolumeSlider: document.getElementById('micVolumeSlider'),
+                    chatMessages: document.getElementById('chatMessages'),
+                    chatInput: document.getElementById('chatInput'),
+                    chatSendBtn: document.getElementById('chatSendBtn'),
+                    chatParticipantCount: document.getElementById('chatParticipantCount'),
+                    streamStatus: document.getElementById('streamStatus'),
+                    statusText: document.getElementById('statusText'),
+                    streamId: document.getElementById('streamId'),
+                    streamKey: document.getElementById('streamKey'),
+                    streamStatusText: document.getElementById('streamStatusText'),
+                    duration: document.getElementById('duration'),
+                    viewers: document.getElementById('viewers'),
+                    messages: document.getElementById('messages')
+                };
+            }
+
+            bindEvents() {
+                this.elements.createStreamBtn.addEventListener('click', () => this.createStream());
+                this.elements.startBtn.addEventListener('click', () => this.startStream());
+                this.elements.stopBtn.addEventListener('click', () => this.stopStream());
+                this.elements.recordBtn.addEventListener('click', () => this.startRecording());
+                this.elements.stopRecordBtn.addEventListener('click', () => this.stopRecording());
+                this.elements.muteBtn.addEventListener('click', () => this.toggleMute());
+                this.elements.audioSettingsBtn.addEventListener('click', () => this.toggleAudioSettings());
+                this.elements.micVolumeSlider.addEventListener('input', (e) => this.adjustMicVolume(e.target.value));
+
+                // Chat event listeners
+                this.elements.chatSendBtn.addEventListener('click', () => this.sendChatMessage());
+                this.elements.chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendChatMessage();
+                    }
+                });
+            }
+
+            async createStream() {
+                const title = document.getElementById('streamTitle').value;
+                const description = document.getElementById('streamDescription').value;
+
+                if (!title.trim()) {
+                    this.showMessage('Please enter a stream title', 'danger');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('Setting up stream...', 'info');
+
+                    // Call the API to create stream
+                    const response = await fetch('/stream_api.php?action=create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: title,
+                            description: description,
+                            category: 'interview'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.streamData = result.data;
+                            this.showMessage('✅ Stream created via API!', 'success');
+                        } else {
+                            throw new Error(result.error || 'API call failed');
+                        }
+                    } else {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                } catch (apiError) {
+                    console.log('API call failed, using local creation:', apiError.message);
+                    this.showMessage('⚠️ API unavailable, using local mode', 'warning');
+
+                    // Fallback to local stream creation
+                    this.streamData = {
+                        id: 'stream_' + Date.now(),
+                        stream_key: 'sk_' + Math.random().toString(36).substr(2, 9),
+                        title: title,
+                        description: description,
+                        status: 'scheduled',
+                        created_at: new Date().toISOString()
+                    };
+                }
+
+                try {
+                    // Update UI
+                    this.elements.streamId.textContent = this.streamData.id;
+                    this.elements.streamKey.textContent = this.streamData.stream_key || this.streamData.streamKey;
+                    this.elements.streamStatusText.textContent = 'Ready';
+
+                    // Initialize camera
+                    await this.initializeCamera();
+
+                    // Show video container
+                    this.elements.streamSetup.style.display = 'none';
+                    this.elements.videoContainer.style.display = 'block';
+
+                    this.updateStatus('Stream created - Ready to go live!', 'success');
+                    this.showMessage('✅ Stream created successfully! Click the play button to start streaming.', 'success');
+
+                } catch (error) {
+                    console.error('Error creating stream:', error);
+                    this.showMessage('❌ Failed to create stream: ' + error.message, 'danger');
+                    this.updateStatus('Failed to create stream', 'danger');
+                }
+            }
+
+            async initializeCamera() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 1280, height: 720 },
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    this.elements.localVideo.srcObject = this.localStream;
+
+                    // Initialize audio monitoring
+                    await this.initializeAudioMonitoring();
+
+                    // Initialize chat
+                    await this.initializeChat();
+
+                    this.showMessage('✅ Camera and microphone access granted', 'success');
+
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    throw new Error('Camera access denied. Please allow camera and microphone access.');
+                }
+            }
+
+            async startStream() {
+                if (!this.localStream) {
+                    this.showMessage('❌ Camera not initialized', 'danger');
+                    return;
+                }
+
+                try {
+                    this.isStreaming = true;
+                    this.startTime = Date.now();
+                    this.streamData.status = 'live';
+                    this.streamData.started_at = new Date().toISOString();
+
+                    // Update UI
+                    this.elements.startBtn.style.display = 'none';
+                    this.elements.stopBtn.style.display = 'block';
+                    this.elements.streamStatusText.textContent = 'Live';
+                    
+                    this.updateStatus('🔴 LIVE - Broadcasting now!', 'live');
+                    this.showMessage('🎉 Stream started! You are now live!', 'success');
+
+                    // Start duration timer
+                    this.startDurationTimer();
+                    
+                    // Simulate viewer growth
+                    this.simulateViewers();
+
+                } catch (error) {
+                    console.error('Error starting stream:', error);
+                    this.showMessage('❌ Failed to start stream: ' + error.message, 'danger');
+                }
+            }
+
+            stopStream() {
+                this.isStreaming = false;
+                this.streamData.status = 'ended';
+                this.streamData.ended_at = new Date().toISOString();
+
+                // Update UI
+                this.elements.startBtn.style.display = 'block';
+                this.elements.stopBtn.style.display = 'none';
+                this.elements.streamStatusText.textContent = 'Ended';
+
+                this.updateStatus('Stream ended', 'offline');
+                this.showMessage('📺 Stream ended successfully!', 'success');
+
+                // Stop timers
+                if (this.durationInterval) {
+                    clearInterval(this.durationInterval);
+                }
+            }
+
+            toggleMute() {
+                if (this.localStream) {
+                    const audioTrack = this.localStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.enabled = !audioTrack.enabled;
+                        this.elements.muteBtn.textContent = audioTrack.enabled ? '🎤' : '🔇';
+                        this.showMessage(audioTrack.enabled ? '🎤 Microphone unmuted' : '🔇 Microphone muted', 'info');
+                    }
+                }
+            }
+
+            startDurationTimer() {
+                this.durationInterval = setInterval(() => {
+                    if (this.startTime && this.isStreaming) {
+                        const elapsed = Date.now() - this.startTime;
+                        const minutes = Math.floor(elapsed / 60000);
+                        const seconds = Math.floor((elapsed % 60000) / 1000);
+                        this.elements.duration.textContent = 
+                            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            }
+
+            simulateViewers() {
+                if (this.isStreaming) {
+                    // Simulate viewer growth
+                    this.viewerCount = Math.floor(Math.random() * 20) + 1;
+                    this.elements.viewers.textContent = this.viewerCount;
+                    
+                    setTimeout(() => {
+                        if (this.isStreaming) {
+                            this.simulateViewers();
+                        }
+                    }, 3000);
+                }
+            }
+
+            updateStatus(message, type) {
+                this.elements.statusText.textContent = message;
+                this.elements.streamStatus.className = `status status-${type}`;
+            }
+
+            async initializeAudioMonitoring() {
+                try {
+                    // Create audio context
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Create analyser node
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 256;
+                    this.analyser.smoothingTimeConstant = 0.8;
+
+                    // Connect microphone to analyser
+                    this.microphone = this.audioContext.createMediaStreamSource(this.localStream);
+                    this.microphone.connect(this.analyser);
+
+                    // Start volume monitoring
+                    this.startVolumeMonitoring();
+
+                } catch (error) {
+                    console.error('Audio monitoring initialization error:', error);
+                    this.showMessage('⚠️ Audio monitoring unavailable', 'warning');
+                }
+            }
+
+            startVolumeMonitoring() {
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                const updateVolume = () => {
+                    if (!this.analyser) return;
+
+                    this.analyser.getByteFrequencyData(dataArray);
+
+                    // Calculate average volume
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / bufferLength;
+                    const volumePercent = Math.round((average / 255) * 100);
+
+                    // Update volume indicator
+                    this.updateVolumeIndicator(volumePercent);
+                };
+
+                // Update volume 60 times per second
+                this.volumeMonitorInterval = setInterval(updateVolume, 16);
+            }
+
+            updateVolumeIndicator(volumePercent) {
+                // Update volume bar
+                this.elements.volumeBar.style.width = volumePercent + '%';
+                this.elements.volumeText.textContent = volumePercent + '%';
+
+                // Update microphone icon based on volume and mute status
+                if (this.isMuted) {
+                    this.elements.micIcon.className = 'fas fa-microphone-slash mic-icon mic-muted';
+                } else if (volumePercent > 50) {
+                    this.elements.micIcon.className = 'fas fa-microphone mic-icon';
+                } else if (volumePercent > 10) {
+                    this.elements.micIcon.className = 'fas fa-microphone-alt mic-icon';
+                } else {
+                    this.elements.micIcon.className = 'fas fa-microphone mic-icon';
+                }
+            }
+
+            toggleMute() {
+                if (this.localStream) {
+                    const audioTrack = this.localStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.enabled = !audioTrack.enabled;
+                        this.isMuted = !audioTrack.enabled;
+
+                        // Update mute button
+                        const muteBtn = this.elements.muteBtn;
+                        if (this.isMuted) {
+                            muteBtn.innerHTML = '🔇';
+                            muteBtn.title = 'Unmute';
+                            muteBtn.style.backgroundColor = '#dc3545';
+                        } else {
+                            muteBtn.innerHTML = '🎤';
+                            muteBtn.title = 'Mute';
+                            muteBtn.style.backgroundColor = '#ffc107';
+                        }
+
+                        // Update volume indicator
+                        this.updateVolumeIndicator(this.isMuted ? 0 : 50);
+                    }
+                }
+            }
+
+            toggleAudioSettings() {
+                const audioControls = this.elements.audioControls;
+                if (audioControls.style.display === 'none' || audioControls.style.display === '') {
+                    audioControls.style.display = 'flex';
+                } else {
+                    audioControls.style.display = 'none';
+                }
+            }
+
+            adjustMicVolume(value) {
+                // This would typically adjust the gain node in a more complex setup
+                // For now, we'll just update the visual indicator
+                console.log('Microphone volume adjusted to:', value + '%');
+
+                // In a real implementation, you would:
+                // 1. Create a GainNode
+                // 2. Connect: microphone -> gainNode -> analyser
+                // 3. Set gainNode.gain.value = value / 100
+            }
+
+            async initializeChat() {
+                try {
+                    // Join chat room using stream ID as room ID
+                    const roomId = this.streamData?.id || 'demo_room';
+                    const participantName = 'Stream Host';
+
+                    const response = await fetch(`/chat_server.php?action=join_chat&room_id=${roomId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            participant_name: participantName,
+                            role: 'host'
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.chatParticipantId = result.data.participant_id;
+                        this.startChatPolling();
+                        this.showMessage('✅ Chat initialized successfully!', 'success');
+                    } else {
+                        console.error('Failed to join chat:', result.error);
+                        this.showMessage('⚠️ Chat unavailable', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Error initializing chat:', error);
+                    this.showMessage('⚠️ Chat unavailable', 'warning');
+                }
+            }
+
+            startChatPolling() {
+                // Poll for new messages every 1 second
+                this.chatPollInterval = setInterval(() => {
+                    this.pollChatMessages();
+                }, 1000);
+            }
+
+            async pollChatMessages() {
+                try {
+                    const roomId = this.streamData?.id || 'demo_room';
+                    const since = this.lastChatMessageTime ? `&since=${encodeURIComponent(this.lastChatMessageTime)}` : '';
+                    const response = await fetch(`/chat_server.php?action=poll_updates&room_id=${roomId}${since}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data.length > 0) {
+                        result.data.forEach(message => {
+                            this.displayChatMessage(message);
+                        });
+                        this.lastChatMessageTime = result.timestamp;
+                    }
+                } catch (error) {
+                    console.error('Error polling chat messages:', error);
+                }
+            }
+
+            async sendChatMessage() {
+                const content = this.elements.chatInput.value.trim();
+                if (!content || !this.chatParticipantId) return;
+
+                try {
+                    const roomId = this.streamData?.id || 'demo_room';
+                    const response = await fetch(`/chat_server.php?action=send_message&room_id=${roomId}&participant_id=${this.chatParticipantId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                            message_type: 'text'
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.elements.chatInput.value = '';
+                    } else {
+                        console.error('Failed to send message:', result.error);
+                        this.showMessage('❌ Failed to send message', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    this.showMessage('❌ Failed to send message', 'danger');
+                }
+            }
+
+            displayChatMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message ${message.message_type}`;
+
+                if (message.participant_id === this.chatParticipantId) {
+                    messageDiv.classList.add('own');
+                }
+
+                if (message.message_type === 'system') {
+                    messageDiv.innerHTML = `
+                        <small class="text-muted">${message.content}</small>
+                    `;
+                } else {
+                    const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const roleColor = message.participant_role === 'host' ? 'text-danger' : 'text-primary';
+
+                    messageDiv.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="${roleColor}">${message.participant_name}</strong>
+                            <small class="text-muted">${time}</small>
+                        </div>
+                        <div>${this.formatChatContent(message.content)}</div>
+                    `;
+                }
+
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollChatToBottom();
+            }
+
+            formatChatContent(content) {
+                // Basic formatting: convert URLs to links, line breaks
+                return content
+                    .replace(/https?:\/\/[^\s]+/g, '<a href="$&" target="_blank" rel="noopener" class="text-info">$&</a>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            scrollChatToBottom() {
+                this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+            }
+
+            async startRecording() {
+                if (!this.localStream) {
+                    this.showMessage('❌ No stream available for recording', 'danger');
+                    return;
+                }
+
+                try {
+                    this.recordedChunks = [];
+
+                    // Create MediaRecorder
+                    const options = {
+                        mimeType: 'video/webm;codecs=vp9,opus'
+                    };
+
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options.mimeType = 'video/webm;codecs=vp8,opus';
+                        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                            options.mimeType = 'video/webm';
+                        }
+                    }
+
+                    this.mediaRecorder = new MediaRecorder(this.localStream, options);
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.recordedChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        this.saveRecording();
+                    };
+
+                    this.mediaRecorder.start(1000); // Collect data every second
+                    this.isRecording = true;
+
+                    // Update UI
+                    this.elements.recordBtn.style.display = 'none';
+                    this.elements.stopRecordBtn.style.display = 'block';
+
+                    this.showMessage('🔴 Recording started!', 'success');
+
+                } catch (error) {
+                    console.error('Recording error:', error);
+                    this.showMessage('❌ Failed to start recording: ' + error.message, 'danger');
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+
+                    // Update UI
+                    this.elements.recordBtn.style.display = 'block';
+                    this.elements.stopRecordBtn.style.display = 'none';
+
+                    this.showMessage('⏹ Recording stopped!', 'info');
+                }
+            }
+
+            saveRecording() {
+                if (this.recordedChunks.length === 0) {
+                    this.showMessage('❌ No recording data available', 'warning');
+                    return;
+                }
+
+                const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+
+                // Create download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `interview-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // Clean up
+                URL.revokeObjectURL(url);
+                this.recordedChunks = [];
+
+                this.showMessage('💾 Recording saved successfully!', 'success');
+            }
+
+            showMessage(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                this.elements.messages.appendChild(alertDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SimpleStreaming();
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+    "part_68e94ed61a2a1": {
+        "id": "part_68e94ed61a2a1",
+        "room_id": "room_68e94de550cdb",
+        "invitation_id": "inv_68e94df875816",
+        "guest_name": "bob",
+        "email": "guest@example.com",
+        "role": "guest",
+        "status": "waiting",
+        "joined_at": "2025-10-10 18:22:14",
+        "connection_id": "LI8BMUCJF95KGXHT",
+        "peer_id": "WP4GZU28AJRSCF6I",
+        "audio_enabled": true,
+        "video_enabled": true,
+        "screen_sharing": false,
+        "hand_raised": false,
+        "muted_by_host": false,
+        "camera_disabled_by_host": false,
+        "connection_quality": "good",
+        "last_activity": "2025-10-10 18:22:14"
+    }
+}

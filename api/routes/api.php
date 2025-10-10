@@ -264,6 +264,26 @@ $router->group(['prefix' => 'admin', 'middleware' => 'auth'], function($router) 
     $router->get('interviews/{id}/moderation-history', 'AdminInterviewController@getModerationHistory');
 });
 
+// Live Streaming routes
+$router->group(['prefix' => 'streams'], function($router) {
+    // Stream management
+    $router->post('/', 'StreamingController@createStream')->middleware('auth');
+    $router->get('live', 'StreamingController@getLiveStreams');
+    $router->get('{id}', 'StreamingController@getStream');
+    $router->put('{id}', 'StreamingController@updateStream')->middleware('auth');
+
+    // Stream control
+    $router->post('{id}/start', 'StreamingController@startStream')->middleware('auth');
+    $router->post('{id}/stop', 'StreamingController@stopStream')->middleware('auth');
+
+    // Viewer management
+    $router->post('{id}/join', 'StreamingController@joinStream');
+    $router->post('{id}/leave', 'StreamingController@leaveStream');
+
+    // Analytics
+    $router->get('{id}/stats', 'StreamingController@getStreamStats');
+});
+
 // Health check
 $router->get('health', function() {
     return response([

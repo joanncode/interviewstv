@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Host Dashboard - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            padding: 2rem;
+        }
+        
+        .card {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background: #333;
+            border-bottom: 1px solid #404040;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+        
+        .brand-logo {
+            color: #FF0000;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .form-control, .form-select {
+            background: #3a3a3a;
+            border: 1px solid #555;
+            color: #ffffff;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: #3a3a3a;
+            border-color: #FF0000;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+        
+        .btn-primary {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .btn-primary:hover {
+            background: #cc0000;
+            border-color: #cc0000;
+        }
+        
+        .guest-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .guest-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: #ffc107; color: #000; }
+        .status-accepted { background: #28a745; color: #fff; }
+        .status-waiting { background: #17a2b8; color: #fff; }
+        .status-connected { background: #28a745; color: #fff; }
+        .status-declined { background: #dc3545; color: #fff; }
+        
+        .room-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .participant-video {
+            width: 200px;
+            height: 150px;
+            background: #000;
+            border-radius: 8px;
+            margin: 0.5rem;
+            position: relative;
+        }
+        
+        .participant-name {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .main-video {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 10px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #404040;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #404040;
+        }
+
+        /* Volume Indicator Styles */
+        .volume-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .volume-meter {
+            width: 80px;
+            height: 16px;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(to right, #28a745 0%, #ffc107 70%, #dc3545 90%);
+            width: 0%;
+            transition: width 0.1s ease;
+            border-radius: 8px;
+        }
+
+        .volume-text {
+            min-width: 25px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .mic-icon {
+            font-size: 14px;
+        }
+
+        .mic-muted {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid dashboard-container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="brand-logo">
+                        <i class="fas fa-video"></i> Interviews.tv Host Dashboard
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-light" onclick="window.location.href='/'">
+                            <i class="fas fa-home"></i> Home
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Room Section -->
+        <div class="row" id="createRoomSection">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plus-circle"></i> Create Interview Room</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="createRoomForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="roomTitle" class="form-label">Interview Title</label>
+                                        <input type="text" class="form-control" id="roomTitle" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="scheduledStart" class="form-label">Scheduled Start</label>
+                                        <input type="datetime-local" class="form-control" id="scheduledStart">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="roomDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="roomDescription" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="maxGuests" class="form-label">Max Guests</label>
+                                        <select class="form-select" id="maxGuests">
+                                            <option value="5">5 guests</option>
+                                            <option value="10" selected>10 guests</option>
+                                            <option value="20">20 guests</option>
+                                            <option value="50">50 guests</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="recordingEnabled" checked>
+                                        <label class="form-check-label" for="recordingEnabled">
+                                            Enable Recording
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="waitingRoomEnabled" checked>
+                                        <label class="form-check-label" for="waitingRoomEnabled">
+                                            Waiting Room
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create Room
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info-circle"></i> Quick Tips</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Test your camera and microphone first</li>
+                            <li><i class="fas fa-check text-success"></i> Send invitations before the interview</li>
+                            <li><i class="fas fa-check text-success"></i> Use waiting room for better control</li>
+                            <li><i class="fas fa-check text-success"></i> Enable recording to review later</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Management Section -->
+        <div class="row" id="roomManagementSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 id="roomTitle">Interview Room</h5>
+                        <div class="room-controls">
+                            <button class="btn btn-success" id="startRoomBtn">
+                                <i class="fas fa-play"></i> Start Interview
+                            </button>
+                            <button class="btn btn-warning" id="inviteGuestBtn">
+                                <i class="fas fa-user-plus"></i> Invite Guest
+                            </button>
+                            <button class="btn btn-danger" id="endRoomBtn" style="display: none;">
+                                <i class="fas fa-stop"></i> End Interview
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="mb-3" style="position: relative;">
+                                    <video id="mainVideo" class="main-video" autoplay muted></video>
+                                    <!-- Volume Indicator -->
+                                    <div class="volume-indicator" id="volumeIndicator" style="display: none;">
+                                        <i class="fas fa-microphone mic-icon" id="micIcon"></i>
+                                        <div class="volume-meter">
+                                            <div class="volume-bar" id="volumeBar"></div>
+                                        </div>
+                                        <span class="volume-text" id="volumeText">0%</span>
+                                    </div>
+                                </div>
+                                <div id="participantVideos" class="d-flex flex-wrap"></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-users"></i> Guests & Participants</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="guestsList"></div>
+                                    </div>
+                                </div>
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-cog"></i> Room Info</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="roomInfo"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Area -->
+        <div id="messageArea"></div>
+    </div>
+
+    <!-- Invite Guest Modal -->
+    <div class="modal fade" id="inviteGuestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Invite Guest</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="inviteGuestForm">
+                        <div class="mb-3">
+                            <label for="guestEmail" class="form-label">Guest Email</label>
+                            <input type="email" class="form-control" id="guestEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="guestNameInput" class="form-label">Guest Name (Optional)</label>
+                            <input type="text" class="form-control" id="guestNameInput">
+                        </div>
+                        <div class="mb-3">
+                            <label for="guestRole" class="form-label">Role</label>
+                            <select class="form-select" id="guestRole">
+                                <option value="guest">Guest</option>
+                                <option value="co-host">Co-host</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customMessage" class="form-label">Custom Message (Optional)</label>
+                            <textarea class="form-control" id="customMessage" rows="3" placeholder="Add a personal message to the invitation..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="sendInvitationBtn">
+                        <i class="fas fa-paper-plane"></i> Send Invitation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class InterviewHostManager {
+            constructor() {
+                this.currentRoom = null;
+                this.localStream = null;
+                this.guests = [];
+                this.participants = [];
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.checkDevices();
+            }
+            
+            setupEventListeners() {
+                document.getElementById('createRoomForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createRoom();
+                });
+                
+                document.getElementById('startRoomBtn').addEventListener('click', () => {
+                    this.startRoom();
+                });
+                
+                document.getElementById('endRoomBtn').addEventListener('click', () => {
+                    this.endRoom();
+                });
+                
+                document.getElementById('inviteGuestBtn').addEventListener('click', () => {
+                    this.showInviteModal();
+                });
+                
+                document.getElementById('sendInvitationBtn').addEventListener('click', () => {
+                    this.sendInvitation();
+                });
+            }
+            
+            async checkDevices() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                } catch (error) {
+                    console.error('Device access error:', error);
+                    this.showMessage('Please allow camera and microphone access to host interviews.', 'warning');
+                }
+            }
+            
+            async createRoom() {
+                const formData = {
+                    title: document.getElementById('roomTitle').value,
+                    description: document.getElementById('roomDescription').value,
+                    scheduled_start: document.getElementById('scheduledStart').value || null,
+                    max_guests: parseInt(document.getElementById('maxGuests').value),
+                    recording_enabled: document.getElementById('recordingEnabled').checked,
+                    waiting_room_enabled: document.getElementById('waitingRoomEnabled').checked,
+                    host_user_id: 1 // Mock user ID
+                };
+                
+                try {
+                    this.showMessage('Creating interview room...', 'info');
+                    
+                    const response = await fetch('/interview_api.php?action=create_room', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.currentRoom = result.data;
+                        this.showRoomManagement();
+                        this.showMessage('Interview room created successfully!', 'success');
+                    } else {
+                        this.showMessage(result.error || 'Failed to create room', 'danger');
+                    }
+                    
+                } catch (error) {
+                    console.error('Create room error:', error);
+                    this.showMessage('Failed to create room. Please try again.', 'danger');
+                }
+            }
+            
+            showRoomManagement() {
+                document.getElementById('createRoomSection').style.display = 'none';
+                document.getElementById('roomManagementSection').style.display = 'block';
+                
+                document.getElementById('roomTitle').textContent = this.currentRoom.title;
+                
+                this.updateRoomInfo();
+                this.loadGuests();
+                
+                // Set up local video
+                if (this.localStream) {
+                    const mainVideo = document.getElementById('mainVideo');
+                    mainVideo.srcObject = this.localStream;
+                }
+            }
+            
+            updateRoomInfo() {
+                const roomInfo = document.getElementById('roomInfo');
+                roomInfo.innerHTML = `
+                    <p><strong>Room Code:</strong> ${this.currentRoom.room_code}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-secondary">${this.currentRoom.status}</span></p>
+                    <p><strong>Max Guests:</strong> ${this.currentRoom.max_guests}</p>
+                    <p><strong>Recording:</strong> ${this.currentRoom.recording_enabled ? 'Enabled' : 'Disabled'}</p>
+                    <p><strong>Join URL:</strong><br>
+                    <small class="text-muted">http://localhost:8080/join.html</small></p>
+                `;
+            }
+            
+            async loadGuests() {
+                try {
+                    const response = await fetch(`/interview_api.php?action=invitations&room_id=${this.currentRoom.id}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.guests = result.data;
+                        this.updateGuestsList();
+                    }
+                } catch (error) {
+                    console.error('Load guests error:', error);
+                }
+            }
+            
+            updateGuestsList() {
+                const guestsList = document.getElementById('guestsList');
+                
+                if (this.guests.length === 0) {
+                    guestsList.innerHTML = '<p class="text-muted">No guests invited yet.</p>';
+                    return;
+                }
+                
+                guestsList.innerHTML = this.guests.map(guest => `
+                    <div class="guest-item">
+                        <div>
+                            <strong>${guest.guest_name || guest.email}</strong><br>
+                            <small class="text-muted">${guest.email}</small>
+                        </div>
+                        <div>
+                            <span class="guest-status status-${guest.status}">${guest.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            showInviteModal() {
+                const modal = new bootstrap.Modal(document.getElementById('inviteGuestModal'));
+                modal.show();
+            }
+            
+            async sendInvitation() {
+                const email = document.getElementById('guestEmail').value;
+                const guestName = document.getElementById('guestNameInput').value;
+                const role = document.getElementById('guestRole').value;
+                const customMessage = document.getElementById('customMessage').value;
+                
+                if (!email) {
+                    this.showMessage('Please enter guest email.', 'danger');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/interview_api.php?action=invite_guest&room_id=${this.currentRoom.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            guest_name: guestName,
+                            role: role,
+                            custom_message: customMessage
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showMessage(`Invitation sent to ${email}!`, 'success');
+                        this.loadGuests(); // Refresh guest list
+                        
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('inviteGuestModal'));
+                        modal.hide();
+                        
+                        // Clear form
+                        document.getElementById('inviteGuestForm').reset();
+                    } else {
+                        this.showMessage(result.error || 'Failed to send invitation', 'danger');
+                    }
+                    
+                } catch (error) {
+                    console.error('Send invitation error:', error);
+                    this.showMessage('Failed to send invitation. Please try again.', 'danger');
+                }
+            }
+            
+            async startRoom() {
+                try {
+                    const response = await fetch(`/interview_api.php?action=start_room&room_id=${this.currentRoom.id}`, {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.currentRoom = result.data;
+                        this.updateRoomInfo();
+                        this.showMessage('Interview started!', 'success');
+                        
+                        document.getElementById('startRoomBtn').style.display = 'none';
+                        document.getElementById('endRoomBtn').style.display = 'inline-block';
+                    } else {
+                        this.showMessage(result.error || 'Failed to start interview', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Start room error:', error);
+                    this.showMessage('Failed to start interview. Please try again.', 'danger');
+                }
+            }
+            
+            async endRoom() {
+                if (!confirm('Are you sure you want to end this interview?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/interview_api.php?action=end_room&room_id=${this.currentRoom.id}`, {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.currentRoom = result.data;
+                        this.updateRoomInfo();
+                        this.showMessage('Interview ended.', 'info');
+                        
+                        document.getElementById('startRoomBtn').style.display = 'inline-block';
+                        document.getElementById('endRoomBtn').style.display = 'none';
+                    } else {
+                        this.showMessage(result.error || 'Failed to end interview', 'danger');
+                    }
+                } catch (error) {
+                    console.error('End room error:', error);
+                    this.showMessage('Failed to end interview. Please try again.', 'danger');
+                }
+            }
+            
+            showMessage(message, type) {
+                const messageArea = document.getElementById('messageArea');
+                messageArea.innerHTML = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // Auto-hide success messages
+                if (type === 'success') {
+                    setTimeout(() => {
+                        const alert = messageArea.querySelector('.alert');
+                        if (alert) {
+                            const bsAlert = new bootstrap.Alert(alert);
+                            bsAlert.close();
+                        }
+                    }, 3000);
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InterviewHostManager();
+        });
+    </script>
+</body>
+</html>

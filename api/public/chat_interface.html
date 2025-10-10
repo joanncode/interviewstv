@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Chat - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #2a2a2a;
+            border-left: 1px solid #404040;
+        }
+        
+        .chat-header {
+            background: #333;
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .chat-title {
+            color: #FF0000;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .participant-count {
+            background: #FF0000;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .message {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .message-author {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .message-time {
+            color: #888;
+            font-size: 0.8rem;
+        }
+        
+        .message-role {
+            background: #FF0000;
+            color: white;
+            padding: 0.1rem 0.4rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+        
+        .message-content {
+            background: #3a3a3a;
+            padding: 0.75rem;
+            border-radius: 12px;
+            border-top-left-radius: 4px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .message.own .message-content {
+            background: #FF0000;
+            margin-left: auto;
+            border-top-right-radius: 4px;
+            border-top-left-radius: 12px;
+        }
+        
+        .message.system {
+            align-items: center;
+            text-align: center;
+        }
+        
+        .message.system .message-content {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            font-style: italic;
+            max-width: 100%;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+        }
+        
+        .message-reactions {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+            flex-wrap: wrap;
+        }
+        
+        .reaction {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .reaction:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .reaction.active {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid #404040;
+            background: #333;
+        }
+        
+        .chat-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: #3a3a3a;
+            border: 1px solid #555;
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 0.75rem 1rem;
+            resize: none;
+            max-height: 100px;
+            min-height: 40px;
+        }
+        
+        .chat-input:focus {
+            background: #3a3a3a;
+            border-color: #FF0000;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+            outline: none;
+        }
+        
+        .chat-send-btn {
+            background: #FF0000;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .chat-send-btn:hover {
+            background: #cc0000;
+            transform: scale(1.05);
+        }
+        
+        .chat-send-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing-indicator {
+            padding: 0.5rem 1rem;
+            color: #888;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            right: 10px;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 0.5rem;
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            max-width: 200px;
+            z-index: 1000;
+        }
+        
+        .emoji {
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .emoji:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-tools {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .chat-tool-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .chat-tool-btn:hover {
+            color: #FF0000;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .participants-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 0.5rem;
+        }
+        
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .participant-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .participant-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        
+        .participant-status.offline {
+            background: #6c757d;
+        }
+        
+        .participant-name {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        
+        .participant-role {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <h6 class="chat-title">
+                <i class="fas fa-comments"></i> Live Chat
+            </h6>
+            <span class="participant-count" id="participantCount">0 participants</span>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message system">
+                <div class="message-content">
+                    Welcome to the interview chat! Please be respectful and professional.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            Someone is typing...
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <div class="chat-tools">
+                    <button class="chat-tool-btn" id="emojiBtn" title="Emojis">
+                        <i class="fas fa-smile"></i>
+                    </button>
+                    <button class="chat-tool-btn" id="participantsBtn" title="Participants">
+                        <i class="fas fa-users"></i>
+                    </button>
+                </div>
+                <textarea 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Type your message..."
+                    rows="1"
+                ></textarea>
+                <button class="chat-send-btn" id="sendBtn" title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Emoji Picker -->
+        <div class="emoji-picker" id="emojiPicker">
+            <span class="emoji" data-emoji="😀">😀</span>
+            <span class="emoji" data-emoji="😂">😂</span>
+            <span class="emoji" data-emoji="😊">😊</span>
+            <span class="emoji" data-emoji="😍">😍</span>
+            <span class="emoji" data-emoji="🤔">🤔</span>
+            <span class="emoji" data-emoji="👍">👍</span>
+            <span class="emoji" data-emoji="👎">👎</span>
+            <span class="emoji" data-emoji="❤️">❤️</span>
+            <span class="emoji" data-emoji="🎉">🎉</span>
+            <span class="emoji" data-emoji="🔥">🔥</span>
+            <span class="emoji" data-emoji="💯">💯</span>
+            <span class="emoji" data-emoji="👏">👏</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class LiveChat {
+            constructor(roomId, participantName, participantRole = 'guest') {
+                this.roomId = roomId;
+                this.participantName = participantName;
+                this.participantRole = participantRole;
+                this.participantId = null;
+                this.lastMessageTime = null;
+                this.pollInterval = null;
+                this.isTyping = false;
+                this.typingTimeout = null;
+                
+                this.elements = {
+                    chatMessages: document.getElementById('chatMessages'),
+                    chatInput: document.getElementById('chatInput'),
+                    sendBtn: document.getElementById('sendBtn'),
+                    emojiBtn: document.getElementById('emojiBtn'),
+                    emojiPicker: document.getElementById('emojiPicker'),
+                    participantsBtn: document.getElementById('participantsBtn'),
+                    participantCount: document.getElementById('participantCount'),
+                    typingIndicator: document.getElementById('typingIndicator')
+                };
+                
+                this.init();
+            }
+            
+            async init() {
+                this.setupEventListeners();
+                await this.joinChat();
+                this.startPolling();
+            }
+            
+            setupEventListeners() {
+                // Send message on button click
+                this.elements.sendBtn.addEventListener('click', () => this.sendMessage());
+                
+                // Send message on Enter (Shift+Enter for new line)
+                this.elements.chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // Auto-resize textarea
+                this.elements.chatInput.addEventListener('input', () => {
+                    this.autoResizeTextarea();
+                    this.handleTyping();
+                });
+                
+                // Emoji picker
+                this.elements.emojiBtn.addEventListener('click', () => this.toggleEmojiPicker());
+                
+                // Emoji selection
+                document.querySelectorAll('.emoji').forEach(emoji => {
+                    emoji.addEventListener('click', (e) => {
+                        this.insertEmoji(e.target.dataset.emoji);
+                    });
+                });
+                
+                // Close emoji picker when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.emoji-picker') && !e.target.closest('#emojiBtn')) {
+                        this.elements.emojiPicker.style.display = 'none';
+                    }
+                });
+            }
+            
+            async joinChat() {
+                try {
+                    const response = await fetch(`/chat_server.php?action=join_chat&room_id=${this.roomId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            participant_name: this.participantName,
+                            role: this.participantRole
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.participantId = result.data.participant_id;
+                        console.log('Joined chat successfully');
+                    } else {
+                        console.error('Failed to join chat:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error joining chat:', error);
+                }
+            }
+            
+            async sendMessage() {
+                const content = this.elements.chatInput.value.trim();
+                if (!content || !this.participantId) return;
+                
+                try {
+                    const response = await fetch(`/chat_server.php?action=send_message&room_id=${this.roomId}&participant_id=${this.participantId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                            message_type: 'text'
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.elements.chatInput.value = '';
+                        this.autoResizeTextarea();
+                        this.elements.sendBtn.disabled = false;
+                    } else {
+                        console.error('Failed to send message:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+            
+            startPolling() {
+                // Poll for new messages every 1 second
+                this.pollInterval = setInterval(() => {
+                    this.pollMessages();
+                }, 1000);
+            }
+            
+            async pollMessages() {
+                try {
+                    const since = this.lastMessageTime ? `&since=${encodeURIComponent(this.lastMessageTime)}` : '';
+                    const response = await fetch(`/chat_server.php?action=poll_updates&room_id=${this.roomId}${since}`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        result.data.forEach(message => {
+                            this.displayMessage(message);
+                        });
+                        this.lastMessageTime = result.timestamp;
+                    }
+                } catch (error) {
+                    console.error('Error polling messages:', error);
+                }
+            }
+            
+            displayMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.message_type}`;
+                
+                if (message.participant_id === this.participantId) {
+                    messageDiv.classList.add('own');
+                }
+                
+                if (message.message_type === 'system') {
+                    messageDiv.innerHTML = `
+                        <div class="message-content">${message.content}</div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="message-header">
+                            <span class="message-author">${message.participant_name}</span>
+                            ${message.participant_role !== 'guest' ? `<span class="message-role">${message.participant_role}</span>` : ''}
+                            <span class="message-time">${this.formatTime(message.timestamp)}</span>
+                        </div>
+                        <div class="message-content">${this.formatMessageContent(message.content)}</div>
+                        ${message.reactions && message.reactions.length > 0 ? this.renderReactions(message.reactions) : ''}
+                    `;
+                }
+                
+                this.elements.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            formatMessageContent(content) {
+                // Basic formatting: convert URLs to links, emojis, etc.
+                return content
+                    .replace(/https?:\/\/[^\s]+/g, '<a href="$&" target="_blank" rel="noopener">$&</a>')
+                    .replace(/\n/g, '<br>');
+            }
+            
+            formatTime(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            renderReactions(reactions) {
+                const reactionCounts = {};
+                reactions.forEach(reaction => {
+                    reactionCounts[reaction.reaction] = (reactionCounts[reaction.reaction] || 0) + 1;
+                });
+                
+                return `
+                    <div class="message-reactions">
+                        ${Object.entries(reactionCounts).map(([emoji, count]) => 
+                            `<span class="reaction">${emoji} ${count}</span>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+            
+            autoResizeTextarea() {
+                const textarea = this.elements.chatInput;
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+            }
+            
+            handleTyping() {
+                if (!this.isTyping) {
+                    this.isTyping = true;
+                    // In a real implementation, send typing indicator to server
+                }
+                
+                clearTimeout(this.typingTimeout);
+                this.typingTimeout = setTimeout(() => {
+                    this.isTyping = false;
+                    // Send stop typing indicator
+                }, 1000);
+            }
+            
+            toggleEmojiPicker() {
+                const picker = this.elements.emojiPicker;
+                picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
+            }
+            
+            insertEmoji(emoji) {
+                const input = this.elements.chatInput;
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const text = input.value;
+                
+                input.value = text.substring(0, start) + emoji + text.substring(end);
+                input.selectionStart = input.selectionEnd = start + emoji.length;
+                input.focus();
+                
+                this.elements.emojiPicker.style.display = 'none';
+            }
+            
+            scrollToBottom() {
+                this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+            }
+            
+            destroy() {
+                if (this.pollInterval) {
+                    clearInterval(this.pollInterval);
+                }
+                if (this.typingTimeout) {
+                    clearTimeout(this.typingTimeout);
+                }
+            }
+        }
+        
+        // Initialize chat when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get room and participant info from URL params or set defaults
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room') || 'demo_room';
+            const participantName = urlParams.get('name') || 'Guest User';
+            const participantRole = urlParams.get('role') || 'guest';
+            
+            window.liveChat = new LiveChat(roomId, participantName, participantRole);
+        });
+    </script>
+</body>
+</html>

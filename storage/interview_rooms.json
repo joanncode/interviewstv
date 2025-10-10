@@ -1,0 +1,57 @@
+{
+    "room_68e94de550cdb": {
+        "id": "room_68e94de550cdb",
+        "host_user_id": 1,
+        "title": "Test Interview",
+        "description": "Testing the interview system",
+        "scheduled_start": null,
+        "scheduled_end": null,
+        "status": "scheduled",
+        "room_code": "M6W7QZBL",
+        "max_guests": 5,
+        "recording_enabled": true,
+        "chat_enabled": true,
+        "waiting_room_enabled": true,
+        "guest_approval_required": false,
+        "password_protected": false,
+        "room_password": null,
+        "stream_key": "C9VW4OX1TMHG78JL",
+        "rtmp_url": "rtmp:\/\/localhost:1935\/live\/C9VW4OX1TMHG78JL",
+        "hls_url": "http:\/\/localhost:8080\/live\/C9VW4OX1TMHG78JL\/index.m3u8",
+        "webrtc_url": "wss:\/\/localhost:8081\/webrtc\/C9VW4OX1TMHG78JL",
+        "created_at": "2025-10-10 18:18:13",
+        "updated_at": "2025-10-10 18:18:13",
+        "guests": [
+            "inv_68e94df875816"
+        ],
+        "participants": [
+            "part_68e94ed61a2a1"
+        ]
+    },
+    "room_68e94df52ad61": {
+        "id": "room_68e94df52ad61",
+        "host_user_id": 1,
+        "title": "funplace",
+        "description": "asdsda",
+        "scheduled_start": "32005-03-30T09:00",
+        "scheduled_end": null,
+        "status": "live",
+        "room_code": "8NRQALSG",
+        "max_guests": 10,
+        "recording_enabled": true,
+        "chat_enabled": true,
+        "waiting_room_enabled": true,
+        "guest_approval_required": false,
+        "password_protected": false,
+        "room_password": null,
+        "stream_key": "LTF8DR0O694QNCAJ",
+        "rtmp_url": "rtmp:\/\/localhost:1935\/live\/LTF8DR0O694QNCAJ",
+        "hls_url": "http:\/\/localhost:8080\/live\/LTF8DR0O694QNCAJ\/index.m3u8",
+        "webrtc_url": "wss:\/\/localhost:8081\/webrtc\/LTF8DR0O694QNCAJ",
+        "created_at": "2025-10-10 18:18:29",
+        "updated_at": "2025-10-10 18:18:44",
+        "guests": [],
+        "participants": [],
+        "actual_start": "2025-10-10 18:18:44"
+    }
+}

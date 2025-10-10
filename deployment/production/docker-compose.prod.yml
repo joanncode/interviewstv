@@ -1,0 +1,471 @@
+version: '3.8'
+
+# Production Docker Compose Configuration for Interviews.tv
+# Optimized for high availability, scalability, and security
+
+services:
+  # Load Balancer & Reverse Proxy
+  nginx-lb:
+    image: nginx:1.25-alpine
+    container_name: interviews-nginx-lb
+    ports:
+      - "80:80"
+      - "443:443"
+      - "1935:1935"  # RTMP
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - api-server-1
+      - api-server-2
+      - api-server-3
+      - streaming-server-1
+      - streaming-server-2
+      - streaming-server-3
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Servers (3 instances for high availability)
+  api-server-1:
+    image: interviews-tv/api:latest
+    container_name: interviews-api-1
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - CDN_URL=${CDN_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - INSTANCE_ID=api-1
+    volumes:
+      - ./logs/api-1:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mysql-master
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-server-2:
+    image: interviews-tv/api:latest
+    container_name: interviews-api-2
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - CDN_URL=${CDN_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - INSTANCE_ID=api-2
+    volumes:
+      - ./logs/api-2:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mysql-master
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-server-3:
+    image: interviews-tv/api:latest
+    container_name: interviews-api-3
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - CDN_URL=${CDN_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - INSTANCE_ID=api-3
+    volumes:
+      - ./logs/api-3:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mysql-master
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streaming Servers (3 instances for high availability)
+  streaming-server-1:
+    image: interviews-tv/streaming:latest
+    container_name: interviews-streaming-1
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - RTMP_PORT=1935
+      - HLS_PORT=8080
+      - INSTANCE_ID=streaming-1
+      - CDN_URL=${CDN_URL}
+      - TURN_SECRET=${TURN_SECRET}
+    volumes:
+      - ./logs/streaming-1:/app/logs
+      - ./media/streaming-1:/app/media
+    depends_on:
+      - mysql-master
+      - redis-cluster
+      - ffmpeg-worker-1
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  streaming-server-2:
+    image: interviews-tv/streaming:latest
+    container_name: interviews-streaming-2
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - RTMP_PORT=1935
+      - HLS_PORT=8080
+      - INSTANCE_ID=streaming-2
+      - CDN_URL=${CDN_URL}
+      - TURN_SECRET=${TURN_SECRET}
+    volumes:
+      - ./logs/streaming-2:/app/logs
+      - ./media/streaming-2:/app/media
+    depends_on:
+      - mysql-master
+      - redis-cluster
+      - ffmpeg-worker-2
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  streaming-server-3:
+    image: interviews-tv/streaming:latest
+    container_name: interviews-streaming-3
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql-master
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis-cluster
+      - RTMP_PORT=1935
+      - HLS_PORT=8080
+      - INSTANCE_ID=streaming-3
+      - CDN_URL=${CDN_URL}
+      - TURN_SECRET=${TURN_SECRET}
+    volumes:
+      - ./logs/streaming-3:/app/logs
+      - ./media/streaming-3:/app/media
+    depends_on:
+      - mysql-master
+      - redis-cluster
+      - ffmpeg-worker-3
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Database - MySQL Master-Slave Replication
+  mysql-master:
+    image: mysql:8.0
+    container_name: interviews-mysql-master
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_REPLICATION_MODE=master
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=${MYSQL_REPLICATION_PASSWORD}
+    volumes:
+      - mysql-master-data:/var/lib/mysql
+      - ./mysql/master.cnf:/etc/mysql/conf.d/master.cnf:ro
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+      - ./backups/mysql:/backups
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql-slave:
+    image: mysql:8.0
+    container_name: interviews-mysql-slave
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_REPLICATION_MODE=slave
+      - MYSQL_REPLICATION_USER=replicator
+      - MYSQL_REPLICATION_PASSWORD=${MYSQL_REPLICATION_PASSWORD}
+      - MYSQL_MASTER_HOST=mysql-master
+      - MYSQL_MASTER_PORT_NUMBER=3306
+    volumes:
+      - mysql-slave-data:/var/lib/mysql
+      - ./mysql/slave.cnf:/etc/mysql/conf.d/slave.cnf:ro
+    depends_on:
+      - mysql-master
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cluster for Caching and Sessions
+  redis-cluster:
+    image: redis:7-alpine
+    container_name: interviews-redis-cluster
+    command: redis-server --appendonly yes --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000
+    volumes:
+      - redis-data:/data
+      - ./redis/redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FFmpeg Workers for Video Processing
+  ffmpeg-worker-1:
+    image: interviews-tv/ffmpeg:latest
+    container_name: interviews-ffmpeg-1
+    environment:
+      - WORKER_ID=ffmpeg-1
+      - REDIS_HOST=redis-cluster
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./media/processing-1:/app/processing
+      - ./logs/ffmpeg-1:/app/logs
+    depends_on:
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  ffmpeg-worker-2:
+    image: interviews-tv/ffmpeg:latest
+    container_name: interviews-ffmpeg-2
+    environment:
+      - WORKER_ID=ffmpeg-2
+      - REDIS_HOST=redis-cluster
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./media/processing-2:/app/processing
+      - ./logs/ffmpeg-2:/app/logs
+    depends_on:
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  ffmpeg-worker-3:
+    image: interviews-tv/ffmpeg:latest
+    container_name: interviews-ffmpeg-3
+    environment:
+      - WORKER_ID=ffmpeg-3
+      - REDIS_HOST=redis-cluster
+      - S3_BUCKET=${S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./media/processing-3:/app/processing
+      - ./logs/ffmpeg-3:/app/logs
+    depends_on:
+      - redis-cluster
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: interviews-prometheus
+    volumes:
+      - ./monitoring/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: interviews-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  # Log Management
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: interviews-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: interviews-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  # Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: interviews-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+  # Object Storage (MinIO for development, S3 for production)
+  minio:
+    image: minio/minio:latest
+    container_name: interviews-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    restart: unless-stopped
+    networks:
+      - interviews-network
+
+volumes:
+  mysql-master-data:
+    driver: local
+  mysql-slave-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  interviews-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" 
+        xmlns:tizen="http://tizen.org/ns/widgets" 
+        id="tv.interviews.tizen" 
+        version="1.0.0" 
+        viewmodes="maximized">
+    
+    <tizen:application id="tv.interviews.tizen" package="tv.interviews.tizen" required_version="6.0"/>
+    
+    <content src="index.html"/>
+    
+    <name>Interviews.tv</name>
+    <description>Live Interview Streaming Platform for Smart TVs</description>
+    
+    <author href="https://interviews.tv" email="support@interviews.tv">Interviews.tv Team</author>
+    
+    <icon src="icons/icon-117x117.png"/>
+    
+    <tizen:metadata key="http://samsung.com/tv/metadata/use.preview" value="endpoint_URL"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/prelaunch.support" value="true"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/drminfo.value" value="Widevine"/>
+    
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.read"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.write"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.audio"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.display"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.window"/>
+    <tizen:privilege name="http://samsung.com/privilege/drmplay"/>
+    <tizen:privilege name="http://samsung.com/privilege/avplay"/>
+    <tizen:privilege name="http://samsung.com/privilege/productinfo"/>
+    
+    <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+    
+    <tizen:app-control>
+        <tizen:src name="index.html"/>
+        <tizen:operation name="http://tizen.org/appcontrol/operation/main"/>
+    </tizen:app-control>
+    
+    <tizen:app-widget id="tv.interviews.widget" primary="true">
+        <tizen:widget-label>Interviews.tv</tizen:widget-label>
+        <tizen:widget-content src="widget/widget.html"/>
+        <tizen:widget-size preview="widget/preview.png">2x1</tizen:widget-size>
+    </tizen:app-widget>
+    
+    <tizen:category name="http://samsung.com/tv/metadata/category/entertainment"/>
+    <tizen:category name="http://samsung.com/tv/metadata/category/video"/>
+    
+    <access origin="*" subdomains="true"/>
+    
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <feature name="http://tizen.org/feature/tv"/>
+    <feature name="http://tizen.org/feature/network.internet"/>
+    
+</widget>
