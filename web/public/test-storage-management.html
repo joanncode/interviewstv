@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Management Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: #FF0000;
+            color: white;
+            border-radius: 10px 10px 0 0;
+            padding: 15px;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn-primary {
+            background-color: #FF0000;
+            border-color: #FF0000;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: #444;
+            border-color: #444;
+        }
+
+        .form-control {
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            color: #ffffff;
+        }
+
+        .form-control:focus {
+            background-color: #3a3a3a;
+            border-color: #FF0000;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .alert {
+            border-radius: 8px;
+        }
+
+        .progress {
+            background-color: #444;
+        }
+
+        .progress-bar {
+            background-color: #FF0000;
+        }
+
+        .table-dark {
+            background-color: #2a2a2a;
+        }
+
+        .table-dark td, .table-dark th {
+            border-color: #444;
+        }
+
+        .status-healthy { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-critical { color: #dc3545; }
+
+        .metric-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FF0000;
+        }
+
+        .metric-label {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        #log {
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .log-info { color: #17a2b8; }
+        .log-warning { color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-database"></i> Storage Management Test
+                </h1>
+            </div>
+        </div>
+
+        <!-- Storage Health Overview -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-heartbeat"></i> Storage Health Overview
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="health-metrics">
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="health-score">--</div>
+                                    <div class="metric-label">Health Score</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="quota-usage">--</div>
+                                    <div class="metric-label">Quota Usage</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="total-files">--</div>
+                                    <div class="metric-label">Total Files</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="total-size">--</div>
+                                    <div class="metric-label">Total Size</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadStorageHealth()">
+                            <i class="fas fa-sync"></i> Refresh Health
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Operations -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-tools"></i> Storage Operations
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button class="btn btn-primary w-100 mb-2" onclick="getStorageStats()">
+                                <i class="fas fa-chart-bar"></i> Get Storage Statistics
+                            </button>
+                            <button class="btn btn-primary w-100 mb-2" onclick="getStorageAnalytics()">
+                                <i class="fas fa-analytics"></i> Get Storage Analytics
+                            </button>
+                            <button class="btn btn-secondary w-100 mb-2" onclick="enforceQuota()">
+                                <i class="fas fa-balance-scale"></i> Enforce Storage Quota
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Cleanup Days Old:</label>
+                            <input type="number" class="form-control" id="cleanup-days" value="90" min="1" max="365">
+                            <button class="btn btn-warning w-100 mt-2" onclick="cleanupOldFiles()">
+                                <i class="fas fa-trash"></i> Cleanup Old Files
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Optimize Days Old:</label>
+                            <input type="number" class="form-control" id="optimize-days" value="30" min="1" max="365">
+                            <button class="btn btn-info w-100 mt-2" onclick="optimizeStorage()">
+                                <i class="fas fa-compress"></i> Optimize Storage
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-cogs"></i> Admin Operations
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary w-100 mb-2" onclick="getSystemAnalytics()">
+                            <i class="fas fa-server"></i> System-wide Analytics
+                        </button>
+                        <button class="btn btn-secondary w-100 mb-2" onclick="updateStatistics()">
+                            <i class="fas fa-database"></i> Update Statistics
+                        </button>
+                        <button class="btn btn-info w-100 mb-2" onclick="loadStorageHealth()">
+                            <i class="fas fa-heartbeat"></i> Check Storage Health
+                        </button>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Admin operations require elevated privileges
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-terminal"></i> Operation Log
+                    </div>
+                    <div class="card-body">
+                        <div id="log"></div>
+                        <button class="btn btn-secondary btn-sm mt-2" onclick="clearLog()">
+                            <i class="fas fa-eraser"></i> Clear Log
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mock JWT token for testing
+        const mockToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJpbnRlcnZpZXdzLnR2IiwiYXVkIjoiaW50ZXJ2aWV3cy50diIsImlhdCI6MTczMzk0NzIwMCwiZXhwIjoxNzM0MDMzNjAwLCJ1c2VyX2lkIjoxLCJlbWFpbCI6InRlc3RAdGVzdC5jb20ifQ.test';
+
+        function logMessage(message, type = 'info') {
+            const log = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.innerHTML = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function makeRequest(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${mockToken}`
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                logMessage(`Making ${method} request to ${endpoint}`, 'info');
+                const response = await fetch(`/api${endpoint}`, options);
+                const result = await response.json();
+
+                if (result.success) {
+                    logMessage(`✓ ${endpoint} - Success`, 'success');
+                    console.log('Response:', result);
+                    return result;
+                } else {
+                    logMessage(`✗ ${endpoint} - Error: ${result.message}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                logMessage(`✗ ${endpoint} - Network Error: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function getStorageStats() {
+            const result = await makeRequest('/storage/stats');
+            if (result) {
+                logMessage(`Storage Stats: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function getStorageAnalytics() {
+            const result = await makeRequest('/storage/analytics');
+            if (result) {
+                logMessage(`Storage Analytics: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function enforceQuota() {
+            const result = await makeRequest('/storage/enforce-quota', 'POST');
+            if (result) {
+                logMessage(`Quota Enforcement: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function cleanupOldFiles() {
+            const days = document.getElementById('cleanup-days').value;
+            const result = await makeRequest('/storage/cleanup', 'POST', { days_old: parseInt(days) });
+            if (result) {
+                logMessage(`Cleanup Result: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function optimizeStorage() {
+            const days = document.getElementById('optimize-days').value;
+            const result = await makeRequest('/storage/optimize', 'POST', { days_old: parseInt(days) });
+            if (result) {
+                logMessage(`Optimization Result: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function getSystemAnalytics() {
+            const result = await makeRequest('/storage/system-analytics');
+            if (result) {
+                logMessage(`System Analytics: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function updateStatistics() {
+            const result = await makeRequest('/storage/update-statistics', 'POST');
+            if (result) {
+                logMessage(`Statistics Update: ${JSON.stringify(result.data, null, 2)}`, 'success');
+            }
+        }
+
+        async function loadStorageHealth() {
+            const result = await makeRequest('/storage/health');
+            if (result && result.data) {
+                const health = result.data;
+                
+                // Update health metrics
+                document.getElementById('health-score').textContent = health.overall_score;
+                document.getElementById('quota-usage').textContent = health.quota_usage.percentage + '%';
+                
+                // Get storage stats for additional metrics
+                const stats = await makeRequest('/storage/stats');
+                if (stats && stats.data) {
+                    document.getElementById('total-files').textContent = stats.data.total_files;
+                    document.getElementById('total-size').textContent = stats.data.total_size_formatted;
+                }
+                
+                logMessage(`Storage Health: Score ${health.overall_score}/100, Status: ${health.status}`, 
+                    health.status === 'healthy' ? 'success' : health.status === 'warning' ? 'warning' : 'error');
+                
+                if (health.issues.length > 0) {
+                    health.issues.forEach(issue => logMessage(`⚠ Issue: ${issue}`, 'warning'));
+                }
+                
+                if (health.recommendations.length > 0) {
+                    health.recommendations.forEach(rec => logMessage(`💡 Recommendation: ${rec}`, 'info'));
+                }
+            }
+        }
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', function() {
+            logMessage('Storage Management Test Interface Loaded', 'info');
+            logMessage('Click buttons above to test storage management functionality', 'info');
+            loadStorageHealth();
+        });
+    </script>
+</body>
+</html>

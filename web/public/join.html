@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Interview - Interviews.tv</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .join-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #2a2a2a;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .join-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .join-header h1 {
+            color: #FF0000;
+            margin-bottom: 10px;
+        }
+        .form-control {
+            background: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+        .form-control:focus {
+            background: #3a3a3a;
+            border-color: #FF0000;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+        .btn-primary {
+            background: #FF0000;
+            border-color: #FF0000;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: #cc0000;
+            border-color: #cc0000;
+        }
+        .device-test {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .device-status {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-good { background: #28a745; }
+        .status-warning { background: #ffc107; }
+        .status-error { background: #dc3545; }
+        .video-preview {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .waiting-room {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #FF0000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="join-container">
+            <!-- Step 1: Join Code Entry -->
+            <div id="step-join-code" class="join-step">
+                <div class="join-header">
+                    <h1>Join Interview</h1>
+                    <p>Enter your join code or invitation link to access the interview</p>
+                </div>
+                
+                <form id="join-code-form">
+                    <div class="mb-3">
+                        <label for="joinCode" class="form-label">Join Code</label>
+                        <input type="text" class="form-control" id="joinCode" placeholder="Enter 12-character code" maxlength="12" required>
+                        <div class="form-text text-light">The join code was provided in your invitation email</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Verify Code</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Guest Information -->
+            <div id="step-guest-info" class="join-step hidden">
+                <div class="join-header">
+                    <h1>Welcome to the Interview</h1>
+                    <p id="interview-title">Loading interview details...</p>
+                </div>
+                
+                <form id="guest-info-form">
+                    <div class="mb-3">
+                        <label for="guestName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="guestName" placeholder="Enter your full name" required>
+                        <div class="form-text text-light">This name will be visible to other participants</div>
+                    </div>
+                    
+                    <div class="device-test">
+                        <h5>Device Check</h5>
+                        <div class="device-status">
+                            <div class="status-icon status-warning" id="camera-status"></div>
+                            <span>Camera: <span id="camera-text">Testing...</span></span>
+                        </div>
+                        <div class="device-status">
+                            <div class="status-icon status-warning" id="microphone-status"></div>
+                            <span>Microphone: <span id="microphone-text">Testing...</span></span>
+                        </div>
+                        
+                        <video id="video-preview" class="video-preview" autoplay muted></video>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableCamera" checked>
+                            <label class="form-check-label" for="enableCamera">
+                                Enable camera
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableMicrophone" checked>
+                            <label class="form-check-label" for="enableMicrophone">
+                                Enable microphone
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Join Interview</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 3: Waiting Room -->
+            <div id="step-waiting-room" class="join-step hidden">
+                <div class="waiting-room">
+                    <h2>Waiting for Host</h2>
+                    <div class="spinner"></div>
+                    <p>Please wait while the host admits you to the interview.</p>
+                    <p><strong id="waiting-room-title">Interview Title</strong></p>
+                    <p>Host: <span id="waiting-host-name">Loading...</span></p>
+                    
+                    <div class="device-test mt-4">
+                        <h5>While you wait, check your setup:</h5>
+                        <video id="waiting-video-preview" class="video-preview" autoplay muted></video>
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-outline-light" id="toggle-camera">
+                                <i class="fas fa-video"></i> Camera
+                            </button>
+                            <button type="button" class="btn btn-outline-light" id="toggle-microphone">
+                                <i class="fas fa-microphone"></i> Microphone
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Error State -->
+            <div id="step-error" class="join-step hidden">
+                <div class="text-center">
+                    <h2 class="text-danger">Unable to Join</h2>
+                    <p id="error-message">An error occurred while trying to join the interview.</p>
+                    <button type="button" class="btn btn-outline-light" onclick="location.reload()">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script>
+        class InterviewJoin {
+            constructor() {
+                this.currentStep = 'join-code';
+                this.invitationData = null;
+                this.participantId = null;
+                this.mediaStream = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.checkUrlParams();
+            }
+
+            bindEvents() {
+                document.getElementById('join-code-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.verifyJoinCode();
+                });
+
+                document.getElementById('guest-info-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.joinInterview();
+                });
+
+                document.getElementById('toggle-camera').addEventListener('click', () => {
+                    this.toggleCamera();
+                });
+
+                document.getElementById('toggle-microphone').addEventListener('click', () => {
+                    this.toggleMicrophone();
+                });
+            }
+
+            checkUrlParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                const code = urlParams.get('code');
+
+                if (token) {
+                    this.loadInvitationByToken(token);
+                } else if (code) {
+                    document.getElementById('joinCode').value = code;
+                    this.verifyJoinCode();
+                }
+            }
+
+            async verifyJoinCode() {
+                const joinCode = document.getElementById('joinCode').value.trim().toUpperCase();
+                
+                if (joinCode.length !== 12) {
+                    this.showError('Please enter a valid 12-character join code');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/guest/verify-code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ join_code: joinCode })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.invitationData = data.data;
+                        this.showGuestInfoStep();
+                    } else {
+                        this.showError(data.message || 'Invalid join code');
+                    }
+                } catch (error) {
+                    this.showError('Network error. Please try again.');
+                }
+            }
+
+            async loadInvitationByToken(token) {
+                try {
+                    const response = await fetch(`/api/guest/invitation/${token}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.invitationData = data.data;
+                        this.showGuestInfoStep();
+                    } else {
+                        this.showError(data.message || 'Invalid invitation link');
+                    }
+                } catch (error) {
+                    this.showError('Network error. Please try again.');
+                }
+            }
+
+            showGuestInfoStep() {
+                this.showStep('guest-info');
+                document.getElementById('interview-title').textContent = this.invitationData.room.title;
+                document.getElementById('guestName').value = this.invitationData.invitation.guest_name || '';
+                this.setupDeviceTest();
+            }
+
+            async setupDeviceTest() {
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: true 
+                    });
+                    
+                    document.getElementById('video-preview').srcObject = this.mediaStream;
+                    this.updateDeviceStatus('camera', 'good', 'Working');
+                    this.updateDeviceStatus('microphone', 'good', 'Working');
+                } catch (error) {
+                    this.updateDeviceStatus('camera', 'error', 'Access denied');
+                    this.updateDeviceStatus('microphone', 'error', 'Access denied');
+                }
+            }
+
+            updateDeviceStatus(device, status, text) {
+                document.getElementById(`${device}-status`).className = `status-icon status-${status}`;
+                document.getElementById(`${device}-text`).textContent = text;
+            }
+
+            async joinInterview() {
+                const guestName = document.getElementById('guestName').value.trim();
+                
+                if (!guestName) {
+                    this.showError('Please enter your name');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/guest/join', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            invitation_token: this.invitationData.invitation.invitation_token,
+                            guest_name: guestName,
+                            device_info: {
+                                audio_enabled: document.getElementById('enableMicrophone').checked,
+                                video_enabled: document.getElementById('enableCamera').checked
+                            }
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.participantId = data.data.participant_id;
+                        
+                        if (data.data.waiting_room) {
+                            this.showWaitingRoom();
+                        } else {
+                            this.redirectToInterview();
+                        }
+                    } else {
+                        this.showError(data.message || 'Failed to join interview');
+                    }
+                } catch (error) {
+                    this.showError('Network error. Please try again.');
+                }
+            }
+
+            showWaitingRoom() {
+                this.showStep('waiting-room');
+                document.getElementById('waiting-room-title').textContent = this.invitationData.room.title;
+                document.getElementById('waiting-host-name').textContent = this.invitationData.room.host_name || 'Host';
+                
+                // Setup waiting room video
+                if (this.mediaStream) {
+                    document.getElementById('waiting-video-preview').srcObject = this.mediaStream;
+                }
+                
+                // Poll for admission
+                this.pollWaitingRoomStatus();
+            }
+
+            async pollWaitingRoomStatus() {
+                if (!this.participantId) return;
+
+                try {
+                    const response = await fetch(`/api/guest/participant/${this.participantId}/status`);
+                    const data = await response.json();
+
+                    if (data.success && data.data.can_join) {
+                        this.redirectToInterview();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+
+                // Poll again in 3 seconds
+                setTimeout(() => this.pollWaitingRoomStatus(), 3000);
+            }
+
+            redirectToInterview() {
+                // Redirect to the actual interview room
+                window.location.href = `/interview-room/${this.invitationData.room.id}?participant=${this.participantId}`;
+            }
+
+            toggleCamera() {
+                // Implementation for camera toggle
+                console.log('Toggle camera');
+            }
+
+            toggleMicrophone() {
+                // Implementation for microphone toggle
+                console.log('Toggle microphone');
+            }
+
+            showStep(stepName) {
+                // Hide all steps
+                document.querySelectorAll('.join-step').forEach(step => {
+                    step.classList.add('hidden');
+                });
+                
+                // Show target step
+                document.getElementById(`step-${stepName}`).classList.remove('hidden');
+                this.currentStep = stepName;
+            }
+
+            showError(message) {
+                document.getElementById('error-message').textContent = message;
+                this.showStep('error');
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InterviewJoin();
+        });
+    </script>
+</body>
+</html>

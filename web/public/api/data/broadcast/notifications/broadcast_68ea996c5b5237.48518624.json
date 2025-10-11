@@ -1,0 +1,17 @@
+{
+    "id": "broadcast_68ea996c5b5237.48518624",
+    "type": "message",
+    "room_id": "broadcast-test-room",
+    "data": {
+        "id": "68ea996c5b520",
+        "room_id": "broadcast-test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "User 3 here as well",
+        "message_type": "text",
+        "timestamp": 1760205164
+    },
+    "created_at": 1760205164,
+    "processed": false,
+    "updated_at": 1760205164
+}

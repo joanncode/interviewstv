@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Quality Monitoring Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .test-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .test-section h3 {
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .quality-card {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        .quality-card h5 {
+            color: #FF0000;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quality-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .quality-excellent {
+            background: #00ff44;
+            color: #000;
+        }
+
+        .quality-good {
+            background: #88cc00;
+            color: #000;
+        }
+
+        .quality-fair {
+            background: #ffaa00;
+            color: #000;
+        }
+
+        .quality-poor {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .quality-unknown {
+            background: #666;
+            color: #fff;
+        }
+
+        .metrics-display {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #ccc;
+            flex: 1;
+        }
+
+        .metric-value {
+            color: #00ff44;
+            font-weight: bold;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .metric-value.warning {
+            color: #ffaa00;
+        }
+
+        .metric-value.error {
+            color: #ff4444;
+        }
+
+        .btn-test {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-test:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+
+        .btn-test:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            height: 2px;
+            background: #00ff44;
+            transition: all 0.1s ease;
+        }
+
+        .chart-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .chart-labels {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .alerts-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .alert-warning {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            color: #ffaa00;
+        }
+
+        .alert-error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+        }
+
+        .alert-icon {
+            font-size: 14px;
+        }
+
+        .alert-time {
+            font-size: 10px;
+            color: #888;
+            margin-left: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #444;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff44;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-entry.info { color: #ccc; }
+        .log-entry.success { color: #00ff44; }
+        .log-entry.error { color: #ff4444; }
+        .log-entry.warning { color: #ffaa00; }
+
+        .quality-summary {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .quality-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ff44;
+        }
+
+        .quality-details {
+            flex: 1;
+        }
+
+        .quality-breakdown {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quality-aspect {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 4;
+        }
+
+        .progress-ring .background {
+            stroke: #333;
+        }
+
+        .progress-ring .progress {
+            stroke: #00ff44;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.3s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #00ff44;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="text-center mb-4">
+            <h1><i class="fas fa-chart-line"></i> Audio Quality Monitoring Test</h1>
+            <p class="text-muted">Monitor and analyze real-time audio quality metrics and connection status</p>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="test-section">
+            <h3><i class="fas fa-play-circle"></i> Test Controls</h3>
+            <div class="text-center mb-3">
+                <button class="btn-test" id="start-test-btn">
+                    <i class="fas fa-play"></i> Start Quality Monitoring
+                </button>
+                <button class="btn-test" id="reset-metrics-btn" disabled>
+                    <i class="fas fa-redo"></i> Reset Metrics
+                </button>
+                <button class="btn-test" id="export-data-btn" disabled>
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+                <button class="btn-test" id="stop-test-btn" disabled>
+                    <i class="fas fa-stop"></i> Stop Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Quality Summary -->
+        <div class="test-section" id="quality-summary" style="display: none;">
+            <h3><i class="fas fa-tachometer-alt"></i> Quality Overview</h3>
+            <div class="quality-summary">
+                <div class="progress-ring">
+                    <svg>
+                        <circle class="background" cx="30" cy="30" r="26"></circle>
+                        <circle class="progress" cx="30" cy="30" r="26" 
+                                stroke-dasharray="0 163.36" id="overall-progress"></circle>
+                    </svg>
+                    <div class="progress-text" id="overall-score">0%</div>
+                </div>
+                <div class="quality-details">
+                    <h4>Overall Quality: <span class="quality-indicator quality-unknown" id="overall-quality">Unknown</span></h4>
+                    <div class="quality-breakdown">
+                        <div class="quality-aspect">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Volume:</span>
+                            <span class="quality-indicator quality-unknown" id="volume-quality">Unknown</span>
+                        </div>
+                        <div class="quality-aspect">
+                            <i class="fas fa-microphone"></i>
+                            <span>Clarity:</span>
+                            <span class="quality-indicator quality-unknown" id="clarity-quality">Unknown</span>
+                        </div>
+                        <div class="quality-aspect">
+                            <i class="fas fa-volume-off"></i>
+                            <span>Noise:</span>
+                            <span class="quality-indicator quality-unknown" id="noise-quality">Unknown</span>
+                        </div>
+                        <div class="quality-aspect">
+                            <i class="fas fa-signal"></i>
+                            <span>Stability:</span>
+                            <span class="quality-indicator quality-unknown" id="stability-quality">Unknown</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Metrics -->
+        <div class="test-section" id="realtime-metrics" style="display: none;">
+            <h3><i class="fas fa-chart-bar"></i> Real-time Metrics</h3>
+            <div class="quality-grid">
+                <!-- Current Audio Metrics -->
+                <div class="quality-card">
+                    <h5><i class="fas fa-microphone"></i> Current Audio</h5>
+                    <div class="metrics-display">
+                        <div class="metric-row">
+                            <span class="metric-label">Volume Level:</span>
+                            <span class="metric-value" id="current-volume">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Peak Volume:</span>
+                            <span class="metric-value" id="peak-volume">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Speech Quality:</span>
+                            <span class="metric-value" id="speech-quality">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Background Noise:</span>
+                            <span class="metric-value" id="background-noise">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Signal/Noise Ratio:</span>
+                            <span class="metric-value" id="snr">0 dB</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Is Speaking:</span>
+                            <span class="metric-value" id="is-speaking">No</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connection Quality -->
+                <div class="quality-card">
+                    <h5><i class="fas fa-wifi"></i> Connection Quality</h5>
+                    <div class="metrics-display">
+                        <div class="metric-row">
+                            <span class="metric-label">Latency:</span>
+                            <span class="metric-value" id="latency">0 ms</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Dynamic Range:</span>
+                            <span class="metric-value" id="dynamic-range">0 dB</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Clipping:</span>
+                            <span class="metric-value" id="clipping">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Dropouts:</span>
+                            <span class="metric-value" id="dropouts">0</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Processing Active:</span>
+                            <span class="metric-value" id="processing-active">Yes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality History Chart -->
+                <div class="quality-card" style="grid-column: span 2;">
+                    <h5><i class="fas fa-chart-line"></i> Quality History</h5>
+                    <div class="chart-container" id="quality-chart">
+                        <div class="chart-grid"></div>
+                        <canvas id="quality-canvas" width="100%" height="200"></canvas>
+                        <div class="chart-labels">
+                            <span>-30s</span>
+                            <span>-20s</span>
+                            <span>-10s</span>
+                            <span>Now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="test-section" id="statistics" style="display: none;">
+            <h3><i class="fas fa-calculator"></i> Session Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-time">0:00</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="speaking-time">0:00</div>
+                    <div class="stat-label">Speaking Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-volume">0%</div>
+                    <div class="stat-label">Avg Volume</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-speech-quality">0%</div>
+                    <div class="stat-label">Avg Speech Quality</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="quality-drops">0</div>
+                    <div class="stat-label">Quality Drops</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-samples">0</div>
+                    <div class="stat-label">Total Samples</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="test-section" id="alerts-section" style="display: none;">
+            <h3><i class="fas fa-exclamation-triangle"></i> Quality Alerts</h3>
+            <div class="alerts-container" id="alerts-container">
+                <div class="text-center text-muted">No alerts</div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-terminal"></i> Quality Monitoring Log</h3>
+            <div class="log-container" id="log-container">
+                <div class="log-entry info">Quality monitoring test initialized...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../src/services/audioQualityMonitor.js"></script>
+    <script src="../src/services/audioFilters.js"></script>
+    <script src="../src/services/audioControls.js"></script>
+    <script>
+        class QualityMonitoringTest {
+            constructor() {
+                this.audioControls = window.audioControls;
+                this.qualityMonitor = window.audioQualityMonitor;
+                this.isTestRunning = false;
+                this.participantId = 'quality-test';
+                this.updateInterval = null;
+                this.chartData = [];
+                this.maxChartPoints = 300; // 30 seconds at 100ms intervals
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.setupQualityListeners();
+                this.log('Quality monitoring test ready', 'info');
+            }
+
+            bindEvents() {
+                document.getElementById('start-test-btn').addEventListener('click', () => this.startTest());
+                document.getElementById('reset-metrics-btn').addEventListener('click', () => this.resetMetrics());
+                document.getElementById('export-data-btn').addEventListener('click', () => this.exportData());
+                document.getElementById('stop-test-btn').addEventListener('click', () => this.stopTest());
+            }
+
+            setupQualityListeners() {
+                // Quality change listener
+                this.audioControls.addQualityListener((participantId, metrics) => {
+                    if (participantId === this.participantId) {
+                        this.updateQualityDisplay(metrics);
+                    }
+                });
+
+                // Alert listener
+                this.audioControls.addAlertListener((participantId, alerts) => {
+                    if (participantId === this.participantId) {
+                        this.displayAlerts(alerts);
+                    }
+                });
+            }
+
+            async startTest() {
+                try {
+                    this.log('Starting quality monitoring test...', 'info');
+                    
+                    // Request microphone access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    // Add to audio controls (which will start quality monitoring)
+                    this.audioControls.addParticipantAudio(this.participantId, stream, true);
+                    
+                    this.isTestRunning = true;
+                    this.updateButtons();
+                    this.showTestSections();
+                    this.startUpdateLoop();
+                    this.setupChart();
+                    
+                    this.log('Quality monitoring test started successfully', 'success');
+                    
+                } catch (error) {
+                    this.log(`Failed to start test: ${error.message}`, 'error');
+                }
+            }
+
+            stopTest() {
+                this.isTestRunning = false;
+                
+                // Stop update loop
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+                
+                // Clean up audio controls
+                this.audioControls.removeParticipantAudio(this.participantId);
+                
+                this.updateButtons();
+                this.hideTestSections();
+                
+                this.log('Quality monitoring test stopped', 'warning');
+            }
+
+            resetMetrics() {
+                this.audioControls.resetQualityMetrics(this.participantId);
+                this.chartData = [];
+                this.clearChart();
+                this.clearAlerts();
+                this.log('Quality metrics reset', 'info');
+            }
+
+            exportData() {
+                const data = this.audioControls.exportQualityMetrics(this.participantId);
+                if (data) {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `quality-metrics-${new Date().toISOString()}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    this.log('Quality metrics exported', 'success');
+                }
+            }
+
+            startUpdateLoop() {
+                this.updateInterval = setInterval(() => {
+                    this.updateDisplay();
+                }, 100);
+            }
+
+            updateDisplay() {
+                const metrics = this.audioControls.getQualityMetrics(this.participantId);
+                if (metrics) {
+                    this.updateCurrentMetrics(metrics);
+                    this.updateStatistics(metrics);
+                    this.updateChart(metrics);
+                }
+            }
+
+            updateQualityDisplay(metrics) {
+                // Update overall quality
+                const overall = metrics.quality.overall;
+                document.getElementById('overall-quality').textContent = overall.charAt(0).toUpperCase() + overall.slice(1);
+                document.getElementById('overall-quality').className = `quality-indicator quality-${overall}`;
+                
+                // Update quality breakdown
+                ['volume', 'clarity', 'noise', 'stability'].forEach(aspect => {
+                    const quality = metrics.quality[aspect] || 'unknown';
+                    const element = document.getElementById(`${aspect}-quality`);
+                    element.textContent = quality.charAt(0).toUpperCase() + quality.slice(1);
+                    element.className = `quality-indicator quality-${quality}`;
+                });
+                
+                // Update progress ring
+                const qualityScores = { excellent: 100, good: 75, fair: 50, poor: 25, unknown: 0 };
+                const score = qualityScores[overall] || 0;
+                const circumference = 2 * Math.PI * 26;
+                const progress = (score / 100) * circumference;
+                
+                document.getElementById('overall-progress').style.strokeDasharray = `${progress} ${circumference}`;
+                document.getElementById('overall-score').textContent = `${score}%`;
+            }
+
+            updateCurrentMetrics(metrics) {
+                const current = metrics.current;
+                
+                document.getElementById('current-volume').textContent = `${(current.volume * 100).toFixed(1)}%`;
+                document.getElementById('peak-volume').textContent = `${(current.peakVolume * 100).toFixed(1)}%`;
+                document.getElementById('speech-quality').textContent = `${(current.speechQuality * 100).toFixed(1)}%`;
+                document.getElementById('background-noise').textContent = `${(current.backgroundNoise * 100).toFixed(1)}%`;
+                document.getElementById('snr').textContent = `${current.signalToNoise.toFixed(1)} dB`;
+                document.getElementById('is-speaking').textContent = current.isSpeaking ? 'Yes' : 'No';
+                
+                document.getElementById('latency').textContent = `${current.latency.toFixed(0)} ms`;
+                document.getElementById('dynamic-range').textContent = `${current.dynamicRange.toFixed(1)} dB`;
+                document.getElementById('clipping').textContent = `${(current.clipping * 100).toFixed(1)}%`;
+                document.getElementById('dropouts').textContent = current.dropouts.toString();
+                document.getElementById('processing-active').textContent = current.audioProcessingActive ? 'Yes' : 'No';
+                
+                // Apply warning/error classes
+                this.applyMetricStyling('current-volume', current.volume, 0.05, 0.9);
+                this.applyMetricStyling('background-noise', current.backgroundNoise, 0.1, 0.2, true);
+                this.applyMetricStyling('clipping', current.clipping, 0.05, 0.1, true);
+                this.applyMetricStyling('dropouts', current.dropouts, 2, 5, true);
+            }
+
+            updateStatistics(metrics) {
+                const stats = metrics.stats;
+                
+                const totalTime = stats.speakingTime + stats.silenceTime;
+                document.getElementById('total-time').textContent = this.formatTime(totalTime);
+                document.getElementById('speaking-time').textContent = this.formatTime(stats.speakingTime);
+                document.getElementById('avg-volume').textContent = `${(stats.avgVolume * 100).toFixed(1)}%`;
+                document.getElementById('avg-speech-quality').textContent = `${(stats.avgSpeechQuality * 100).toFixed(1)}%`;
+                document.getElementById('quality-drops').textContent = stats.qualityDrops.toString();
+                document.getElementById('total-samples').textContent = stats.totalSamples.toString();
+            }
+
+            updateChart(metrics) {
+                // Add current quality score to chart data
+                const qualityScores = { excellent: 100, good: 75, fair: 50, poor: 25, unknown: 0 };
+                const score = qualityScores[metrics.quality.overall] || 0;
+                
+                this.chartData.push({
+                    timestamp: Date.now(),
+                    quality: score,
+                    volume: metrics.current.volume * 100,
+                    speechQuality: metrics.current.speechQuality * 100,
+                    backgroundNoise: metrics.current.backgroundNoise * 100
+                });
+                
+                // Trim data to max points
+                if (this.chartData.length > this.maxChartPoints) {
+                    this.chartData = this.chartData.slice(-this.maxChartPoints);
+                }
+                
+                this.drawChart();
+            }
+
+            setupChart() {
+                const canvas = document.getElementById('quality-canvas');
+                const container = document.getElementById('quality-chart');
+                canvas.width = container.clientWidth;
+                canvas.height = 200;
+            }
+
+            drawChart() {
+                const canvas = document.getElementById('quality-canvas');
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+                
+                if (this.chartData.length < 2) return;
+                
+                // Draw quality line
+                ctx.strokeStyle = '#00ff44';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                this.chartData.forEach((point, index) => {
+                    const x = (index / (this.maxChartPoints - 1)) * width;
+                    const y = height - (point.quality / 100) * height;
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // Draw volume line (lighter)
+                ctx.strokeStyle = 'rgba(0, 255, 68, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                
+                this.chartData.forEach((point, index) => {
+                    const x = (index / (this.maxChartPoints - 1)) * width;
+                    const y = height - (point.volume / 100) * height;
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+            }
+
+            clearChart() {
+                const canvas = document.getElementById('quality-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            displayAlerts(alerts) {
+                const container = document.getElementById('alerts-container');
+                
+                alerts.forEach(alert => {
+                    const alertElement = document.createElement('div');
+                    alertElement.className = `alert-item alert-${alert.severity}`;
+                    
+                    alertElement.innerHTML = `
+                        <i class="alert-icon fas fa-${alert.severity === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
+                        <span>${alert.message}</span>
+                        <span class="alert-time">${new Date(alert.timestamp).toLocaleTimeString()}</span>
+                    `;
+                    
+                    container.insertBefore(alertElement, container.firstChild);
+                    
+                    // Remove old alerts (keep last 20)
+                    while (container.children.length > 20) {
+                        container.removeChild(container.lastChild);
+                    }
+                });
+                
+                // Remove "No alerts" message
+                const noAlertsMsg = container.querySelector('.text-muted');
+                if (noAlertsMsg) {
+                    noAlertsMsg.remove();
+                }
+            }
+
+            clearAlerts() {
+                const container = document.getElementById('alerts-container');
+                container.innerHTML = '<div class="text-center text-muted">No alerts</div>';
+            }
+
+            applyMetricStyling(elementId, value, warningThreshold, errorThreshold, inverse = false) {
+                const element = document.getElementById(elementId);
+                element.classList.remove('warning', 'error');
+                
+                if (inverse) {
+                    if (value > errorThreshold) {
+                        element.classList.add('error');
+                    } else if (value > warningThreshold) {
+                        element.classList.add('warning');
+                    }
+                } else {
+                    if (value < errorThreshold) {
+                        element.classList.add('error');
+                    } else if (value < warningThreshold) {
+                        element.classList.add('warning');
+                    }
+                }
+            }
+
+            formatTime(milliseconds) {
+                const seconds = Math.floor(milliseconds / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+
+            showTestSections() {
+                document.getElementById('quality-summary').style.display = 'block';
+                document.getElementById('realtime-metrics').style.display = 'block';
+                document.getElementById('statistics').style.display = 'block';
+                document.getElementById('alerts-section').style.display = 'block';
+            }
+
+            hideTestSections() {
+                document.getElementById('quality-summary').style.display = 'none';
+                document.getElementById('realtime-metrics').style.display = 'none';
+                document.getElementById('statistics').style.display = 'none';
+                document.getElementById('alerts-section').style.display = 'none';
+            }
+
+            updateButtons() {
+                document.getElementById('start-test-btn').disabled = this.isTestRunning;
+                document.getElementById('reset-metrics-btn').disabled = !this.isTestRunning;
+                document.getElementById('export-data-btn').disabled = !this.isTestRunning;
+                document.getElementById('stop-test-btn').disabled = !this.isTestRunning;
+            }
+
+            log(message, type = 'info') {
+                const logContainer = document.getElementById('log-container');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                console.log(`[QualityMonitoringTest] ${message}`);
+            }
+        }
+
+        // Initialize test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.qualityMonitoringTest = new QualityMonitoringTest();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "id": "test-room",
+    "name": "Test Chat Room",
+    "description": "Test chat room for development",
+    "interview_id": 1,
+    "created_by": 1,
+    "created_at": 1760200525,
+    "updated_at": 1760200525,
+    "is_active": true,
+    "max_users": 100,
+    "settings": []
+}

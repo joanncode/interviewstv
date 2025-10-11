@@ -1,0 +1,10 @@
+{
+    "id": "new-test-room",
+    "name": "New Test Room",
+    "description": "Created via API test",
+    "created_by": 123456,
+    "is_active": true,
+    "settings": [],
+    "updated_at": 1760202287,
+    "created_at": 1760202287
+}

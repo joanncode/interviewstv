@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Room - Interviews.tv</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .interview-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header-bar {
+            background: #2a2a2a;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        .interview-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FF0000;
+        }
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .video-area {
+            flex: 1;
+            background: #000;
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 15px;
+        }
+        .video-container {
+            position: relative;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        .video-container.speaking {
+            border-color: #FF0000;
+        }
+        .video-container.host {
+            border-color: #28a745;
+        }
+        .participant-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 10px;
+            color: white;
+        }
+        .participant-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .participant-status {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .chat-panel {
+            width: 300px;
+            background: #2a2a2a;
+            border-left: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid #444;
+            font-weight: 600;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: #333;
+            border-radius: 8px;
+        }
+        .chat-message.system {
+            background: #444;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        .message-author {
+            font-weight: 600;
+            color: #FF0000;
+            font-size: 12px;
+        }
+        .message-content {
+            margin-top: 2px;
+        }
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #444;
+        }
+        .chat-input input {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+        .chat-input input:focus {
+            background: #333;
+            border-color: #FF0000;
+            color: white;
+            box-shadow: none;
+        }
+        .controls-bar {
+            background: #2a2a2a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 1px solid #444;
+        }
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .control-btn.active {
+            background: #FF0000;
+            color: white;
+        }
+        .control-btn.inactive {
+            background: #666;
+            color: #ccc;
+        }
+        .control-btn.danger {
+            background: #dc3545;
+            color: white;
+        }
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+        .participants-list {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+        .participant-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+        .participant-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #FF0000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .recording-indicator {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .recording-indicator.paused {
+            background: #ffc107;
+            color: #000;
+        }
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        .recording-dot.paused {
+            background: #000;
+            animation: none;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .recording-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .recording-time {
+            font-family: monospace;
+            font-size: 14px;
+            color: #ccc;
+        }
+        /* Responsive video grid */
+        .video-container.single { width: 80%; height: 60%; }
+        .video-container.dual { width: 45%; height: 45%; }
+        .video-container.multi { width: 30%; height: 30%; }
+        .video-container.many { width: 23%; height: 23%; }
+    </style>
+</head>
+<body>
+    <div class="interview-container">
+        <!-- Header Bar -->
+        <div class="header-bar">
+            <div class="interview-title" id="interview-title">Loading Interview...</div>
+            <div class="header-controls">
+                <div class="recording-controls">
+                    <div class="recording-indicator" id="recording-indicator" style="display: none;">
+                        <div class="recording-dot" id="recording-dot"></div>
+                        <span id="recording-status">Recording</span>
+                    </div>
+                    <div class="recording-time" id="recording-time" style="display: none;">00:00:00</div>
+                    <button class="btn btn-sm btn-outline-light" id="record-btn" style="display: none;">
+                        <i class="fas fa-record-vinyl"></i> Record
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" id="pause-record-btn" style="display: none;">
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" id="stop-record-btn" style="display: none;">
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                </div>
+                <button class="btn btn-sm btn-outline-light" id="participants-btn">
+                    <i class="fas fa-users"></i> <span id="participant-count">0</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" id="leave-btn">
+                    <i class="fas fa-sign-out-alt"></i> Leave
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Video Area -->
+            <div class="video-area" id="video-area">
+                <!-- Videos will be dynamically added here -->
+            </div>
+
+            <!-- Chat Panel -->
+            <div class="chat-panel" id="chat-panel">
+                <div class="chat-header">
+                    <i class="fas fa-comments"></i> Chat
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="chat-input">
+                    <form id="chat-form">
+                        <input type="text" class="form-control" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <button class="control-btn active" id="microphone-btn" title="Microphone">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="control-btn active" id="camera-btn" title="Camera">
+                <i class="fas fa-video"></i>
+            </button>
+            <button class="control-btn inactive" id="screen-share-btn" title="Share Screen">
+                <i class="fas fa-desktop"></i>
+            </button>
+            <button class="control-btn inactive" id="hand-raise-btn" title="Raise Hand">
+                <i class="fas fa-hand-paper"></i>
+            </button>
+            <button class="control-btn inactive" id="chat-toggle-btn" title="Toggle Chat">
+                <i class="fas fa-comments"></i>
+            </button>
+            <button class="control-btn danger" id="end-call-btn" title="End Call">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+
+        <!-- Participants List -->
+        <div class="participants-list" id="participants-list">
+            <h6>Participants</h6>
+            <div id="participants-content">
+                <!-- Participants will be listed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="../src/services/recordingManager.js"></script>
+    <script src="../src/services/audioQualityMonitor.js"></script>
+    <script src="../src/services/audioFilters.js"></script>
+    <script src="../src/services/audioControls.js"></script>
+    <script src="../src/services/chatClient.js"></script>
+    <script>
+        class InterviewRoom {
+            constructor() {
+                this.roomId = this.getRoomIdFromUrl();
+                this.participantId = this.getParticipantIdFromUrl();
+                this.isHost = false;
+                this.participants = new Map();
+                this.localStream = null;
+                this.peerConnections = new Map();
+                this.chatEnabled = true;
+                this.recordingManager = null;
+                this.recordingTimer = null;
+                this.recordingStartTime = null;
+                this.autoRecordingEnabled = false;
+                this.participantCount = 0;
+                this.autoRecordingStarted = false;
+                this.audioControls = window.audioControls;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadRoomData();
+                this.setupLocalMedia();
+                this.connectToRoom();
+            }
+
+            bindEvents() {
+                // Control buttons
+                document.getElementById('microphone-btn').addEventListener('click', () => this.toggleMicrophone());
+                document.getElementById('camera-btn').addEventListener('click', () => this.toggleCamera());
+                document.getElementById('screen-share-btn').addEventListener('click', () => this.toggleScreenShare());
+                document.getElementById('hand-raise-btn').addEventListener('click', () => this.toggleHandRaise());
+                document.getElementById('chat-toggle-btn').addEventListener('click', () => this.toggleChat());
+                document.getElementById('end-call-btn').addEventListener('click', () => this.endCall());
+                document.getElementById('leave-btn').addEventListener('click', () => this.leaveRoom());
+
+                // Recording controls
+                document.getElementById('record-btn').addEventListener('click', () => this.startRecording());
+                document.getElementById('pause-record-btn').addEventListener('click', () => this.toggleRecordingPause());
+                document.getElementById('stop-record-btn').addEventListener('click', () => this.stopRecording());
+
+                // Participants
+                document.getElementById('participants-btn').addEventListener('click', () => this.toggleParticipantsList());
+
+                // Chat
+                document.getElementById('chat-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendChatMessage();
+                });
+
+                // Window events
+                window.addEventListener('beforeunload', () => this.leaveRoom());
+            }
+
+            getRoomIdFromUrl() {
+                const path = window.location.pathname;
+                const match = path.match(/\/interview-room\/([^\/]+)/);
+                return match ? match[1] : null;
+            }
+
+            getParticipantIdFromUrl() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('participant');
+            }
+
+            async loadRoomData() {
+                try {
+                    const response = await fetch(`/api/interview-rooms/${this.roomId}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        document.getElementById('interview-title').textContent = data.data.title;
+                        this.isHost = data.data.host_user_id === this.getCurrentUserId();
+
+                        // Show recording controls for hosts
+                        if (this.isHost && data.data.recording_enabled) {
+                            document.getElementById('record-btn').style.display = 'inline-block';
+                            this.initializeRecordingManager();
+
+                            // Check for auto-recording
+                            if (data.data.auto_recording_enabled) {
+                                this.autoRecordingEnabled = true;
+                                this.addSystemMessage('Auto-recording is enabled for this interview');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load room data:', error);
+                }
+            }
+
+            async setupLocalMedia() {
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    this.addVideoContainer('local', 'You', this.localStream, true);
+
+                    // Add audio controls for local stream
+                    if (this.audioControls) {
+                        this.audioControls.addParticipantAudio('local', this.localStream, true);
+                    }
+                } catch (error) {
+                    console.error('Failed to access media devices:', error);
+                    this.addSystemMessage('Failed to access camera/microphone');
+                }
+            }
+
+            connectToRoom() {
+                // This would typically connect to WebRTC signaling server
+                // For now, simulate some participants
+                this.simulateParticipants();
+            }
+
+            simulateParticipants() {
+                // Add some mock participants for demonstration
+                setTimeout(() => {
+                    this.addParticipant('host', 'Interview Host', true);
+                    this.addSystemMessage('Interview Host joined');
+                }, 1000);
+
+                setTimeout(() => {
+                    this.addParticipant('guest1', 'John Doe', false);
+                    this.addSystemMessage('John Doe joined');
+                }, 2000);
+            }
+
+            addParticipant(id, name, isHost) {
+                this.participants.set(id, { name, isHost });
+                this.participantCount = this.participants.size;
+                this.updateParticipantCount();
+                this.updateParticipantsList();
+
+                // Add video container (without actual stream for demo)
+                this.addVideoContainer(id, name, null, isHost);
+
+                // For demo purposes, create a mock audio stream for remote participants
+                if (this.audioControls && id !== 'local') {
+                    this.createMockAudioStream(id);
+                }
+
+                // Check for auto-recording trigger
+                this.checkAutoRecordingTrigger();
+            }
+
+            createMockAudioStream(participantId) {
+                // Create a mock audio stream for demonstration
+                // In a real implementation, this would be the actual remote audio stream
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    const destination = audioContext.createMediaStreamDestination();
+
+                    // Create a very quiet oscillator to simulate audio presence
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime); // Very quiet
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(destination);
+                    oscillator.start();
+
+                    // Add audio controls for this mock stream
+                    this.audioControls.addParticipantAudio(participantId, destination.stream, false);
+
+                    // Simulate random speaking activity
+                    this.simulateSpeakingActivity(participantId, gainNode);
+
+                } catch (error) {
+                    console.warn('Could not create mock audio stream:', error);
+                }
+            }
+
+            simulateSpeakingActivity(participantId, gainNode) {
+                // Simulate random speaking patterns for demo
+                const speakingInterval = setInterval(() => {
+                    if (!this.participants.has(participantId)) {
+                        clearInterval(speakingInterval);
+                        return;
+                    }
+
+                    // Random speaking activity
+                    const isSpeaking = Math.random() > 0.7;
+                    const volume = isSpeaking ? Math.random() * 0.1 + 0.05 : 0.001;
+
+                    if (gainNode && gainNode.gain) {
+                        gainNode.gain.setValueAtTime(volume, gainNode.context.currentTime);
+                    }
+                }, 1000 + Math.random() * 2000); // Random interval between 1-3 seconds
+            }
+
+            addVideoContainer(id, name, stream, isHost) {
+                const videoArea = document.getElementById('video-area');
+                const container = document.createElement('div');
+                container.className = `video-container ${this.getVideoSizeClass()}`;
+                container.id = `video-${id}`;
+                container.setAttribute('data-participant-id', id);
+
+                if (isHost) container.classList.add('host');
+
+                container.innerHTML = `
+                    <video class="participant-video" autoplay muted playsinline></video>
+                    <div class="video-overlay">
+                        <div class="participant-name">${name}</div>
+                        <div class="participant-status">${isHost ? 'Host' : 'Guest'}</div>
+                    </div>
+                `;
+
+                if (stream) {
+                    container.querySelector('video').srcObject = stream;
+                }
+
+                videoArea.appendChild(container);
+                this.updateVideoLayout();
+            }
+
+            getVideoSizeClass() {
+                const count = this.participants.size + 1; // +1 for local
+                if (count === 1) return 'single';
+                if (count === 2) return 'dual';
+                if (count <= 4) return 'multi';
+                return 'many';
+            }
+
+            updateVideoLayout() {
+                const containers = document.querySelectorAll('.video-container');
+                const sizeClass = this.getVideoSizeClass();
+                
+                containers.forEach(container => {
+                    container.className = `video-container ${sizeClass}`;
+                    if (container.id === 'video-local') container.classList.add('local');
+                    if (container.classList.contains('host')) container.classList.add('host');
+                });
+            }
+
+            updateParticipantCount() {
+                document.getElementById('participant-count').textContent = this.participants.size + 1;
+            }
+
+            updateParticipantsList() {
+                const content = document.getElementById('participants-content');
+                content.innerHTML = '';
+
+                // Add self
+                content.appendChild(this.createParticipantItem('You', true));
+
+                // Add other participants
+                this.participants.forEach((participant, id) => {
+                    content.appendChild(this.createParticipantItem(participant.name, participant.isHost));
+                });
+            }
+
+            createParticipantItem(name, isHost) {
+                const item = document.createElement('div');
+                item.className = 'participant-item';
+                
+                const initial = name.charAt(0).toUpperCase();
+                item.innerHTML = `
+                    <div class="participant-avatar">${initial}</div>
+                    <div>
+                        <div>${name}</div>
+                        <small class="text-muted">${isHost ? 'Host' : 'Guest'}</small>
+                    </div>
+                `;
+                
+                return item;
+            }
+
+            toggleMicrophone() {
+                const btn = document.getElementById('microphone-btn');
+                const icon = btn.querySelector('i');
+                
+                if (btn.classList.contains('active')) {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
+                    icon.className = 'fas fa-microphone-slash';
+                    
+                    if (this.localStream) {
+                        this.localStream.getAudioTracks().forEach(track => track.enabled = false);
+                    }
+                } else {
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                    icon.className = 'fas fa-microphone';
+                    
+                    if (this.localStream) {
+                        this.localStream.getAudioTracks().forEach(track => track.enabled = true);
+                    }
+                }
+            }
+
+            toggleCamera() {
+                const btn = document.getElementById('camera-btn');
+                const icon = btn.querySelector('i');
+                
+                if (btn.classList.contains('active')) {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
+                    icon.className = 'fas fa-video-slash';
+                    
+                    if (this.localStream) {
+                        this.localStream.getVideoTracks().forEach(track => track.enabled = false);
+                    }
+                } else {
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                    icon.className = 'fas fa-video';
+                    
+                    if (this.localStream) {
+                        this.localStream.getVideoTracks().forEach(track => track.enabled = true);
+                    }
+                }
+            }
+
+            toggleScreenShare() {
+                const btn = document.getElementById('screen-share-btn');
+                // Implementation for screen sharing
+                console.log('Toggle screen share');
+            }
+
+            toggleHandRaise() {
+                const btn = document.getElementById('hand-raise-btn');
+                btn.classList.toggle('active');
+                btn.classList.toggle('inactive');
+                
+                const isRaised = btn.classList.contains('active');
+                this.addSystemMessage(isRaised ? 'You raised your hand' : 'You lowered your hand');
+            }
+
+            toggleChat() {
+                const panel = document.getElementById('chat-panel');
+                const btn = document.getElementById('chat-toggle-btn');
+                
+                if (panel.style.display === 'none') {
+                    panel.style.display = 'flex';
+                    btn.classList.add('active');
+                } else {
+                    panel.style.display = 'none';
+                    btn.classList.remove('active');
+                }
+            }
+
+            toggleParticipantsList() {
+                const list = document.getElementById('participants-list');
+                list.style.display = list.style.display === 'block' ? 'none' : 'block';
+            }
+
+            sendChatMessage() {
+                const input = document.getElementById('chat-input');
+                const message = input.value.trim();
+                
+                if (message) {
+                    this.addChatMessage('You', message);
+                    input.value = '';
+                    
+                    // Here you would send the message via WebSocket/API
+                }
+            }
+
+            addChatMessage(author, content) {
+                const messages = document.getElementById('chat-messages');
+                const message = document.createElement('div');
+                message.className = 'chat-message';
+                
+                message.innerHTML = `
+                    <div class="message-author">${author}</div>
+                    <div class="message-content">${content}</div>
+                `;
+                
+                messages.appendChild(message);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            addSystemMessage(content) {
+                const messages = document.getElementById('chat-messages');
+                const message = document.createElement('div');
+                message.className = 'chat-message system';
+                message.innerHTML = `<div class="message-content">${content}</div>`;
+                
+                messages.appendChild(message);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            endCall() {
+                if (this.isHost) {
+                    if (confirm('Are you sure you want to end the interview for everyone?')) {
+                        this.leaveRoom();
+                    }
+                } else {
+                    this.leaveRoom();
+                }
+            }
+
+            async leaveRoom() {
+                try {
+                    if (this.participantId) {
+                        await fetch(`/api/guest/participant/${this.participantId}/leave`, {
+                            method: 'POST'
+                        });
+                    }
+                    
+                    if (this.localStream) {
+                        this.localStream.getTracks().forEach(track => track.stop());
+                    }
+                    
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Error leaving room:', error);
+                    window.location.href = '/';
+                }
+            }
+
+            getCurrentUserId() {
+                // This would typically get the current user ID from authentication
+                return null;
+            }
+
+            // Recording Methods
+            initializeRecordingManager() {
+                if (!this.recordingManager) {
+                    const authToken = this.getAuthToken();
+                    this.recordingManager = new RecordingManager(this.roomId, authToken);
+
+                    // Set up recording event listeners
+                    this.recordingManager.addEventListener('recordingStarted', (event) => {
+                        this.onRecordingStarted(event.detail);
+                    });
+
+                    this.recordingManager.addEventListener('recordingStopped', (event) => {
+                        this.onRecordingStopped(event.detail);
+                    });
+
+                    this.recordingManager.addEventListener('recordingPaused', (event) => {
+                        this.onRecordingPaused(event.detail);
+                    });
+
+                    this.recordingManager.addEventListener('recordingResumed', (event) => {
+                        this.onRecordingResumed(event.detail);
+                    });
+
+                    this.recordingManager.addEventListener('recordingError', (event) => {
+                        this.onRecordingError(event.detail);
+                    });
+                }
+            }
+
+            async startRecording() {
+                try {
+                    if (!this.recordingManager) {
+                        this.initializeRecordingManager();
+                    }
+
+                    if (!this.localStream) {
+                        throw new Error('No media stream available for recording');
+                    }
+
+                    await this.recordingManager.startRecording(this.localStream);
+
+                } catch (error) {
+                    console.error('Failed to start recording:', error);
+                    alert('Failed to start recording: ' + error.message);
+                }
+            }
+
+            async stopRecording() {
+                try {
+                    if (this.recordingManager) {
+                        await this.recordingManager.stopRecording();
+                    }
+                } catch (error) {
+                    console.error('Failed to stop recording:', error);
+                    alert('Failed to stop recording: ' + error.message);
+                }
+            }
+
+            async toggleRecordingPause() {
+                try {
+                    if (!this.recordingManager) return;
+
+                    const status = this.recordingManager.getStatus();
+                    if (status.isPaused) {
+                        await this.recordingManager.resumeRecording();
+                    } else {
+                        await this.recordingManager.pauseRecording();
+                    }
+                } catch (error) {
+                    console.error('Failed to toggle recording pause:', error);
+                    alert('Failed to pause/resume recording: ' + error.message);
+                }
+            }
+
+            onRecordingStarted(data) {
+                console.log('Recording started:', data);
+
+                // Update UI
+                document.getElementById('record-btn').style.display = 'none';
+                document.getElementById('pause-record-btn').style.display = 'inline-block';
+                document.getElementById('stop-record-btn').style.display = 'inline-block';
+                document.getElementById('recording-indicator').style.display = 'flex';
+                document.getElementById('recording-time').style.display = 'inline-block';
+
+                // Start recording timer
+                this.recordingStartTime = new Date();
+                this.startRecordingTimer();
+
+                // Add system message
+                this.addSystemMessage('Recording started');
+            }
+
+            onRecordingStopped(data) {
+                console.log('Recording stopped:', data);
+
+                // Update UI
+                document.getElementById('record-btn').style.display = 'inline-block';
+                document.getElementById('pause-record-btn').style.display = 'none';
+                document.getElementById('stop-record-btn').style.display = 'none';
+                document.getElementById('recording-indicator').style.display = 'none';
+                document.getElementById('recording-time').style.display = 'none';
+
+                // Stop recording timer
+                this.stopRecordingTimer();
+
+                // Add system message
+                this.addSystemMessage(`Recording stopped. Duration: ${this.formatDuration(data.duration)}`);
+            }
+
+            onRecordingPaused(data) {
+                console.log('Recording paused:', data);
+
+                // Update UI
+                const indicator = document.getElementById('recording-indicator');
+                const dot = document.getElementById('recording-dot');
+                const status = document.getElementById('recording-status');
+
+                indicator.classList.add('paused');
+                dot.classList.add('paused');
+                status.textContent = 'Paused';
+
+                const pauseBtn = document.getElementById('pause-record-btn');
+                pauseBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
+
+                this.addSystemMessage('Recording paused');
+            }
+
+            onRecordingResumed(data) {
+                console.log('Recording resumed:', data);
+
+                // Update UI
+                const indicator = document.getElementById('recording-indicator');
+                const dot = document.getElementById('recording-dot');
+                const status = document.getElementById('recording-status');
+
+                indicator.classList.remove('paused');
+                dot.classList.remove('paused');
+                status.textContent = 'Recording';
+
+                const pauseBtn = document.getElementById('pause-record-btn');
+                pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+
+                this.addSystemMessage('Recording resumed');
+            }
+
+            onRecordingError(data) {
+                console.error('Recording error:', data);
+                alert('Recording error: ' + data.error);
+
+                // Reset UI
+                this.onRecordingStopped({ duration: 0 });
+            }
+
+            startRecordingTimer() {
+                this.recordingTimer = setInterval(() => {
+                    if (this.recordingStartTime) {
+                        const elapsed = (new Date() - this.recordingStartTime) / 1000;
+                        document.getElementById('recording-time').textContent = this.formatDuration(elapsed);
+                    }
+                }, 1000);
+            }
+
+            stopRecordingTimer() {
+                if (this.recordingTimer) {
+                    clearInterval(this.recordingTimer);
+                    this.recordingTimer = null;
+                }
+                this.recordingStartTime = null;
+            }
+
+            formatDuration(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            getAuthToken() {
+                // This would typically get the JWT token from localStorage or cookies
+                return localStorage.getItem('auth_token') || '';
+            }
+
+            // Auto-Recording Methods
+            checkAutoRecordingTrigger() {
+                if (!this.autoRecordingEnabled || this.autoRecordingStarted || !this.isHost) {
+                    return;
+                }
+
+                // Auto-start recording when we have at least 2 participants (host + 1 guest)
+                if (this.participantCount >= 2) {
+                    this.triggerAutoRecording();
+                }
+            }
+
+            async triggerAutoRecording() {
+                try {
+                    this.autoRecordingStarted = true;
+                    this.addSystemMessage('Auto-recording starting...');
+
+                    // Wait a moment for participants to settle
+                    setTimeout(async () => {
+                        try {
+                            await this.startRecording();
+                            this.addSystemMessage('Auto-recording started successfully');
+                        } catch (error) {
+                            console.error('Auto-recording failed:', error);
+                            this.addSystemMessage('Auto-recording failed: ' + error.message);
+                            this.autoRecordingStarted = false;
+                        }
+                    }, 3000); // 3 second delay
+
+                } catch (error) {
+                    console.error('Failed to trigger auto-recording:', error);
+                    this.autoRecordingStarted = false;
+                }
+            }
+
+            // Override the original startRecording to handle auto-recording state
+            async startRecording() {
+                try {
+                    if (!this.recordingManager) {
+                        this.initializeRecordingManager();
+                    }
+
+                    if (!this.localStream) {
+                        throw new Error('No media stream available for recording');
+                    }
+
+                    await this.recordingManager.startRecording(this.localStream);
+
+                    // If this was auto-started, hide the manual record button
+                    if (this.autoRecordingStarted) {
+                        document.getElementById('record-btn').style.display = 'none';
+                    }
+
+                } catch (error) {
+                    console.error('Failed to start recording:', error);
+                    if (!this.autoRecordingStarted) {
+                        alert('Failed to start recording: ' + error.message);
+                    }
+                    throw error;
+                }
+            }
+
+            // Method to disable auto-recording (for host control)
+            disableAutoRecording() {
+                this.autoRecordingEnabled = false;
+                this.addSystemMessage('Auto-recording disabled');
+            }
+
+            // Method to check if auto-recording should stop when participants leave
+            checkAutoRecordingStop() {
+                if (this.autoRecordingStarted && this.participantCount < 2) {
+                    // Optionally auto-stop recording when participants drop below threshold
+                    // For now, we'll just log it
+                    console.log('Participant count below auto-recording threshold');
+                }
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InterviewRoom();
+        });
+    </script>
+</body>
+</html>

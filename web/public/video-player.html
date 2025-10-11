@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-player {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            background: #000;
+        }
+
+        .video-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 20px 15px 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-container:hover .video-controls,
+        .video-controls.show {
+            opacity: 1;
+        }
+
+        .progress-container {
+            position: relative;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #FF0000;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .progress-buffer {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            width: 0%;
+        }
+
+        .progress-handle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: #FF0000;
+            border-radius: 50%;
+            margin-left: -8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .progress-container:hover .progress-handle {
+            opacity: 1;
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .controls-left,
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.play-pause {
+            font-size: 24px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #FF0000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: #ccc;
+            min-width: 100px;
+        }
+
+        .quality-selector {
+            position: relative;
+        }
+
+        .quality-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 4px;
+            padding: 8px 0;
+            min-width: 120px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .quality-menu.show {
+            display: block;
+        }
+
+        .quality-option {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .quality-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .quality-option.active {
+            color: #FF0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .speed-selector {
+            position: relative;
+        }
+
+        .speed-menu {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 4px;
+            padding: 8px 0;
+            min-width: 80px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .speed-menu.show {
+            display: block;
+        }
+
+        .speed-option {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .speed-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .speed-option.active {
+            color: #FF0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .video-overlay.show {
+            opacity: 1;
+        }
+
+        .play-overlay {
+            font-size: 80px;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #FF0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .video-info {
+            padding: 20px;
+            background: #2a2a2a;
+        }
+
+        .video-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FF0000;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 20px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .video-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .thumbnail-overlay .play-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .thumbnail-overlay:hover .play-button {
+            transform: scale(1.1);
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .controls-left,
+            .controls-right {
+                gap: 10px;
+            }
+
+            .control-btn {
+                font-size: 16px;
+                padding: 6px;
+            }
+
+            .volume-slider {
+                width: 60px;
+            }
+
+            .time-display {
+                font-size: 12px;
+                min-width: 80px;
+            }
+        }
+
+        /* Fullscreen styles */
+        .video-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            border-radius: 0;
+        }
+
+        .video-container.fullscreen .video-player {
+            padding-bottom: 0;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="video-container" id="videoContainer">
+                    <div class="video-player">
+                        <!-- Thumbnail overlay (shown before video loads) -->
+                        <div class="thumbnail-overlay" id="thumbnailOverlay">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+
+                        <!-- Video element -->
+                        <video class="video-element" id="videoElement" preload="metadata">
+                            <source src="" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+
+                        <!-- Video overlay for play/loading states -->
+                        <div class="video-overlay" id="videoOverlay">
+                            <div class="play-overlay" id="playOverlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+                        </div>
+
+                        <!-- Error message -->
+                        <div class="error-message" id="errorMessage">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>Failed to load video</div>
+                            <small>Please try again or contact support</small>
+                        </div>
+
+                        <!-- Video controls -->
+                        <div class="video-controls" id="videoControls">
+                            <!-- Progress bar -->
+                            <div class="progress-container" id="progressContainer">
+                                <div class="progress-buffer" id="progressBuffer"></div>
+                                <div class="progress-bar" id="progressBar"></div>
+                                <div class="progress-handle" id="progressHandle"></div>
+                            </div>
+
+                            <!-- Control buttons -->
+                            <div class="controls-row">
+                                <div class="controls-left">
+                                    <button class="control-btn play-pause" id="playPauseBtn">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    
+                                    <div class="volume-container">
+                                        <button class="control-btn" id="muteBtn">
+                                            <i class="fas fa-volume-up"></i>
+                                        </button>
+                                        <input type="range" class="volume-slider" id="volumeSlider" 
+                                               min="0" max="100" value="100">
+                                    </div>
+
+                                    <div class="time-display" id="timeDisplay">
+                                        0:00 / 0:00
+                                    </div>
+                                </div>
+
+                                <div class="controls-right">
+                                    <div class="speed-selector">
+                                        <button class="control-btn" id="speedBtn">
+                                            <i class="fas fa-tachometer-alt"></i>
+                                            <span id="speedText">1x</span>
+                                        </button>
+                                        <div class="speed-menu" id="speedMenu">
+                                            <div class="speed-option" data-speed="0.5">0.5x</div>
+                                            <div class="speed-option" data-speed="0.75">0.75x</div>
+                                            <div class="speed-option active" data-speed="1">1x</div>
+                                            <div class="speed-option" data-speed="1.25">1.25x</div>
+                                            <div class="speed-option" data-speed="1.5">1.5x</div>
+                                            <div class="speed-option" data-speed="2">2x</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="quality-selector">
+                                        <button class="control-btn" id="qualityBtn">
+                                            <i class="fas fa-cog"></i>
+                                            <span id="qualityText">Auto</span>
+                                        </button>
+                                        <div class="quality-menu" id="qualityMenu">
+                                            <div class="quality-option active" data-quality="auto">Auto</div>
+                                            <div class="quality-option" data-quality="1080p">1080p</div>
+                                            <div class="quality-option" data-quality="720p">720p</div>
+                                            <div class="quality-option" data-quality="480p">480p</div>
+                                            <div class="quality-option" data-quality="360p">360p</div>
+                                        </div>
+                                    </div>
+
+                                    <button class="control-btn" id="fullscreenBtn">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video information -->
+                    <div class="video-info">
+                        <div class="video-title" id="videoTitle">Sample Interview Recording</div>
+                        <div class="video-meta">
+                            <span><i class="fas fa-calendar"></i> <span id="videoDate">Dec 11, 2024</span></span>
+                            <span><i class="fas fa-clock"></i> <span id="videoDuration">--:--</span></span>
+                            <span><i class="fas fa-eye"></i> <span id="videoViews">0 views</span></span>
+                            <span><i class="fas fa-download"></i> <span id="videoSize">-- MB</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/web/src/services/videoPlayer.js"></script>
+    <script src="/web/src/services/playbackControls.js"></script>
+    <script src="/web/src/services/qualitySelector.js"></script>
+    <script>
+        // Initialize video player when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get recording ID from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const recordingId = urlParams.get('recording') || 'demo';
+            
+            // Initialize the video player
+            const player = new VideoPlayer('videoContainer');
+
+            // Initialize enhanced playback controls
+            const controls = new PlaybackControls(player);
+
+            // Initialize quality selector
+            const qualitySelector = new QualitySelector(player);
+
+            // Load demo video or specific recording
+            if (recordingId === 'demo') {
+                player.loadVideo({
+                    title: 'Demo Interview Recording',
+                    sources: [
+                        { src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', quality: '720p', type: 'video/mp4' }
+                    ],
+                    thumbnail: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg',
+                    duration: 596,
+                    date: '2024-12-11',
+                    views: 42,
+                    size: '158 MB'
+                });
+            } else {
+                // Load specific recording
+                player.loadRecording(recordingId);
+            }
+        });
+    </script>
+</body>
+</html>

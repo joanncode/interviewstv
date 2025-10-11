@@ -142,6 +142,42 @@ $router->group(['prefix' => 'events'], function($router) {
     $router->get('{id}/attendance', 'EventController@getAttendance')->middleware('auth');
 });
 
+// Interview Room routes
+$router->group(['prefix' => 'interview-rooms'], function($router) {
+    // Room management (host only)
+    $router->get('/', 'InterviewRoomController@index')->middleware('auth');
+    $router->post('/', 'InterviewRoomController@create')->middleware('auth');
+    $router->get('{roomId}', 'InterviewRoomController@show');
+    $router->put('{roomId}', 'InterviewRoomController@update')->middleware('auth');
+    $router->delete('{roomId}', 'InterviewRoomController@delete')->middleware('auth');
+
+    // Guest invitation management
+    $router->post('{roomId}/invite', 'InterviewRoomController@inviteGuests')->middleware('auth');
+    $router->get('{roomId}/invitations', 'InterviewRoomController@getInvitations')->middleware('auth');
+    $router->delete('{roomId}/invitations/{invitationId}', 'InterviewRoomController@cancelInvitation')->middleware('auth');
+    $router->post('{roomId}/invitations/{invitationId}/resend', 'InterviewRoomController@resendInvitation')->middleware('auth');
+});
+
+// Guest Invitation routes (public access for guests)
+$router->group(['prefix' => 'guest'], function($router) {
+    // Join code verification and room joining
+    $router->post('verify-code', 'GuestInvitationController@verifyJoinCode');
+    $router->post('join', 'GuestInvitationController@joinRoom');
+
+    // Invitation management
+    $router->get('invitation/{token}', 'GuestInvitationController@getInvitationByToken');
+    $router->post('invitation/{token}/accept', 'GuestInvitationController@acceptInvitation');
+    $router->post('invitation/{token}/decline', 'GuestInvitationController@declineInvitation');
+
+    // Participant management
+    $router->get('participant/{participantId}/status', 'GuestInvitationController@getWaitingRoomStatus');
+    $router->put('participant/{participantId}/settings', 'GuestInvitationController@updateDeviceSettings');
+    $router->post('participant/{participantId}/leave', 'GuestInvitationController@leaveRoom');
+
+    // Device testing
+    $router->post('test-devices', 'GuestInvitationController@testDevices');
+});
+
 // Business routes
 $router->group(['prefix' => 'businesses'], function($router) {
     $router->get('/', 'BusinessController@index');
@@ -149,6 +185,153 @@ $router->group(['prefix' => 'businesses'], function($router) {
     $router->get('{id}', 'BusinessController@show')->where('id', '[0-9]+');
     $router->put('{id}', 'BusinessController@update')->middleware('auth');
     $router->delete('{id}', 'BusinessController@delete')->middleware('auth');
+});
+
+// Recording routes (protected - requires authentication)
+$router->group(['prefix' => 'recordings'], function($router) {
+    // Recording control
+    $router->post('start', 'RecordingController@startRecording')->middleware('auth');
+    $router->post('{recordingId}/stop', 'RecordingController@stopRecording')->middleware('auth');
+    $router->post('{recordingId}/pause', 'RecordingController@pauseRecording')->middleware('auth');
+    $router->post('{recordingId}/resume', 'RecordingController@resumeRecording')->middleware('auth');
+
+    // Recording management
+    $router->get('/', 'RecordingController@getUserRecordings')->middleware('auth');
+    $router->get('{recordingId}', 'RecordingController@getRecording')->middleware('auth');
+    $router->delete('{recordingId}', 'RecordingController@deleteRecording')->middleware('auth');
+
+    // File upload for client-side recording
+    $router->post('{recordingId}/upload', 'RecordingController@uploadRecordingChunk')->middleware('auth');
+
+    // Process recording chunks
+    $router->post('{recordingId}/process', 'RecordingController@processRecordingChunks')->middleware('auth');
+});
+
+// Room-specific recording routes
+$router->group(['prefix' => 'rooms'], function($router) {
+    $router->get('{roomId}/recordings', 'RecordingController@getRoomRecordings')->middleware('auth');
+});
+
+// Video storage routes (protected - requires authentication)
+$router->group(['prefix' => 'videos'], function($router) {
+    // Video file management
+    $router->post('store', 'VideoStorageController@storeVideo')->middleware('auth');
+    $router->get('/', 'VideoStorageController@listVideoFiles')->middleware('auth');
+    $router->get('{recordingId}', 'VideoStorageController@getVideoFile')->middleware('auth');
+    $router->get('{recordingId}/qualities', 'VideoStorageController@getVideoQualities')->middleware('auth');
+    $router->delete('{recordingId}', 'VideoStorageController@deleteVideoFile')->middleware('auth');
+
+    // Video sharing
+    $router->post('{recordingId}/share', 'VideoSharingController@createShareLink')->middleware('auth');
+    $router->get('{recordingId}/embed', 'VideoSharingController@getEmbedCode')->middleware('auth');
+    $router->get('shared/{shareToken}', 'VideoSharingController@getSharedVideo');
+    $router->get('shares', 'VideoSharingController@getUserShares')->middleware('auth');
+    $router->patch('shares/{shareId}', 'VideoSharingController@updateShare')->middleware('auth');
+    $router->delete('shares/{shareId}', 'VideoSharingController@revokeShare')->middleware('auth');
+    $router->get('shares/analytics', 'VideoSharingController@getShareAnalytics')->middleware('auth');
+    $router->post('shares/{shareId}/social', 'VideoSharingController@trackSocialShare');
+    $router->get('shares/{shareId}/social-urls', 'VideoSharingController@getSocialSharingUrls');
+
+    // Storage statistics
+    $router->get('stats', 'VideoStorageController@getStorageStats')->middleware('auth');
+
+    // Video streaming (public access with auth check in controller)
+    $router->get('stream/{encodedPath}', 'VideoStorageController@streamVideo');
+});
+
+// Video compression routes (protected - requires authentication)
+$router->group(['prefix' => 'compression'], function($router) {
+    // Compression operations
+    $router->post('compress', 'VideoCompressionController@compressVideo')->middleware('auth');
+    $router->post('multi-quality', 'VideoCompressionController@createMultipleQualities')->middleware('auth');
+
+    // Job management
+    $router->get('jobs', 'VideoCompressionController@listJobs')->middleware('auth');
+    $router->get('jobs/{jobId}', 'VideoCompressionController@getJobStatus')->middleware('auth');
+    $router->post('jobs/{jobId}/cancel', 'VideoCompressionController@cancelJob')->middleware('auth');
+
+    // Configuration
+    $router->get('presets', 'VideoCompressionController@getQualityPresets');
+    $router->get('formats', 'VideoCompressionController@getSupportedFormats');
+
+    // Maintenance
+    $router->post('cleanup', 'VideoCompressionController@cleanupOldJobs')->middleware('auth');
+});
+
+// Video thumbnail routes (protected - requires authentication)
+$router->group(['prefix' => 'thumbnails'], function($router) {
+    // Thumbnail generation
+    $router->post('poster', 'VideoThumbnailController@generatePosterThumbnail')->middleware('auth');
+    $router->post('timeline', 'VideoThumbnailController@generateTimelineThumbnails')->middleware('auth');
+    $router->post('preview', 'VideoThumbnailController@generateAnimatedPreview')->middleware('auth');
+    $router->post('generate-all', 'VideoThumbnailController@generateAllThumbnails')->middleware('auth');
+
+    // Thumbnail management
+    $router->get('{recordingId}', 'VideoThumbnailController@getThumbnails')->middleware('auth');
+    $router->delete('{recordingId}', 'VideoThumbnailController@deleteThumbnails')->middleware('auth');
+
+    // Thumbnail serving (public access with auth check in controller)
+    $router->get('{path}', 'VideoThumbnailController@serveThumbnail');
+});
+
+// Video metadata routes (protected - requires authentication)
+$router->group(['prefix' => 'metadata'], function($router) {
+    // Metadata extraction
+    $router->post('extract', 'VideoMetadataController@extractMetadata')->middleware('auth');
+    $router->post('batch-extract', 'VideoMetadataController@batchExtractMetadata')->middleware('auth');
+    $router->post('re-extract-missing', 'VideoMetadataController@reExtractMissingMetadata')->middleware('auth');
+
+    // Metadata retrieval
+    $router->get('{recordingId}', 'VideoMetadataController@getStoredMetadata')->middleware('auth');
+    $router->get('stats', 'VideoMetadataController@getMetadataStats')->middleware('auth');
+
+    // Quality assessment
+    $router->post('assess-quality', 'VideoMetadataController@assessVideoQuality')->middleware('auth');
+});
+
+// Storage management routes (protected - requires authentication)
+$router->group(['prefix' => 'storage'], function($router) {
+    // User storage management
+    $router->get('analytics', 'StorageManagementController@getStorageAnalytics')->middleware('auth');
+    $router->get('stats', 'StorageManagementController@getStorageStats')->middleware('auth');
+    $router->get('health', 'StorageManagementController@getStorageHealth')->middleware('auth');
+
+    // Storage operations
+    $router->post('enforce-quota', 'StorageManagementController@enforceStorageQuota')->middleware('auth');
+    $router->post('cleanup', 'StorageManagementController@cleanupOldFiles')->middleware('auth');
+    $router->post('optimize', 'StorageManagementController@optimizeStorage')->middleware('auth');
+
+    // Admin operations
+    $router->get('system-analytics', 'StorageManagementController@getSystemStorageAnalytics')->middleware('auth');
+    $router->post('update-statistics', 'StorageManagementController@updateStorageStatistics')->middleware('auth');
+});
+
+// Health check endpoint
+$router->get('health', function() {
+    try {
+        require_once __DIR__ . '/../config/database.php';
+        $database = new Database();
+        $pdo = $database->getConnection();
+
+        // Test database connection
+        $stmt = $pdo->query('SELECT 1 as test');
+        $result = $stmt->fetch();
+
+        return [
+            'success' => true,
+            'message' => 'API is healthy',
+            'database' => 'connected',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'test_query' => $result ? 'passed' : 'failed'
+        ];
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Database connection failed',
+            'error' => $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+    }
 });
 
 // Community routes

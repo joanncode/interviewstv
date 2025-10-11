@@ -1,0 +1,35 @@
+[
+    {
+        "room_id": "broadcast-test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "Test API \u2192 WebSocket broadcast",
+        "message_type": "text",
+        "timestamp": 1760205159,
+        "is_deleted": false,
+        "metadata": [],
+        "id": "68ea9967ba48e"
+    },
+    {
+        "room_id": "broadcast-test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "Hello from User 1!",
+        "message_type": "text",
+        "timestamp": 1760205162,
+        "is_deleted": false,
+        "metadata": [],
+        "id": "68ea996a5b0f5"
+    },
+    {
+        "room_id": "broadcast-test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "User 3 here as well",
+        "message_type": "text",
+        "timestamp": 1760205164,
+        "is_deleted": false,
+        "metadata": [],
+        "id": "68ea996c5b45a"
+    }
+]

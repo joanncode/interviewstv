@@ -1,0 +1,24 @@
+[
+    {
+        "room_id": "test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "Hello from API!",
+        "message_type": "text",
+        "timestamp": 1760202205,
+        "is_deleted": false,
+        "metadata": [],
+        "id": "68ea8ddd34798"
+    },
+    {
+        "room_id": "test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "Hello from API test!",
+        "message_type": "text",
+        "timestamp": 1760202280,
+        "is_deleted": false,
+        "metadata": [],
+        "id": "68ea8e288c506"
+    }
+]

@@ -1,0 +1,17 @@
+{
+    "id": "broadcast_68ea9967ba6762.72269073",
+    "type": "message",
+    "room_id": "broadcast-test-room",
+    "data": {
+        "id": "68ea9967ba674",
+        "room_id": "broadcast-test-room",
+        "user_id": 123456,
+        "user_name": "TestUser456",
+        "message": "Test API \u2192 WebSocket broadcast",
+        "message_type": "text",
+        "timestamp": 1760205159
+    },
+    "created_at": 1760205159,
+    "processed": false,
+    "updated_at": 1760205159
+}

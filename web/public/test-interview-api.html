@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview API Test - Interviews.tv</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .response-area {
+            background: #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .btn-primary {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        .btn-primary:hover {
+            background: #cc0000;
+            border-color: #cc0000;
+        }
+        .form-control {
+            background: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+        }
+        .form-control:focus {
+            background: #3a3a3a;
+            border-color: #FF0000;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Interview API Test Suite</h1>
+        
+        <!-- Authentication -->
+        <div class="test-section">
+            <h3>Authentication</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control mb-2" id="auth-token" placeholder="JWT Token (optional)">
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-primary" onclick="testAuth()">Test Auth</button>
+                </div>
+            </div>
+            <div class="response-area" id="auth-response"></div>
+        </div>
+
+        <!-- Create Interview Room -->
+        <div class="test-section">
+            <h3>Create Interview Room</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control mb-2" id="room-title" placeholder="Room Title" value="Test Interview">
+                </div>
+                <div class="col-md-4">
+                    <input type="datetime-local" class="form-control mb-2" id="room-start">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+                </div>
+            </div>
+            <div class="response-area" id="create-room-response"></div>
+        </div>
+
+        <!-- Get Rooms -->
+        <div class="test-section">
+            <h3>Get Interview Rooms</h3>
+            <button class="btn btn-primary" onclick="getRooms()">Get My Rooms</button>
+            <div class="response-area" id="get-rooms-response"></div>
+        </div>
+
+        <!-- Invite Guests -->
+        <div class="test-section">
+            <h3>Invite Guests</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control mb-2" id="invite-room-id" placeholder="Room ID">
+                </div>
+                <div class="col-md-4">
+                    <input type="email" class="form-control mb-2" id="guest-email" placeholder="Guest Email" value="test@example.com">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary" onclick="inviteGuests()">Send Invitation</button>
+                </div>
+            </div>
+            <div class="response-area" id="invite-response"></div>
+        </div>
+
+        <!-- Verify Join Code -->
+        <div class="test-section">
+            <h3>Verify Join Code</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control mb-2" id="join-code" placeholder="12-character join code" maxlength="12">
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-primary" onclick="verifyJoinCode()">Verify Code</button>
+                </div>
+            </div>
+            <div class="response-area" id="verify-code-response"></div>
+        </div>
+
+        <!-- Join Room -->
+        <div class="test-section">
+            <h3>Join Room as Guest</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control mb-2" id="invitation-token" placeholder="Invitation Token">
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control mb-2" id="guest-name" placeholder="Guest Name" value="Test Guest">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary" onclick="joinRoom()">Join Room</button>
+                </div>
+            </div>
+            <div class="response-area" id="join-room-response"></div>
+        </div>
+
+        <!-- Database Test -->
+        <div class="test-section">
+            <h3>Database Connection Test</h3>
+            <button class="btn btn-primary" onclick="testDatabase()">Test Database</button>
+            <div class="response-area" id="database-response"></div>
+        </div>
+    </div>
+
+    <script>
+        // Set default datetime
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+            document.getElementById('room-start').value = now.toISOString().slice(0, 16);
+        });
+
+        function getAuthHeaders() {
+            const token = document.getElementById('auth-token').value.trim();
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            return headers;
+        }
+
+        async function testAuth() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                document.getElementById('auth-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('auth-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function createRoom() {
+            const roomData = {
+                title: document.getElementById('room-title').value || 'Test Interview',
+                description: 'Test interview room created via API',
+                scheduled_start: document.getElementById('room-start').value,
+                max_guests: 10,
+                recording_enabled: true,
+                chat_enabled: true,
+                waiting_room_enabled: true
+            };
+
+            try {
+                const response = await fetch('/api/interview-rooms', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(roomData)
+                });
+                
+                const data = await response.json();
+                document.getElementById('create-room-response').textContent = JSON.stringify(data, null, 2);
+                
+                // Auto-fill room ID for invitations
+                if (data.success && data.data.id) {
+                    document.getElementById('invite-room-id').value = data.data.id;
+                }
+            } catch (error) {
+                document.getElementById('create-room-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function getRooms() {
+            try {
+                const response = await fetch('/api/interview-rooms', {
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                document.getElementById('get-rooms-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('get-rooms-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function inviteGuests() {
+            const roomId = document.getElementById('invite-room-id').value.trim();
+            const email = document.getElementById('guest-email').value.trim();
+            
+            if (!roomId || !email) {
+                document.getElementById('invite-response').textContent = 'Please provide room ID and guest email';
+                return;
+            }
+
+            const inviteData = {
+                guests: [
+                    {
+                        email: email,
+                        name: 'Test Guest',
+                        role: 'guest'
+                    }
+                ],
+                send_email: true
+            };
+
+            try {
+                const response = await fetch(`/api/interview-rooms/${roomId}/invite`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(inviteData)
+                });
+                
+                const data = await response.json();
+                document.getElementById('invite-response').textContent = JSON.stringify(data, null, 2);
+                
+                // Auto-fill join code and invitation token if available
+                if (data.success && data.data.invitations && data.data.invitations.length > 0) {
+                    const invitation = data.data.invitations[0];
+                    if (invitation.join_code) {
+                        document.getElementById('join-code').value = invitation.join_code;
+                    }
+                    if (invitation.invitation_token) {
+                        document.getElementById('invitation-token').value = invitation.invitation_token;
+                    }
+                }
+            } catch (error) {
+                document.getElementById('invite-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function verifyJoinCode() {
+            const joinCode = document.getElementById('join-code').value.trim().toUpperCase();
+            
+            if (!joinCode || joinCode.length !== 12) {
+                document.getElementById('verify-code-response').textContent = 'Please provide a valid 12-character join code';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/guest/verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ join_code: joinCode })
+                });
+                
+                const data = await response.json();
+                document.getElementById('verify-code-response').textContent = JSON.stringify(data, null, 2);
+                
+                // Auto-fill invitation token if available
+                if (data.success && data.data.invitation && data.data.invitation.invitation_token) {
+                    document.getElementById('invitation-token').value = data.data.invitation.invitation_token;
+                }
+            } catch (error) {
+                document.getElementById('verify-code-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function joinRoom() {
+            const token = document.getElementById('invitation-token').value.trim();
+            const guestName = document.getElementById('guest-name').value.trim();
+            
+            if (!token || !guestName) {
+                document.getElementById('join-room-response').textContent = 'Please provide invitation token and guest name';
+                return;
+            }
+
+            const joinData = {
+                invitation_token: token,
+                guest_name: guestName,
+                device_info: {
+                    audio_enabled: true,
+                    video_enabled: true,
+                    user_agent: navigator.userAgent
+                }
+            };
+
+            try {
+                const response = await fetch('/api/guest/join', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(joinData)
+                });
+                
+                const data = await response.json();
+                document.getElementById('join-room-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('join-room-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testDatabase() {
+            try {
+                // Test basic database connectivity
+                const response = await fetch('/api/health', {
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                document.getElementById('database-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('database-response').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

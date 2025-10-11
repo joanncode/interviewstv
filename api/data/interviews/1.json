@@ -1,0 +1,14 @@
+{
+    "id": 1,
+    "title": "Test Interview",
+    "description": "This is a test interview for development",
+    "host_id": 1,
+    "status": "scheduled",
+    "join_code": "TEST123",
+    "scheduled_at": null,
+    "started_at": null,
+    "ended_at": null,
+    "settings": [],
+    "created_at": 1760200525,
+    "updated_at": 1760200525
+}

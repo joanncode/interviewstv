@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noise Suppression & Echo Cancellation Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .test-section h3 {
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .control-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        .control-card h5 {
+            color: #FF0000;
+            margin-bottom: 10px;
+        }
+
+        .level-selector {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .level-btn {
+            background: #444;
+            border: 1px solid #666;
+            color: #ccc;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .level-btn:hover {
+            border-color: #FF0000;
+            color: #FF0000;
+        }
+
+        .level-btn.active {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #FF0000;
+            color: #FF0000;
+        }
+
+        .metrics-display {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #ccc;
+        }
+
+        .metric-value {
+            color: #00ff44;
+        }
+
+        .quality-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .quality-high { background: #00ff44; }
+        .quality-medium { background: #ffaa00; }
+        .quality-low { background: #ff4444; }
+
+        .btn-test {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-test:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+
+        .btn-test:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .frequency-visualizer {
+            width: 100%;
+            height: 100px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .frequency-bar {
+            position: absolute;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to top, #ff4444, #ffaa00, #00ff44);
+            transition: height 0.1s ease;
+        }
+
+        .noise-simulation {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .noise-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .noise-slider {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .noise-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #FF0000;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .adaptive-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(0, 255, 68, 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 68, 0.3);
+        }
+
+        .adaptive-indicator.active {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-entry.info { color: #ccc; }
+        .log-entry.success { color: #00ff44; }
+        .log-entry.error { color: #ff4444; }
+        .log-entry.warning { color: #ffaa00; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="text-center mb-4">
+            <h1><i class="fas fa-volume-off"></i> Noise Suppression & Echo Cancellation Test</h1>
+            <p class="text-muted">Advanced audio processing and quality monitoring</p>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="test-section">
+            <h3><i class="fas fa-sliders-h"></i> Test Controls</h3>
+            <div class="text-center mb-3">
+                <button class="btn-test" id="start-test-btn">
+                    <i class="fas fa-play"></i> Start Audio Processing Test
+                </button>
+                <button class="btn-test" id="stop-test-btn" disabled>
+                    <i class="fas fa-stop"></i> Stop Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Audio Processing Controls -->
+        <div class="test-section" id="processing-controls" style="display: none;">
+            <h3><i class="fas fa-cogs"></i> Audio Processing Controls</h3>
+            <div class="control-grid">
+                <!-- Noise Suppression -->
+                <div class="control-card">
+                    <h5><i class="fas fa-volume-off"></i> Noise Suppression</h5>
+                    <div class="level-selector" id="noise-suppression-levels">
+                        <button class="level-btn" data-level="off">Off</button>
+                        <button class="level-btn" data-level="low">Low</button>
+                        <button class="level-btn" data-level="medium">Medium</button>
+                        <button class="level-btn active" data-level="high">High</button>
+                    </div>
+                    <div class="metrics-display" id="noise-metrics">
+                        <div class="metric-row">
+                            <span class="metric-label">Background Noise:</span>
+                            <span class="metric-value" id="background-noise">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Suppression Level:</span>
+                            <span class="metric-value" id="suppression-level">High</span>
+                        </div>
+                    </div>
+                    <div class="adaptive-indicator" id="adaptive-noise">
+                        <i class="fas fa-magic"></i>
+                        <span>Adaptive Noise Reduction</span>
+                    </div>
+                </div>
+
+                <!-- Echo Cancellation -->
+                <div class="control-card">
+                    <h5><i class="fas fa-echo"></i> Echo Cancellation</h5>
+                    <div class="level-selector" id="echo-cancellation-levels">
+                        <button class="level-btn" data-level="off">Off</button>
+                        <button class="level-btn" data-level="low">Low</button>
+                        <button class="level-btn" data-level="medium">Medium</button>
+                        <button class="level-btn active" data-level="high">High</button>
+                    </div>
+                    <div class="metrics-display" id="echo-metrics">
+                        <div class="metric-row">
+                            <span class="metric-label">Echo Detection:</span>
+                            <span class="metric-value" id="echo-detection">None</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Cancellation Level:</span>
+                            <span class="metric-value" id="cancellation-level">High</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speech Quality -->
+                <div class="control-card">
+                    <h5><i class="fas fa-microphone"></i> Speech Quality</h5>
+                    <div class="metrics-display" id="speech-metrics">
+                        <div class="metric-row">
+                            <span class="metric-label">Speech Clarity:</span>
+                            <span class="metric-value" id="speech-clarity">Unknown</span>
+                            <span class="quality-indicator" id="clarity-indicator"></span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Speech Energy:</span>
+                            <span class="metric-value" id="speech-energy">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Quality Score:</span>
+                            <span class="metric-value" id="quality-score">0%</span>
+                        </div>
+                    </div>
+                    <div class="frequency-visualizer" id="frequency-visualizer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Noise Simulation -->
+        <div class="test-section" id="noise-simulation" style="display: none;">
+            <h3><i class="fas fa-volume-up"></i> Noise Simulation</h3>
+            <div class="noise-simulation">
+                <div class="noise-controls">
+                    <label><i class="fas fa-volume-down"></i></label>
+                    <input type="range" class="noise-slider" id="background-noise-slider" 
+                           min="0" max="100" value="0">
+                    <label><i class="fas fa-volume-up"></i></label>
+                    <span id="noise-level-display">0%</span>
+                </div>
+                <div class="noise-controls">
+                    <button class="btn-test" id="white-noise-btn">White Noise</button>
+                    <button class="btn-test" id="pink-noise-btn">Pink Noise</button>
+                    <button class="btn-test" id="brown-noise-btn">Brown Noise</button>
+                    <button class="btn-test" id="stop-noise-btn">Stop Noise</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Metrics -->
+        <div class="test-section" id="realtime-metrics" style="display: none;">
+            <h3><i class="fas fa-chart-line"></i> Real-time Audio Metrics</h3>
+            <div class="control-grid">
+                <div class="metrics-display">
+                    <div class="metric-row">
+                        <span class="metric-label">Current Volume:</span>
+                        <span class="metric-value" id="current-volume">0%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Peak Level:</span>
+                        <span class="metric-value" id="peak-level">0%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Average Level:</span>
+                        <span class="metric-value" id="average-level">0%</span>
+                    </div>
+                </div>
+                <div class="metrics-display">
+                    <div class="metric-row">
+                        <span class="metric-label">Processing Active:</span>
+                        <span class="metric-value" id="processing-active">No</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Gain Level:</span>
+                        <span class="metric-value" id="gain-level">100%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Is Speaking:</span>
+                        <span class="metric-value" id="is-speaking">No</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-terminal"></i> Processing Log</h3>
+            <div class="log-container" id="log-container">
+                <div class="log-entry info">Noise suppression test initialized...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../src/services/audioControls.js"></script>
+    <script>
+        class NoiseSuppressionTest {
+            constructor() {
+                this.audioControls = window.audioControls;
+                this.isTestRunning = false;
+                this.metricsInterval = null;
+                this.noiseGenerators = new Map();
+                this.participantId = 'test-local';
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.log('Noise suppression test ready', 'info');
+            }
+
+            bindEvents() {
+                document.getElementById('start-test-btn').addEventListener('click', () => this.startTest());
+                document.getElementById('stop-test-btn').addEventListener('click', () => this.stopTest());
+
+                // Noise suppression level buttons
+                document.querySelectorAll('#noise-suppression-levels .level-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.setNoiseSuppressionLevel(e.target.dataset.level));
+                });
+
+                // Echo cancellation level buttons
+                document.querySelectorAll('#echo-cancellation-levels .level-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.setEchoCancellationLevel(e.target.dataset.level));
+                });
+
+                // Noise simulation controls
+                document.getElementById('background-noise-slider').addEventListener('input', (e) => {
+                    this.setBackgroundNoiseLevel(e.target.value);
+                });
+
+                document.getElementById('white-noise-btn').addEventListener('click', () => this.generateNoise('white'));
+                document.getElementById('pink-noise-btn').addEventListener('click', () => this.generateNoise('pink'));
+                document.getElementById('brown-noise-btn').addEventListener('click', () => this.generateNoise('brown'));
+                document.getElementById('stop-noise-btn').addEventListener('click', () => this.stopNoise());
+            }
+
+            async startTest() {
+                try {
+                    this.log('Starting noise suppression test...', 'info');
+                    
+                    // Request microphone access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    // Add to audio controls
+                    this.audioControls.addParticipantAudio(this.participantId, stream, true);
+                    
+                    this.isTestRunning = true;
+                    this.updateButtons();
+                    this.showTestSections();
+                    this.startMetricsMonitoring();
+                    this.setupFrequencyVisualizer();
+                    
+                    this.log('Noise suppression test started successfully', 'success');
+                    
+                } catch (error) {
+                    this.log(`Failed to start test: ${error.message}`, 'error');
+                }
+            }
+
+            stopTest() {
+                this.isTestRunning = false;
+                
+                // Stop metrics monitoring
+                if (this.metricsInterval) {
+                    clearInterval(this.metricsInterval);
+                    this.metricsInterval = null;
+                }
+                
+                // Stop noise generation
+                this.stopNoise();
+                
+                // Clean up audio controls
+                this.audioControls.removeParticipantAudio(this.participantId);
+                
+                this.updateButtons();
+                this.hideTestSections();
+                
+                this.log('Noise suppression test stopped', 'warning');
+            }
+
+            async setNoiseSuppressionLevel(level) {
+                await this.audioControls.setNoiseSuppressionLevel(this.participantId, level);
+                
+                // Update UI
+                document.querySelectorAll('#noise-suppression-levels .level-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.level === level);
+                });
+                
+                document.getElementById('suppression-level').textContent = level.charAt(0).toUpperCase() + level.slice(1);
+                this.log(`Noise suppression level set to: ${level}`, 'info');
+            }
+
+            async setEchoCancellationLevel(level) {
+                await this.audioControls.setEchoCancellationLevel(this.participantId, level);
+                
+                // Update UI
+                document.querySelectorAll('#echo-cancellation-levels .level-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.level === level);
+                });
+                
+                document.getElementById('cancellation-level').textContent = level.charAt(0).toUpperCase() + level.slice(1);
+                this.log(`Echo cancellation level set to: ${level}`, 'info');
+            }
+
+            generateNoise(type) {
+                this.stopNoise(); // Stop any existing noise
+                
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const bufferSize = audioContext.sampleRate * 2; // 2 seconds
+                    const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    
+                    // Generate different types of noise
+                    switch (type) {
+                        case 'white':
+                            for (let i = 0; i < bufferSize; i++) {
+                                data[i] = Math.random() * 2 - 1;
+                            }
+                            break;
+                        case 'pink':
+                            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                            for (let i = 0; i < bufferSize; i++) {
+                                const white = Math.random() * 2 - 1;
+                                b0 = 0.99886 * b0 + white * 0.0555179;
+                                b1 = 0.99332 * b1 + white * 0.0750759;
+                                b2 = 0.96900 * b2 + white * 0.1538520;
+                                b3 = 0.86650 * b3 + white * 0.3104856;
+                                b4 = 0.55000 * b4 + white * 0.5329522;
+                                b5 = -0.7616 * b5 - white * 0.0168980;
+                                data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                                b6 = white * 0.115926;
+                            }
+                            break;
+                        case 'brown':
+                            let lastOut = 0;
+                            for (let i = 0; i < bufferSize; i++) {
+                                const white = Math.random() * 2 - 1;
+                                data[i] = (lastOut + (0.02 * white)) / 1.02;
+                                lastOut = data[i];
+                                data[i] *= 3.5;
+                            }
+                            break;
+                    }
+                    
+                    const source = audioContext.createBufferSource();
+                    const gainNode = audioContext.createGain();
+                    
+                    source.buffer = buffer;
+                    source.loop = true;
+                    gainNode.gain.value = 0.1; // Start quiet
+                    
+                    source.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    source.start();
+                    
+                    this.noiseGenerators.set(type, { source, gainNode, audioContext });
+                    this.log(`Started ${type} noise generation`, 'info');
+                    
+                } catch (error) {
+                    this.log(`Failed to generate ${type} noise: ${error.message}`, 'error');
+                }
+            }
+
+            stopNoise() {
+                this.noiseGenerators.forEach((generator, type) => {
+                    generator.source.stop();
+                    generator.audioContext.close();
+                    this.log(`Stopped ${type} noise`, 'info');
+                });
+                this.noiseGenerators.clear();
+            }
+
+            setBackgroundNoiseLevel(level) {
+                const volume = level / 100;
+                document.getElementById('noise-level-display').textContent = `${level}%`;
+                
+                this.noiseGenerators.forEach(generator => {
+                    generator.gainNode.gain.value = volume * 0.3; // Max 30% volume
+                });
+            }
+
+            startMetricsMonitoring() {
+                this.metricsInterval = setInterval(() => {
+                    this.updateMetrics();
+                }, 100);
+            }
+
+            updateMetrics() {
+                const metrics = this.audioControls.getAudioQualityMetrics(this.participantId);
+                if (!metrics) return;
+
+                // Update real-time metrics
+                document.getElementById('current-volume').textContent = `${(metrics.volume * 100).toFixed(1)}%`;
+                document.getElementById('peak-level').textContent = `${(metrics.peakLevel * 100).toFixed(1)}%`;
+                document.getElementById('average-level').textContent = `${(metrics.averageLevel * 100).toFixed(1)}%`;
+                document.getElementById('processing-active').textContent = metrics.audioProcessingActive ? 'Yes' : 'No';
+                document.getElementById('gain-level').textContent = `${(metrics.gain * 100).toFixed(0)}%`;
+                document.getElementById('is-speaking').textContent = metrics.isSpeaking ? 'Yes' : 'No';
+
+                // Update noise suppression metrics
+                document.getElementById('background-noise').textContent = `${(metrics.backgroundNoise * 100).toFixed(1)}%`;
+
+                // Update speech quality metrics
+                document.getElementById('speech-clarity').textContent = metrics.speechClarity;
+                document.getElementById('speech-energy').textContent = `${(metrics.speechQuality * 100).toFixed(1)}%`;
+                document.getElementById('quality-score').textContent = `${(metrics.speechQuality * 100).toFixed(0)}%`;
+
+                // Update quality indicator
+                const indicator = document.getElementById('clarity-indicator');
+                indicator.className = `quality-indicator quality-${metrics.speechClarity}`;
+
+                // Update adaptive noise indicator
+                const adaptiveIndicator = document.getElementById('adaptive-noise');
+                adaptiveIndicator.classList.toggle('active', metrics.backgroundNoise > 0.05);
+            }
+
+            setupFrequencyVisualizer() {
+                const visualizer = document.getElementById('frequency-visualizer');
+                const barCount = 50;
+                
+                // Create frequency bars
+                for (let i = 0; i < barCount; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'frequency-bar';
+                    bar.style.left = `${(i / barCount) * 100}%`;
+                    bar.style.height = '0%';
+                    visualizer.appendChild(bar);
+                }
+
+                // Update bars with frequency data
+                const updateBars = () => {
+                    if (!this.isTestRunning) return;
+                    
+                    const analyser = this.audioControls.analyserNodes.get(this.participantId);
+                    if (analyser) {
+                        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                        analyser.getByteFrequencyData(dataArray);
+                        
+                        const bars = visualizer.querySelectorAll('.frequency-bar');
+                        bars.forEach((bar, index) => {
+                            const dataIndex = Math.floor((index / barCount) * dataArray.length);
+                            const height = (dataArray[dataIndex] / 255) * 100;
+                            bar.style.height = `${height}%`;
+                        });
+                    }
+                    
+                    requestAnimationFrame(updateBars);
+                };
+                
+                updateBars();
+            }
+
+            showTestSections() {
+                document.getElementById('processing-controls').style.display = 'block';
+                document.getElementById('noise-simulation').style.display = 'block';
+                document.getElementById('realtime-metrics').style.display = 'block';
+            }
+
+            hideTestSections() {
+                document.getElementById('processing-controls').style.display = 'none';
+                document.getElementById('noise-simulation').style.display = 'none';
+                document.getElementById('realtime-metrics').style.display = 'none';
+            }
+
+            updateButtons() {
+                document.getElementById('start-test-btn').disabled = this.isTestRunning;
+                document.getElementById('stop-test-btn').disabled = !this.isTestRunning;
+            }
+
+            log(message, type = 'info') {
+                const logContainer = document.getElementById('log-container');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                console.log(`[NoiseSuppressionTest] ${message}`);
+            }
+        }
+
+        // Initialize test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.noiseSuppressionTest = new NoiseSuppressionTest();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+    "by_id": {
+        "test-room": "chat\/rooms\/test-room.json"
+    },
+    "by_interview": {
+        "1": [
+            "chat\/rooms\/test-room.json"
+        ]
+    }
+}

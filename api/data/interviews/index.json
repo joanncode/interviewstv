@@ -1,0 +1,13 @@
+{
+    "by_id": {
+        "1": "interviews\/1.json"
+    },
+    "by_join_code": {
+        "TEST123": "interviews\/1.json"
+    },
+    "by_host": {
+        "1": [
+            "interviews\/1.json"
+        ]
+    }
+}

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Controls Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .test-section h3 {
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .test-video-container {
+            position: relative;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            border: 2px solid #555;
+        }
+
+        .test-video-container.local {
+            border-color: #FF0000;
+        }
+
+        .test-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .test-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .control-panel {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .btn-test {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-test:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+
+        .btn-test:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.success {
+            background: #00ff44;
+        }
+
+        .status-indicator.error {
+            background: #ff4444;
+        }
+
+        .status-indicator.warning {
+            background: #ffaa00;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-entry.info {
+            color: #ccc;
+        }
+
+        .log-entry.success {
+            color: #00ff44;
+        }
+
+        .log-entry.error {
+            color: #ff4444;
+        }
+
+        .log-entry.warning {
+            color: #ffaa00;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF0000;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="text-center mb-4">
+            <h1><i class="fas fa-microphone"></i> Audio Controls Test</h1>
+            <p class="text-muted">Testing real-time volume indicators and audio controls</p>
+        </div>
+
+        <!-- Status Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle"></i> System Status</h3>
+            <div id="status-indicators">
+                <div class="mb-2">
+                    <span class="status-indicator error" id="audio-context-status"></span>
+                    <span>Audio Context: <span id="audio-context-text">Not Initialized</span></span>
+                </div>
+                <div class="mb-2">
+                    <span class="status-indicator error" id="microphone-status"></span>
+                    <span>Microphone Access: <span id="microphone-text">Not Granted</span></span>
+                </div>
+                <div class="mb-2">
+                    <span class="status-indicator error" id="volume-monitoring-status"></span>
+                    <span>Volume Monitoring: <span id="volume-monitoring-text">Stopped</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="test-section">
+            <h3><i class="fas fa-sliders-h"></i> Test Controls</h3>
+            <div class="control-panel">
+                <button class="btn-test" id="start-test-btn">
+                    <i class="fas fa-play"></i> Start Audio Test
+                </button>
+                <button class="btn-test" id="add-participant-btn" disabled>
+                    <i class="fas fa-user-plus"></i> Add Test Participant
+                </button>
+                <button class="btn-test" id="simulate-speaking-btn" disabled>
+                    <i class="fas fa-volume-up"></i> Simulate Speaking
+                </button>
+                <button class="btn-test" id="test-gain-presets-btn" disabled>
+                    <i class="fas fa-sliders-h"></i> Test Gain Presets
+                </button>
+                <button class="btn-test" id="auto-adjust-gain-btn" disabled>
+                    <i class="fas fa-magic"></i> Auto Adjust Gain
+                </button>
+                <button class="btn-test" id="mute-all-btn" disabled>
+                    <i class="fas fa-volume-mute"></i> Mute All
+                </button>
+                <button class="btn-test" id="clear-participants-btn" disabled>
+                    <i class="fas fa-trash"></i> Clear All Participants
+                </button>
+                <button class="btn-test" id="stop-test-btn" disabled>
+                    <i class="fas fa-stop"></i> Stop Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Video Grid -->
+        <div class="test-section">
+            <h3><i class="fas fa-video"></i> Participants with Audio Controls</h3>
+            <div class="video-grid" id="video-grid">
+                <!-- Participant videos will be added here -->
+            </div>
+        </div>
+
+        <!-- Audio Metrics -->
+        <div class="test-section">
+            <h3><i class="fas fa-chart-line"></i> Audio Metrics</h3>
+            <div class="metrics-grid" id="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="active-participants">0</div>
+                    <div class="metric-label">Active Participants</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="speaking-participants">0</div>
+                    <div class="metric-label">Currently Speaking</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="average-volume">0%</div>
+                    <div class="metric-label">Average Volume</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="peak-volume">0%</div>
+                    <div class="metric-label">Peak Volume</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="average-gain">100%</div>
+                    <div class="metric-label">Average Gain</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="muted-participants">0</div>
+                    <div class="metric-label">Muted Participants</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-terminal"></i> Test Log</h3>
+            <div class="log-container" id="log-container">
+                <div class="log-entry info">Audio controls test initialized...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../src/services/audioControls.js"></script>
+    <script>
+        class AudioControlsTest {
+            constructor() {
+                this.audioControls = window.audioControls;
+                this.participantCount = 0;
+                this.testParticipants = new Map();
+                this.isTestRunning = false;
+                this.metricsInterval = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.updateStatus();
+                this.log('Audio controls test ready', 'info');
+            }
+
+            bindEvents() {
+                document.getElementById('start-test-btn').addEventListener('click', () => this.startTest());
+                document.getElementById('add-participant-btn').addEventListener('click', () => this.addTestParticipant());
+                document.getElementById('simulate-speaking-btn').addEventListener('click', () => this.simulateSpeaking());
+                document.getElementById('test-gain-presets-btn').addEventListener('click', () => this.testGainPresets());
+                document.getElementById('auto-adjust-gain-btn').addEventListener('click', () => this.autoAdjustGain());
+                document.getElementById('mute-all-btn').addEventListener('click', () => this.toggleMuteAll());
+                document.getElementById('clear-participants-btn').addEventListener('click', () => this.clearParticipants());
+                document.getElementById('stop-test-btn').addEventListener('click', () => this.stopTest());
+            }
+
+            async startTest() {
+                try {
+                    this.log('Starting audio controls test...', 'info');
+                    
+                    // Request microphone access
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    // Add local participant
+                    this.addLocalParticipant(stream);
+                    
+                    this.isTestRunning = true;
+                    this.updateButtons();
+                    this.startMetricsMonitoring();
+                    this.updateStatus();
+                    
+                    this.log('Audio test started successfully', 'success');
+                    
+                } catch (error) {
+                    this.log(`Failed to start test: ${error.message}`, 'error');
+                }
+            }
+
+            addLocalParticipant(stream) {
+                const participantId = 'local';
+                const container = this.createVideoContainer(participantId, 'You (Local)', true);
+                
+                // Add to audio controls
+                this.audioControls.addParticipantAudio(participantId, stream, true);
+                this.testParticipants.set(participantId, { name: 'You (Local)', isLocal: true, stream });
+                
+                this.log('Local participant added with audio controls', 'success');
+            }
+
+            addTestParticipant() {
+                this.participantCount++;
+                const participantId = `participant-${this.participantCount}`;
+                const name = `Test User ${this.participantCount}`;
+                
+                const container = this.createVideoContainer(participantId, name, false);
+                
+                // Create mock audio stream
+                this.createMockAudioStream(participantId, name);
+                
+                this.log(`Added test participant: ${name}`, 'info');
+            }
+
+            createVideoContainer(participantId, name, isLocal) {
+                const videoGrid = document.getElementById('video-grid');
+                const container = document.createElement('div');
+                container.className = `test-video-container ${isLocal ? 'local' : ''}`;
+                container.setAttribute('data-participant-id', participantId);
+                
+                container.innerHTML = `
+                    <video class="test-video" autoplay muted playsinline></video>
+                    <div class="test-overlay">
+                        <strong>${name}</strong>
+                        <br><small>${isLocal ? 'Local' : 'Remote'}</small>
+                    </div>
+                `;
+                
+                videoGrid.appendChild(container);
+                return container;
+            }
+
+            createMockAudioStream(participantId, name) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    const destination = audioContext.createMediaStreamDestination();
+                    
+                    oscillator.frequency.setValueAtTime(440 + Math.random() * 200, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(destination);
+                    oscillator.start();
+                    
+                    // Add to audio controls
+                    this.audioControls.addParticipantAudio(participantId, destination.stream, false);
+                    this.testParticipants.set(participantId, { 
+                        name, 
+                        isLocal: false, 
+                        stream: destination.stream,
+                        gainNode,
+                        oscillator
+                    });
+                    
+                    // Simulate random speaking
+                    this.simulateRandomSpeaking(participantId, gainNode);
+                    
+                } catch (error) {
+                    this.log(`Failed to create mock audio for ${name}: ${error.message}`, 'error');
+                }
+            }
+
+            simulateRandomSpeaking(participantId, gainNode) {
+                const speakingInterval = setInterval(() => {
+                    if (!this.testParticipants.has(participantId) || !this.isTestRunning) {
+                        clearInterval(speakingInterval);
+                        return;
+                    }
+                    
+                    const isSpeaking = Math.random() > 0.6;
+                    const volume = isSpeaking ? Math.random() * 0.2 + 0.05 : 0.001;
+                    
+                    if (gainNode && gainNode.gain) {
+                        gainNode.gain.setValueAtTime(volume, gainNode.context.currentTime);
+                    }
+                }, 1000 + Math.random() * 3000);
+            }
+
+            simulateSpeaking() {
+                // Make all participants speak for a few seconds
+                this.testParticipants.forEach((participant, participantId) => {
+                    if (!participant.isLocal && participant.gainNode) {
+                        participant.gainNode.gain.setValueAtTime(0.3, participant.gainNode.context.currentTime);
+                        
+                        setTimeout(() => {
+                            if (participant.gainNode && participant.gainNode.gain) {
+                                participant.gainNode.gain.setValueAtTime(0.001, participant.gainNode.context.currentTime);
+                            }
+                        }, 2000);
+                    }
+                });
+                
+                this.log('Simulated speaking activity for all participants', 'info');
+            }
+
+            clearParticipants() {
+                this.testParticipants.forEach((participant, participantId) => {
+                    if (!participant.isLocal) {
+                        this.audioControls.removeParticipantAudio(participantId);
+                        const container = document.querySelector(`[data-participant-id="${participantId}"]`);
+                        if (container) container.remove();
+                        
+                        // Clean up audio nodes
+                        if (participant.oscillator) participant.oscillator.stop();
+                        if (participant.gainNode) participant.gainNode.disconnect();
+                    }
+                });
+                
+                // Keep only local participant
+                const localParticipant = this.testParticipants.get('local');
+                this.testParticipants.clear();
+                if (localParticipant) {
+                    this.testParticipants.set('local', localParticipant);
+                }
+                
+                this.participantCount = 0;
+                this.log('Cleared all remote participants', 'info');
+            }
+
+            stopTest() {
+                this.isTestRunning = false;
+                
+                // Stop metrics monitoring
+                if (this.metricsInterval) {
+                    clearInterval(this.metricsInterval);
+                    this.metricsInterval = null;
+                }
+                
+                // Clean up all participants
+                this.testParticipants.forEach((participant, participantId) => {
+                    this.audioControls.removeParticipantAudio(participantId);
+                    if (participant.oscillator) participant.oscillator.stop();
+                    if (participant.gainNode) participant.gainNode.disconnect();
+                });
+                
+                this.testParticipants.clear();
+                
+                // Clear video grid
+                document.getElementById('video-grid').innerHTML = '';
+                
+                this.updateButtons();
+                this.updateStatus();
+                this.updateMetrics();
+                
+                this.log('Audio test stopped', 'warning');
+            }
+
+            startMetricsMonitoring() {
+                this.metricsInterval = setInterval(() => {
+                    this.updateMetrics();
+                }, 100);
+            }
+
+            updateMetrics() {
+                let activeParticipants = this.testParticipants.size;
+                let speakingParticipants = 0;
+                let mutedParticipants = 0;
+                let totalVolume = 0;
+                let totalGain = 0;
+                let peakVolume = 0;
+
+                this.testParticipants.forEach((participant, participantId) => {
+                    const metrics = this.audioControls.getAudioQualityMetrics(participantId);
+                    const settings = this.audioControls.getParticipantSettings(participantId);
+
+                    if (metrics) {
+                        totalVolume += metrics.volume;
+                        peakVolume = Math.max(peakVolume, metrics.volume);
+                        if (metrics.isSpeaking) speakingParticipants++;
+                    }
+
+                    if (settings) {
+                        totalGain += settings.gain;
+                        if (settings.muted) mutedParticipants++;
+                    }
+                });
+
+                const averageVolume = activeParticipants > 0 ? (totalVolume / activeParticipants) * 100 : 0;
+                const averageGain = activeParticipants > 0 ? (totalGain / activeParticipants) * 100 : 0;
+
+                document.getElementById('active-participants').textContent = activeParticipants;
+                document.getElementById('speaking-participants').textContent = speakingParticipants;
+                document.getElementById('average-volume').textContent = `${averageVolume.toFixed(1)}%`;
+                document.getElementById('peak-volume').textContent = `${(peakVolume * 100).toFixed(1)}%`;
+                document.getElementById('average-gain').textContent = `${averageGain.toFixed(1)}%`;
+                document.getElementById('muted-participants').textContent = mutedParticipants;
+            }
+
+            testGainPresets() {
+                const presets = ['quiet', 'normal', 'loud', 'boost'];
+                let presetIndex = 0;
+
+                this.testParticipants.forEach((participant, participantId) => {
+                    if (!participant.isLocal) {
+                        const preset = presets[presetIndex % presets.length];
+                        this.audioControls.applyGainPreset(participantId, preset);
+                        this.log(`Applied "${preset}" preset to ${participant.name}`, 'info');
+                        presetIndex++;
+                    }
+                });
+
+                this.log('Applied different gain presets to all participants', 'info');
+            }
+
+            autoAdjustGain() {
+                this.testParticipants.forEach((participant, participantId) => {
+                    this.audioControls.autoAdjustGain(participantId);
+                });
+
+                this.log('Auto-adjusted gain for all participants', 'info');
+            }
+
+            toggleMuteAll() {
+                const button = document.getElementById('mute-all-btn');
+                const isMuting = !button.classList.contains('muting');
+
+                this.testParticipants.forEach((participant, participantId) => {
+                    this.audioControls.setParticipantMute(participantId, isMuting);
+                });
+
+                button.classList.toggle('muting', isMuting);
+                button.innerHTML = isMuting ?
+                    '<i class="fas fa-volume-up"></i> Unmute All' :
+                    '<i class="fas fa-volume-mute"></i> Mute All';
+
+                this.log(`${isMuting ? 'Muted' : 'Unmuted'} all participants`, 'info');
+            }
+
+            updateButtons() {
+                document.getElementById('start-test-btn').disabled = this.isTestRunning;
+                document.getElementById('add-participant-btn').disabled = !this.isTestRunning;
+                document.getElementById('simulate-speaking-btn').disabled = !this.isTestRunning;
+                document.getElementById('test-gain-presets-btn').disabled = !this.isTestRunning;
+                document.getElementById('auto-adjust-gain-btn').disabled = !this.isTestRunning;
+                document.getElementById('mute-all-btn').disabled = !this.isTestRunning;
+                document.getElementById('clear-participants-btn').disabled = !this.isTestRunning;
+                document.getElementById('stop-test-btn').disabled = !this.isTestRunning;
+            }
+
+            updateStatus() {
+                // Audio Context Status
+                const audioContextStatus = this.audioControls.isInitialized;
+                document.getElementById('audio-context-status').className = 
+                    `status-indicator ${audioContextStatus ? 'success' : 'error'}`;
+                document.getElementById('audio-context-text').textContent = 
+                    audioContextStatus ? 'Initialized' : 'Not Initialized';
+
+                // Microphone Status
+                const microphoneStatus = this.testParticipants.has('local');
+                document.getElementById('microphone-status').className = 
+                    `status-indicator ${microphoneStatus ? 'success' : 'error'}`;
+                document.getElementById('microphone-text').textContent = 
+                    microphoneStatus ? 'Granted' : 'Not Granted';
+
+                // Volume Monitoring Status
+                const monitoringStatus = this.isTestRunning;
+                document.getElementById('volume-monitoring-status').className = 
+                    `status-indicator ${monitoringStatus ? 'success' : 'error'}`;
+                document.getElementById('volume-monitoring-text').textContent = 
+                    monitoringStatus ? 'Active' : 'Stopped';
+            }
+
+            log(message, type = 'info') {
+                const logContainer = document.getElementById('log-container');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                
+                logContainer.appendChild(logEntry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                console.log(`[AudioControlsTest] ${message}`);
+            }
+        }
+
+        // Initialize test when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.audioControlsTest = new AudioControlsTest();
+        });
+    </script>
+</body>
+</html>

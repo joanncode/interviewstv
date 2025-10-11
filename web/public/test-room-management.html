@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Management Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            background-color: var(--card-dark);
+            border: 1px solid #444;
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-dark);
+            border: 1px solid #555;
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-dark);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-connected { background-color: #28a745; }
+        .status-disconnected { background-color: #dc3545; }
+        .status-testing { background-color: #ffc107; }
+
+        .test-log {
+            background-color: #000;
+            color: #00ff00;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .room-card {
+            background-color: var(--input-dark);
+            border: 1px solid #555;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .participant-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .role-admin { background-color: #dc3545; }
+        .role-moderator { background-color: #fd7e14; }
+        .role-participant { background-color: #198754; }
+        .role-guest { background-color: #6c757d; }
+
+        .json-display {
+            background-color: #000;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-users-cog text-danger"></i>
+                    Room Management Test
+                </h1>
+                <p class="text-center text-muted">
+                    Test comprehensive room management features including creation, settings, and participant controls
+                </p>
+            </div>
+        </div>
+
+        <!-- API Configuration -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cog"></i> API Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">API Base URL</label>
+                            <input type="text" class="form-control" id="api-url" 
+                                   value="http://localhost:3000/api/room-management-api.php">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Auth Token</label>
+                            <input type="text" class="form-control" id="auth-token" 
+                                   value="test-token-123456">
+                        </div>
+                        <div class="mb-3">
+                            <span class="status-indicator" id="api-status"></span>
+                            <span id="api-status-text">Not tested</span>
+                        </div>
+                        <button class="btn btn-success" onclick="testApiConnection()">
+                            <i class="fas fa-check"></i> Test Connection
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-terminal"></i> Test Log</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="test-log" id="test-log">
+                            Room management test interface ready...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Creation -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plus"></i> Create Room</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Room Name</label>
+                            <input type="text" class="form-control" id="create-room-name" 
+                                   placeholder="Enter room name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="create-room-description" 
+                                      placeholder="Room description (optional)"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Room Type</label>
+                            <select class="form-select" id="create-room-type">
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                                <option value="interview">Interview</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="createRoom()">
+                            <i class="fas fa-plus"></i> Create Room
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-list"></i> Room Operations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Room ID</label>
+                            <input type="text" class="form-control" id="operation-room-id" 
+                                   placeholder="Enter room ID">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info" onclick="getRoomDetails()">
+                                <i class="fas fa-info"></i> Get Room Details
+                            </button>
+                            <button class="btn btn-outline-success" onclick="joinRoom()">
+                                <i class="fas fa-sign-in-alt"></i> Join Room
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="leaveRoom()">
+                                <i class="fas fa-sign-out-alt"></i> Leave Room
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteRoom()">
+                                <i class="fas fa-trash"></i> Delete Room
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room List -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-door-open"></i> Room List</h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadRooms()">
+                            <i class="fas fa-refresh"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="rooms-container">
+                            <p class="text-muted">Click "Refresh" to load rooms...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Participant Management -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users"></i> Participant Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Room ID</label>
+                            <input type="text" class="form-control" id="participant-room-id" 
+                                   placeholder="Enter room ID">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">User ID</label>
+                            <input type="number" class="form-control" id="participant-user-id" 
+                                   placeholder="Enter user ID">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Role</label>
+                            <select class="form-select" id="participant-role">
+                                <option value="participant">Participant</option>
+                                <option value="moderator">Moderator</option>
+                                <option value="admin">Admin</option>
+                                <option value="guest">Guest</option>
+                            </select>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info" onclick="getParticipants()">
+                                <i class="fas fa-list"></i> Get Participants
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="updateParticipantRole()">
+                                <i class="fas fa-user-edit"></i> Update Role
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Room Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Room ID</label>
+                            <input type="text" class="form-control" id="settings-room-id" 
+                                   placeholder="Enter room ID">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Max Participants</label>
+                            <input type="number" class="form-control" id="settings-max-participants" 
+                                   value="100">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="settings-allow-guests" checked>
+                                <label class="form-check-label" for="settings-allow-guests">
+                                    Allow Guest Messages
+                                </label>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info" onclick="getRoomSettings()">
+                                <i class="fas fa-cog"></i> Get Settings
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="updateRoomSettings()">
+                                <i class="fas fa-save"></i> Update Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Controls -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-flask"></i> Test Scenarios</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-outline-primary me-2 mb-2" onclick="runFullTest()">
+                            <i class="fas fa-play"></i> Run Full Test
+                        </button>
+                        <button class="btn btn-outline-success me-2 mb-2" onclick="createTestRoom()">
+                            <i class="fas fa-plus"></i> Create Test Room
+                        </button>
+                        <button class="btn btn-outline-info me-2 mb-2" onclick="simulateMultipleUsers()">
+                            <i class="fas fa-users"></i> Simulate Multiple Users
+                        </button>
+                        <button class="btn btn-outline-warning me-2 mb-2" onclick="testPermissions()">
+                            <i class="fas fa-shield-alt"></i> Test Permissions
+                        </button>
+                        <button class="btn btn-outline-danger me-2 mb-2" onclick="clearTestData()">
+                            <i class="fas fa-trash"></i> Clear Test Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Response -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-code"></i> API Response</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="json-display" id="api-response">
+                            API responses will appear here...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let apiUrl = '';
+        let authToken = '';
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('test-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'color: #ff6b6b' : 
+                              type === 'success' ? 'color: #51cf66' : 'color: #74c0fc';
+            
+            logElement.innerHTML += `<div style="${colorClass}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(status, text) {
+            const statusElement = document.getElementById('api-status');
+            const textElement = document.getElementById('api-status-text');
+            
+            statusElement.className = `status-indicator status-${status}`;
+            textElement.textContent = text;
+        }
+
+        function displayResponse(data, statusCode = 200) {
+            const responseElement = document.getElementById('api-response');
+            
+            const statusColor = statusCode >= 200 && statusCode < 300 ? '#51cf66' : '#ff6b6b';
+            const formattedData = JSON.stringify(data, null, 2);
+            
+            responseElement.innerHTML = `<div style="color: ${statusColor}">Status: ${statusCode}</div>\n${formattedData}`;
+        }
+
+        async function makeRequest(endpoint, method = 'GET', data = null) {
+            try {
+                updateStatus('testing', 'Testing...');
+                
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                };
+                
+                if (data && method !== 'GET') {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${apiUrl}${endpoint}`, options);
+                const responseData = await response.json();
+                
+                displayResponse(responseData, response.status);
+                
+                if (response.ok) {
+                    updateStatus('connected', 'Success');
+                    log(`${method} ${endpoint} - Success`, 'success');
+                    return responseData;
+                } else {
+                    updateStatus('disconnected', 'Error');
+                    log(`${method} ${endpoint} - Error: ${responseData.error}`, 'error');
+                    return null;
+                }
+                
+            } catch (error) {
+                updateStatus('disconnected', 'Failed');
+                log(`${method} ${endpoint} - Network error: ${error.message}`, 'error');
+                displayResponse({ error: error.message }, 0);
+                return null;
+            }
+        }
+
+        async function testApiConnection() {
+            apiUrl = document.getElementById('api-url').value;
+            authToken = document.getElementById('auth-token').value;
+            
+            log('Testing API connection...', 'info');
+            await makeRequest('');
+        }
+
+        async function createRoom() {
+            const name = document.getElementById('create-room-name').value.trim();
+            const description = document.getElementById('create-room-description').value.trim();
+            const type = document.getElementById('create-room-type').value;
+            
+            if (!name) {
+                log('Room name is required', 'error');
+                return;
+            }
+            
+            const roomData = {
+                name: name,
+                description: description,
+                type: type
+            };
+            
+            const result = await makeRequest('/rooms', 'POST', roomData);
+            
+            if (result && result.success) {
+                document.getElementById('operation-room-id').value = result.data.room_id;
+                log(`Room created: ${result.data.room_id}`, 'success');
+                loadRooms(); // Refresh room list
+            }
+        }
+
+        async function getRoomDetails() {
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}`);
+        }
+
+        async function joinRoom() {
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}/join`, 'POST', { role: 'participant' });
+        }
+
+        async function leaveRoom() {
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}/leave`, 'POST');
+        }
+
+        async function deleteRoom() {
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to delete this room?')) {
+                const result = await makeRequest(`/rooms/${roomId}`, 'DELETE');
+                if (result && result.success) {
+                    loadRooms(); // Refresh room list
+                }
+            }
+        }
+
+        async function loadRooms() {
+            const result = await makeRequest('/rooms');
+            
+            if (result && result.success) {
+                displayRooms(result.data.rooms);
+                log(`Loaded ${result.data.count} rooms`, 'success');
+            }
+        }
+
+        function displayRooms(rooms) {
+            const container = document.getElementById('rooms-container');
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<p class="text-muted">No rooms found.</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            rooms.forEach(room => {
+                const participantCount = room.participants ? room.participants.length : 0;
+                const typeColor = room.type === 'public' ? 'success' : 
+                                 room.type === 'private' ? 'warning' : 'info';
+                
+                html += `
+                    <div class="room-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${room.name}</h6>
+                                <p class="mb-1 text-muted">${room.description || 'No description'}</p>
+                                <span class="badge bg-${typeColor}">${room.type}</span>
+                                <span class="badge bg-secondary">${participantCount} participants</span>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">ID: ${room.id}</small><br>
+                                <small class="text-muted">Created: ${new Date(room.created_at * 1000).toLocaleString()}</small>
+                            </div>
+                        </div>
+                        ${room.participants && room.participants.length > 0 ? `
+                            <div class="mt-2">
+                                <small class="text-muted">Participants:</small><br>
+                                ${room.participants.map(p => `
+                                    <span class="participant-badge role-${p.role}">${p.user_name} (${p.role})</span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        async function getParticipants() {
+            const roomId = document.getElementById('participant-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}/participants`);
+        }
+
+        async function updateParticipantRole() {
+            const roomId = document.getElementById('participant-room-id').value.trim();
+            const userId = document.getElementById('participant-user-id').value.trim();
+            const role = document.getElementById('participant-role').value;
+            
+            if (!roomId || !userId) {
+                log('Room ID and User ID are required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}/participants/${userId}`, 'PUT', { role: role });
+        }
+
+        async function getRoomSettings() {
+            const roomId = document.getElementById('settings-room-id').value.trim();
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            await makeRequest(`/rooms/${roomId}/settings`);
+        }
+
+        async function updateRoomSettings() {
+            const roomId = document.getElementById('settings-room-id').value.trim();
+            const maxParticipants = parseInt(document.getElementById('settings-max-participants').value);
+            const allowGuests = document.getElementById('settings-allow-guests').checked;
+            
+            if (!roomId) {
+                log('Room ID is required', 'error');
+                return;
+            }
+            
+            const settings = {
+                max_participants: maxParticipants,
+                allow_guest_messages: allowGuests
+            };
+            
+            await makeRequest(`/rooms/${roomId}/settings`, 'PUT', settings);
+        }
+
+        async function runFullTest() {
+            log('Starting full room management test...', 'info');
+            
+            // Test 1: Create room
+            document.getElementById('create-room-name').value = 'Test Room ' + Date.now();
+            document.getElementById('create-room-description').value = 'Automated test room';
+            await createRoom();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 2: Load rooms
+            await loadRooms();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 3: Join room
+            await joinRoom();
+            
+            log('Full test completed', 'success');
+        }
+
+        async function createTestRoom() {
+            const timestamp = Date.now();
+            document.getElementById('create-room-name').value = `Test Room ${timestamp}`;
+            document.getElementById('create-room-description').value = 'Automated test room for development';
+            document.getElementById('create-room-type').value = 'public';
+            
+            await createRoom();
+        }
+
+        async function simulateMultipleUsers() {
+            log('Simulating multiple users joining room...', 'info');
+            
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            if (!roomId) {
+                log('Please create or specify a room ID first', 'error');
+                return;
+            }
+            
+            // Simulate joining with different tokens
+            const originalToken = authToken;
+            
+            for (let i = 1; i <= 3; i++) {
+                authToken = `test-token-${Date.now()}${i}`;
+                await makeRequest(`/rooms/${roomId}/join`, 'POST', { role: 'participant' });
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // Restore original token
+            authToken = originalToken;
+            
+            // Get updated participants
+            await getParticipants();
+            
+            log('Multiple user simulation completed', 'success');
+        }
+
+        async function testPermissions() {
+            log('Testing permission system...', 'info');
+            
+            const roomId = document.getElementById('operation-room-id').value.trim();
+            if (!roomId) {
+                log('Please create or specify a room ID first', 'error');
+                return;
+            }
+            
+            // Test getting room settings (should work for admin)
+            await getRoomSettings();
+            
+            log('Permission test completed', 'success');
+        }
+
+        function clearTestData() {
+            if (confirm('This will clear all form data. Continue?')) {
+                document.getElementById('create-room-name').value = '';
+                document.getElementById('create-room-description').value = '';
+                document.getElementById('operation-room-id').value = '';
+                document.getElementById('participant-room-id').value = '';
+                document.getElementById('participant-user-id').value = '';
+                document.getElementById('settings-room-id').value = '';
+                
+                document.getElementById('api-response').innerHTML = 'API responses will appear here...';
+                
+                log('Test data cleared', 'info');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            apiUrl = document.getElementById('api-url').value;
+            authToken = document.getElementById('auth-token').value;
+            
+            log('Room management test interface ready');
+            updateStatus('disconnected', 'Not tested');
+        });
+    </script>
+</body>
+</html>

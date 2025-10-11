@@ -1,0 +1,12 @@
+{
+    "id": 2,
+    "username": "testguest",
+    "email": "guest@interviews.tv",
+    "password_hash": "$2y$10$RzVIywRDskqnWWM.EUK65O7hKmA9d81JRPYV623dnqianK28NhlaG",
+    "name": "Test Guest",
+    "role": "guest",
+    "is_active": true,
+    "email_verified": true,
+    "created_at": 1760200525,
+    "updated_at": 1760200525
+}

@@ -1,0 +1,12 @@
+{
+    "id": 1,
+    "username": "testhost",
+    "email": "host@interviews.tv",
+    "password_hash": "$2y$10$qjWdoUBVZoF5s3ZjBgo42uGx\/0dyGtBkBLFjM9Xyy18o2mDq9enRa",
+    "name": "Test Host",
+    "role": "host",
+    "is_active": true,
+    "email_verified": true,
+    "created_at": 1760200525,
+    "updated_at": 1760200525
+}

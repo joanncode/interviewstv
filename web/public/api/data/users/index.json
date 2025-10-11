@@ -1,0 +1,14 @@
+{
+    "by_id": {
+        "1": "users\/1.json",
+        "2": "users\/2.json"
+    },
+    "by_email": {
+        "host@interviews.tv": "users\/1.json",
+        "guest@interviews.tv": "users\/2.json"
+    },
+    "by_username": {
+        "testhost": "users\/1.json",
+        "testguest": "users\/2.json"
+    }
+}
