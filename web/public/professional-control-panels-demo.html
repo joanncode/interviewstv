@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Control Panels - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .demo-sidebar {
+            width: 300px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .demo-main {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            margin-bottom: 20px;
+        }
+        
+        .demo-header h2 {
+            color: #FF0000;
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+        
+        .demo-description {
+            color: #cccccc;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .demo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .demo-section {
+            margin-bottom: 24px;
+        }
+        
+        .demo-section h4 {
+            color: #FF0000;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ffffff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-btn:hover {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-btn.active {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+        }
+        
+        .demo-info h5 {
+            color: #17a2b8;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .demo-stats {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 0.8rem;
+        }
+        
+        .demo-stats h5 {
+            color: #28a745;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #cccccc;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .control-panels-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .role-selector {
+            margin-bottom: 16px;
+        }
+        
+        .role-selector select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .feature-list li {
+            padding: 4px 0;
+            color: #cccccc;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .feature-list li i {
+            color: #28a745;
+            width: 12px;
+        }
+        
+        .demo-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: #FF0000;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-toggle:hover {
+            background: #cc0000;
+            transform: scale(1.1);
+        }
+        
+        .demo-sidebar.hidden {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Toggle Button -->
+    <button class="demo-toggle" onclick="toggleDemoSidebar()" title="Toggle Demo Controls">
+        <i class="fas fa-cog"></i>
+    </button>
+    
+    <div class="demo-container">
+        <!-- Demo Sidebar -->
+        <div class="demo-sidebar" id="demo-sidebar">
+            <div class="demo-header">
+                <h2><i class="fas fa-sliders-h me-2"></i>Control Panels Demo</h2>
+                <div class="demo-description">
+                    Professional control panels for comprehensive streaming management with role-based access and enterprise-grade features.
+                </div>
+            </div>
+            
+            <div class="demo-info">
+                <h5><i class="fas fa-info-circle me-1"></i>Professional Features</h5>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>8 Specialized Control Panels</li>
+                    <li><i class="fas fa-check"></i>Role-Based Access Control</li>
+                    <li><i class="fas fa-check"></i>Real-time Settings Sync</li>
+                    <li><i class="fas fa-check"></i>Professional Dashboard</li>
+                    <li><i class="fas fa-check"></i>Advanced Analytics</li>
+                    <li><i class="fas fa-check"></i>Security & Privacy Controls</li>
+                    <li><i class="fas fa-check"></i>Export/Import Settings</li>
+                    <li><i class="fas fa-check"></i>Mobile Responsive Design</li>
+                </ul>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-user-shield"></i>User Role</h4>
+                <div class="role-selector">
+                    <select id="role-selector" onchange="changeUserRole(this.value)">
+                        <option value="admin">Administrator</option>
+                        <option value="host" selected>Host</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="participant">Participant</option>
+                        <option value="guest">Guest</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-mouse-pointer"></i>Panel Actions</h4>
+                <div class="demo-controls">
+                    <button class="demo-btn" onclick="showDashboard()">
+                        <i class="fas fa-tachometer-alt"></i>Show Dashboard
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('stream-settings')">
+                        <i class="fas fa-cog"></i>Stream Settings
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('audio-video')">
+                        <i class="fas fa-video"></i>Audio & Video
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('recording-controls')">
+                        <i class="fas fa-record-vinyl"></i>Recording Controls
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('participant-management')">
+                        <i class="fas fa-users-cog"></i>Participants
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('moderation-controls')">
+                        <i class="fas fa-shield-alt"></i>Moderation
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('analytics-panel')">
+                        <i class="fas fa-chart-line"></i>Analytics
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('security-panel')">
+                        <i class="fas fa-lock"></i>Security
+                    </button>
+                    <button class="demo-btn" onclick="showPanel('advanced-settings')">
+                        <i class="fas fa-sliders-h"></i>Advanced
+                    </button>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-tools"></i>Demo Actions</h4>
+                <div class="demo-controls">
+                    <button class="demo-btn" onclick="simulateSettings()">
+                        <i class="fas fa-random"></i>Randomize Settings
+                    </button>
+                    <button class="demo-btn" onclick="exportSettings()">
+                        <i class="fas fa-download"></i>Export Settings
+                    </button>
+                    <button class="demo-btn" onclick="resetSettings()">
+                        <i class="fas fa-undo"></i>Reset to Defaults
+                    </button>
+                    <button class="demo-btn" onclick="toggleTheme()">
+                        <i class="fas fa-palette"></i>Toggle Theme
+                    </button>
+                    <button class="demo-btn" onclick="simulateData()">
+                        <i class="fas fa-chart-bar"></i>Simulate Analytics
+                    </button>
+                </div>
+            </div>
+            
+            <div class="demo-stats">
+                <h5><i class="fas fa-chart-bar me-1"></i>Panel Stats</h5>
+                <div class="stat-row">
+                    <span class="stat-label">Active Panel:</span>
+                    <span class="stat-value" id="active-panel">Dashboard</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">User Role:</span>
+                    <span class="stat-value" id="current-role">Host</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Available Panels:</span>
+                    <span class="stat-value" id="available-panels">6</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Settings Changed:</span>
+                    <span class="stat-value" id="settings-changed">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Last Saved:</span>
+                    <span class="stat-value" id="last-saved">Never</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Control Panels Area -->
+        <div class="demo-main">
+            <div class="control-panels-container" id="control-panels-container"></div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Professional Control Panels -->
+    <script src="../src/components/ProfessionalControlPanels.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let controlPanels = null;
+        let currentUserRole = 'host';
+        let demoSidebarVisible = true;
+        let settingsChanged = 0;
+        
+        // Demo state
+        let demoState = {
+            activePanel: 'Dashboard',
+            availablePanels: 6,
+            settingsChanged: 0,
+            lastSaved: 'Never'
+        };
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeControlPanels();
+            updateDemoStats();
+            
+            // Auto-hide demo sidebar after 5 seconds
+            setTimeout(() => {
+                if (demoSidebarVisible) {
+                    toggleDemoSidebar();
+                }
+            }, 5000);
+        });
+        
+        function initializeControlPanels() {
+            const container = document.getElementById('control-panels-container');
+            
+            if (typeof ProfessionalControlPanels !== 'undefined') {
+                controlPanels = new ProfessionalControlPanels({
+                    container: container,
+                    currentUserId: 'demo_user',
+                    currentUserRole: currentUserRole,
+                    roomId: 'demo_room',
+                    onSettingsChange: (settings) => handleSettingsChange(settings),
+                    onControlAction: (action, payload) => handleControlAction(action, payload),
+                    settings: {
+                        streamTitle: 'Professional Interview Stream Demo',
+                        streamDescription: 'Demonstrating professional control panels with comprehensive streaming management capabilities.',
+                        streamCategory: 'interview',
+                        maxViewers: 1000,
+                        isPrivate: false,
+                        requireApproval: true,
+                        allowChat: true,
+                        allowRecording: true,
+                        videoQuality: '720p',
+                        videoBitrate: 2500,
+                        videoFrameRate: 30,
+                        audioQuality: 'high',
+                        enableNoiseSuppression: true,
+                        enableEchoCancellation: true,
+                        enableAutoGainControl: true,
+                        recordingQuality: '1080p',
+                        recordingFormat: 'mp4',
+                        recordingLocation: 'cloud',
+                        enableHighlights: true,
+                        enableTranscription: true,
+                        maxParticipants: 10,
+                        allowParticipantVideo: true,
+                        allowParticipantAudio: true,
+                        requireParticipantApproval: true,
+                        enableAutoModeration: true,
+                        profanityFilter: true,
+                        spamDetection: true,
+                        moderationLevel: 'medium',
+                        enableWaitingRoom: true,
+                        requirePassword: false,
+                        enableEndToEndEncryption: true,
+                        dataRetentionDays: 30,
+                        enableAdaptiveBitrate: true,
+                        enableLowLatencyMode: false
+                    }
+                });
+                
+                // Set global reference
+                window.controlPanels = controlPanels;
+                
+                // Update available panels count based on role
+                updateAvailablePanelsCount();
+            }
+        }
+        
+        function handleSettingsChange(settings) {
+            console.log('Settings changed:', settings);
+            settingsChanged++;
+            demoState.settingsChanged = settingsChanged;
+            demoState.lastSaved = new Date().toLocaleTimeString();
+            updateDemoStats();
+        }
+        
+        function handleControlAction(action, payload) {
+            console.log('Control action:', action, payload);
+        }
+        
+        function updateDemoStats() {
+            document.getElementById('active-panel').textContent = demoState.activePanel;
+            document.getElementById('current-role').textContent = currentUserRole.charAt(0).toUpperCase() + currentUserRole.slice(1);
+            document.getElementById('available-panels').textContent = demoState.availablePanels;
+            document.getElementById('settings-changed').textContent = demoState.settingsChanged;
+            document.getElementById('last-saved').textContent = demoState.lastSaved;
+        }
+        
+        function updateAvailablePanelsCount() {
+            // Count available panels based on role
+            const rolePanelCounts = {
+                'admin': 8,
+                'host': 6,
+                'moderator': 5,
+                'participant': 2,
+                'guest': 1
+            };
+            
+            demoState.availablePanels = rolePanelCounts[currentUserRole] || 0;
+            updateDemoStats();
+        }
+        
+        // Demo control functions
+        function changeUserRole(role) {
+            currentUserRole = role;
+            
+            if (controlPanels) {
+                controlPanels.setUserInfo('demo_user', role);
+                updateAvailablePanelsCount();
+            }
+        }
+        
+        function showDashboard() {
+            if (controlPanels) {
+                controlPanels.showDashboard();
+                demoState.activePanel = 'Dashboard';
+                updateDemoStats();
+            }
+        }
+        
+        function showPanel(panelId) {
+            if (controlPanels) {
+                controlPanels.showPanel(panelId);
+                
+                // Update active panel name
+                const panelNames = {
+                    'stream-settings': 'Stream Settings',
+                    'audio-video': 'Audio & Video',
+                    'recording-controls': 'Recording Controls',
+                    'participant-management': 'Participant Management',
+                    'moderation-controls': 'Moderation Controls',
+                    'analytics-panel': 'Analytics Panel',
+                    'security-panel': 'Security Panel',
+                    'advanced-settings': 'Advanced Settings'
+                };
+                
+                demoState.activePanel = panelNames[panelId] || panelId;
+                updateDemoStats();
+            }
+        }
+        
+        function simulateSettings() {
+            if (controlPanels) {
+                // Generate random settings
+                const randomSettings = {
+                    streamTitle: `Demo Stream ${Math.floor(Math.random() * 1000)}`,
+                    maxViewers: Math.floor(Math.random() * 5000) + 100,
+                    videoBitrate: Math.floor(Math.random() * 3000) + 1000,
+                    videoFrameRate: [15, 24, 30, 60][Math.floor(Math.random() * 4)],
+                    maxParticipants: Math.floor(Math.random() * 50) + 5,
+                    isPrivate: Math.random() > 0.5,
+                    requireApproval: Math.random() > 0.5,
+                    enableAutoModeration: Math.random() > 0.3,
+                    dataRetentionDays: [7, 30, 90, 365][Math.floor(Math.random() * 4)]
+                };
+                
+                controlPanels.updateSettings(randomSettings);
+            }
+        }
+        
+        function exportSettings() {
+            if (controlPanels) {
+                controlPanels.exportSettings();
+            }
+        }
+        
+        function resetSettings() {
+            if (controlPanels) {
+                controlPanels.resetSettings();
+            }
+        }
+        
+        function toggleTheme() {
+            // This would toggle between dark and light themes
+            console.log('Theme toggle not implemented in demo');
+        }
+        
+        function simulateData() {
+            // Simulate analytics data updates
+            if (controlPanels) {
+                // This would update analytics displays with simulated data
+                console.log('Analytics simulation not implemented in demo');
+            }
+        }
+        
+        function toggleDemoSidebar() {
+            demoSidebarVisible = !demoSidebarVisible;
+            const sidebar = document.getElementById('demo-sidebar');
+            
+            if (demoSidebarVisible) {
+                sidebar.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('hidden');
+            }
+        }
+        
+        // Auto-update demo stats
+        setInterval(() => {
+            // Simulate some activity
+            if (Math.random() > 0.9) {
+                settingsChanged++;
+                demoState.settingsChanged = settingsChanged;
+                updateDemoStats();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

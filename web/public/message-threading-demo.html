@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Threading & Replies - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 76px);
+        }
+
+        .demo-sidebar {
+            width: 320px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .demo-section {
+            margin-bottom: 2rem;
+        }
+
+        .demo-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .demo-control {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .demo-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+            margin-right: 0.5rem;
+        }
+
+        .threading-stats {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .threading-stats h6 {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .simulation-controls {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .simulation-controls h6 {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .simulation-btn {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.25rem;
+        }
+
+        .simulation-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .thread-demo-controls {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .thread-demo-controls h6 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 250px;
+                padding: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Basic Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="private-messaging-demo.html">
+                            <i class="fas fa-envelope me-1"></i>Private Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-export-demo.html">
+                            <i class="fas fa-download me-1"></i>Export
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="modern-chat-demo.html">
+                            <i class="fas fa-sparkles me-1"></i>Modern Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="message-threading-demo.html">
+                            <i class="fas fa-comments me-1"></i>Threading
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Demo Sidebar -->
+        <div class="demo-sidebar">
+            <!-- Connection Status -->
+            <div class="demo-section">
+                <h5><i class="fas fa-wifi me-2"></i>Connection</h5>
+                <div class="demo-controls">
+                    <div class="status-indicator disconnected" id="connection-status">
+                        <i class="fas fa-circle"></i>
+                        <span>Disconnected</span>
+                    </div>
+                    <button class="btn btn-primary" id="connect-btn">
+                        <i class="fas fa-plug me-2"></i>Connect
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Settings -->
+            <div class="demo-section">
+                <h5><i class="fas fa-user me-2"></i>User Settings</h5>
+                <div class="demo-controls">
+                    <select class="demo-control" id="user-role">
+                        <option value="participant">Participant</option>
+                        <option value="host">Host</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin" selected>Admin</option>
+                    </select>
+                    <input type="text" class="demo-control" id="user-name" placeholder="Your name" value="Demo User">
+                    <input type="text" class="demo-control" id="room-id" placeholder="Room ID" value="demo_room">
+                </div>
+            </div>
+
+            <!-- Threading Features -->
+            <div class="demo-section">
+                <h5><i class="fas fa-comments me-2"></i>Threading Features</h5>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Start threads from any message</li>
+                    <li><i class="fas fa-check"></i>Nested reply system</li>
+                    <li><i class="fas fa-check"></i>Thread previews in main chat</li>
+                    <li><i class="fas fa-check"></i>Real-time thread updates</li>
+                    <li><i class="fas fa-check"></i>Thread participant tracking</li>
+                    <li><i class="fas fa-check"></i>Thread notifications</li>
+                    <li><i class="fas fa-check"></i>Expandable thread previews</li>
+                    <li><i class="fas fa-check"></i>Thread settings & customization</li>
+                    <li><i class="fas fa-check"></i>Thread statistics</li>
+                    <li><i class="fas fa-check"></i>Mobile-responsive design</li>
+                </ul>
+            </div>
+
+            <!-- Threading Statistics -->
+            <div class="threading-stats">
+                <h6><i class="fas fa-chart-bar me-2"></i>Thread Statistics</h6>
+                <div class="stat-item">
+                    <span class="stat-label">Active Threads:</span>
+                    <span class="stat-value" id="active-threads">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Replies:</span>
+                    <span class="stat-value" id="total-replies">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Participants:</span>
+                    <span class="stat-value" id="thread-participants">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Avg Replies/Thread:</span>
+                    <span class="stat-value" id="avg-replies">0</span>
+                </div>
+            </div>
+
+            <!-- Thread Demo Controls -->
+            <div class="thread-demo-controls">
+                <h6><i class="fas fa-robot me-2"></i>Thread Simulation</h6>
+                <button class="simulation-btn" onclick="simulateThreadStart()">
+                    <i class="fas fa-comments me-1"></i>Start Thread
+                </button>
+                <button class="simulation-btn" onclick="simulateThreadReply()">
+                    <i class="fas fa-reply me-1"></i>Add Reply
+                </button>
+                <button class="simulation-btn" onclick="simulateThreadActivity()">
+                    <i class="fas fa-fire me-1"></i>Thread Activity
+                </button>
+                <button class="simulation-btn" onclick="updateThreadStats()">
+                    <i class="fas fa-sync me-1"></i>Update Stats
+                </button>
+            </div>
+
+            <!-- Simulation Controls -->
+            <div class="simulation-controls">
+                <h6><i class="fas fa-robot me-2"></i>General Simulation</h6>
+                <button class="simulation-btn" onclick="simulateMessage()">
+                    <i class="fas fa-comment me-1"></i>Message
+                </button>
+                <button class="simulation-btn" onclick="simulateUser()">
+                    <i class="fas fa-user-plus me-1"></i>User Join
+                </button>
+                <button class="simulation-btn" onclick="simulateTyping()">
+                    <i class="fas fa-keyboard me-1"></i>Typing
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Message Threading & Replies</h6>
+                <p>Experience advanced conversation threading with nested replies, thread previews, real-time updates, and comprehensive thread management. Click the thread button on any message to start a conversation thread, or use the simulation controls to see threading in action.</p>
+            </div>
+
+            <!-- Chat Interface -->
+            <div id="modern-chat-container" style="flex: 1;"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Components -->
+    <script src="../src/components/EmojiInterface.js"></script>
+    <script src="../src/components/ChatModerationInterface.js"></script>
+    <script src="../src/components/ChatCommandInterface.js"></script>
+    <script src="../src/components/PrivateMessageInterface.js"></script>
+    <script src="../src/components/ChatExportInterface.js"></script>
+    <script src="../src/components/MessageThreadingInterface.js"></script>
+    <script src="../src/components/ModernChatInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let modernChatInterface = null;
+        let currentUserRole = 'admin';
+        let currentUserName = 'Demo User';
+        let currentRoomId = 'demo_room';
+        let threadingInterface = null;
+        
+        // Mock data for simulation
+        const mockUsers = [
+            { id: 'user1', name: 'Alice Johnson', role: 'host' },
+            { id: 'user2', name: 'Bob Smith', role: 'participant' },
+            { id: 'user3', name: 'Carol Davis', role: 'moderator' },
+            { id: 'user4', name: 'David Wilson', role: 'participant' },
+            { id: 'user5', name: 'Emma Brown', role: 'participant' }
+        ];
+        
+        const mockMessages = [
+            "Welcome to the interview! Let's start with introductions.",
+            "Hi everyone! I'm excited to be here today.",
+            "Could you tell us about your background in software development?",
+            "I have 5 years of experience working with JavaScript and React.",
+            "That's impressive! What's your favorite project you've worked on?",
+            "I built a real-time chat application with WebSocket support.",
+            "Interesting! How did you handle scalability challenges?",
+            "We used Redis for message queuing and horizontal scaling.",
+            "Great approach! Do you have experience with microservices?",
+            "Yes, I've worked with Docker and Kubernetes for deployment."
+        ];
+        
+        const threadTopics = [
+            "Technical implementation details",
+            "Best practices discussion",
+            "Alternative approaches",
+            "Performance considerations",
+            "Security implications",
+            "Future improvements",
+            "Related technologies",
+            "Industry standards"
+        ];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+        });
+        
+        function initializeDemo() {
+            // Initialize modern chat interface with threading
+            const container = document.getElementById('modern-chat-container');
+            
+            if (typeof ModernChatInterface !== 'undefined') {
+                modernChatInterface = new ModernChatInterface({
+                    container: container,
+                    websocket: websocket,
+                    currentUserId: 'demo_user',
+                    currentUserRole: currentUserRole,
+                    roomId: currentRoomId,
+                    settings: {
+                        theme: 'dark',
+                        fontSize: 'medium',
+                        soundEnabled: true,
+                        notificationsEnabled: true,
+                        showTimestamps: true,
+                        showAvatars: true,
+                        compactMode: false,
+                        autoScroll: true
+                    }
+                });
+                
+                // Set global reference for onclick handlers
+                window.modernChat = modernChatInterface;
+                
+                // Get threading interface reference
+                threadingInterface = modernChatInterface.threadingInterface;
+                window.messageThreading = threadingInterface;
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect button
+            document.getElementById('connect-btn')?.addEventListener('click', toggleConnection);
+            
+            // User settings
+            document.getElementById('user-role')?.addEventListener('change', (e) => {
+                currentUserRole = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setUserInfo('demo_user', currentUserRole);
+                }
+            });
+            
+            document.getElementById('user-name')?.addEventListener('change', (e) => {
+                currentUserName = e.target.value;
+            });
+            
+            document.getElementById('room-id')?.addEventListener('change', (e) => {
+                currentRoomId = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setRoomId(currentRoomId);
+                }
+            });
+        }
+        
+        function toggleConnection() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                disconnectWebSocket();
+            } else {
+                connectWebSocket();
+            }
+        }
+        
+        function connectWebSocket() {
+            try {
+                // Simulate WebSocket connection
+                websocket = {
+                    readyState: WebSocket.OPEN,
+                    send: function(data) {
+                        console.log('Sending:', JSON.parse(data));
+                        // Simulate server responses
+                        setTimeout(() => {
+                            const message = JSON.parse(data);
+                            handleMockResponse(message);
+                        }, 100);
+                    },
+                    addEventListener: function(event, handler) {
+                        this[event] = handler;
+                    },
+                    close: function() {
+                        this.readyState = WebSocket.CLOSED;
+                        if (this.onclose) this.onclose();
+                    }
+                };
+                
+                console.log('Mock WebSocket connected');
+                updateConnectionStatus(true);
+                
+                // Update chat interface
+                if (modernChatInterface) {
+                    modernChatInterface.setWebSocket(websocket);
+                }
+                
+                // Simulate initial user list
+                setTimeout(() => {
+                    if (websocket.message) {
+                        websocket.message({
+                            data: JSON.stringify({
+                                type: 'user_list',
+                                users: mockUsers
+                            })
+                        });
+                    }
+                }, 500);
+                
+                // Add some initial messages
+                setTimeout(() => {
+                    mockMessages.slice(0, 4).forEach((msg, index) => {
+                        setTimeout(() => {
+                            simulateMessage(msg, mockUsers[index % mockUsers.length]);
+                        }, index * 1000);
+                    });
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+            
+            if (connectBtn) {
+                if (connected) {
+                    connectBtn.innerHTML = '<i class="fas fa-unlink me-2"></i>Disconnect';
+                    connectBtn.className = 'btn btn-secondary';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Connect';
+                    connectBtn.className = 'btn btn-primary';
+                }
+            }
+        }
+        
+        function handleMockResponse(message) {
+            if (!websocket || !websocket.message) return;
+            
+            switch (message.type) {
+                case 'chat_message':
+                    // Echo the message back
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'chat_message',
+                            id: 'msg_' + Date.now(),
+                            message: message.message,
+                            user_id: 'demo_user',
+                            user_name: currentUserName,
+                            user_role: currentUserRole,
+                            timestamp: Date.now(),
+                            room_id: message.room_id,
+                            reply_to: message.reply_to
+                        })
+                    });
+                    break;
+                    
+                case 'thread_reply':
+                    // Echo thread reply back
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'thread_reply',
+                            id: 'reply_' + Date.now(),
+                            thread_id: message.thread_id,
+                            message: message.message,
+                            user_id: 'demo_user',
+                            user_name: currentUserName,
+                            user_role: currentUserRole,
+                            timestamp: Date.now(),
+                            room_id: message.room_id
+                        })
+                    });
+                    break;
+                    
+                case 'get_chat_history':
+                    // Send some mock history
+                    setTimeout(() => {
+                        if (websocket.message) {
+                            mockMessages.slice(0, 3).forEach((msg, index) => {
+                                websocket.message({
+                                    data: JSON.stringify({
+                                        type: 'chat_message',
+                                        id: 'history_' + index,
+                                        message: msg,
+                                        user_id: mockUsers[index % mockUsers.length].id,
+                                        user_name: mockUsers[index % mockUsers.length].name,
+                                        user_role: mockUsers[index % mockUsers.length].role,
+                                        timestamp: Date.now() - (300000 * (3 - index)),
+                                        room_id: message.room_id
+                                    })
+                                });
+                            });
+                        }
+                    }, 200);
+                    break;
+            }
+        }
+        
+        // Simulation functions
+        function simulateMessage(customMessage = null, customUser = null) {
+            if (!websocket || !websocket.message) return;
+            
+            const user = customUser || mockUsers[Math.floor(Math.random() * mockUsers.length)];
+            const message = customMessage || mockMessages[Math.floor(Math.random() * mockMessages.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'chat_message',
+                    id: 'sim_' + Date.now(),
+                    message: message,
+                    user_id: user.id,
+                    user_name: user.name,
+                    user_role: user.role,
+                    timestamp: Date.now(),
+                    room_id: currentRoomId
+                })
+            });
+        }
+        
+        function simulateUser() {
+            if (!websocket || !websocket.message) return;
+            
+            const newUser = {
+                id: 'user_' + Date.now(),
+                name: 'New User ' + Math.floor(Math.random() * 100),
+                role: 'participant'
+            };
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'user_joined',
+                    user: newUser
+                })
+            });
+        }
+        
+        function simulateTyping() {
+            if (!websocket || !websocket.message) return;
+            
+            const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'typing_start',
+                    user_name: randomUser.name
+                })
+            });
+            
+            setTimeout(() => {
+                if (websocket && websocket.message) {
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'typing_stop',
+                            user_name: randomUser.name
+                        })
+                    });
+                }
+            }, 3000);
+        }
+        
+        // Threading simulation functions
+        function simulateThreadStart() {
+            if (!modernChatInterface || !threadingInterface) return;
+            
+            // Get a random message to start a thread from
+            const messages = modernChatInterface.messages;
+            if (messages.length === 0) {
+                // Create a message first
+                simulateMessage();
+                setTimeout(simulateThreadStart, 1000);
+                return;
+            }
+            
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            threadingInterface.startThread(randomMessage.id, randomMessage);
+            
+            // Simulate some initial replies
+            setTimeout(() => {
+                simulateThreadReply(randomMessage.id);
+            }, 1000);
+        }
+        
+        function simulateThreadReply(threadId = null) {
+            if (!websocket || !websocket.message || !threadingInterface) return;
+            
+            // Get active thread or random thread
+            const activeThreadId = threadId || threadingInterface.activeThread;
+            if (!activeThreadId && threadingInterface.threads.size === 0) {
+                simulateThreadStart();
+                return;
+            }
+            
+            const targetThreadId = activeThreadId || Array.from(threadingInterface.threads.keys())[0];
+            const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+            const randomTopic = threadTopics[Math.floor(Math.random() * threadTopics.length)];
+            const replyMessage = `Great point! I'd like to add some thoughts on ${randomTopic.toLowerCase()}.`;
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'thread_reply',
+                    id: 'thread_reply_' + Date.now(),
+                    thread_id: targetThreadId,
+                    message: replyMessage,
+                    user_id: randomUser.id,
+                    user_name: randomUser.name,
+                    user_role: randomUser.role,
+                    timestamp: Date.now(),
+                    room_id: currentRoomId
+                })
+            });
+        }
+        
+        function simulateThreadActivity() {
+            // Simulate multiple thread activities
+            simulateThreadStart();
+            
+            setTimeout(() => {
+                simulateThreadReply();
+            }, 1500);
+            
+            setTimeout(() => {
+                simulateThreadReply();
+            }, 3000);
+            
+            setTimeout(() => {
+                updateThreadStats();
+            }, 4000);
+        }
+        
+        function updateThreadStats() {
+            if (!threadingInterface) return;
+            
+            const stats = threadingInterface.getThreadStatistics();
+            
+            document.getElementById('active-threads').textContent = stats.activeThreads;
+            document.getElementById('total-replies').textContent = stats.totalReplies;
+            document.getElementById('thread-participants').textContent = stats.totalThreads > 0 ? 
+                Array.from(new Set(Array.from(threadingInterface.threads.values()).flatMap(t => Array.from(t.participants)))).length : 0;
+            document.getElementById('avg-replies').textContent = stats.averageRepliesPerThread;
+        }
+        
+        // Auto-connect on page load
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+        
+        // Update stats periodically
+        setInterval(() => {
+            if (threadingInterface) {
+                updateThreadStats();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

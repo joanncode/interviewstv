@@ -253,6 +253,60 @@
         .video-container.dual { width: 45%; height: 45%; }
         .video-container.multi { width: 30%; height: 30%; }
         .video-container.many { width: 23%; height: 23%; }
+
+        /* Audio UI Panels */
+        .audio-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            max-height: 70vh;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #444;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #1a1a1a;
+            padding: 15px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h6 {
+            margin: 0;
+            color: #FF0000;
+            font-weight: 600;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .audio-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .audio-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .audio-section label {
+            display: block;
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -303,11 +357,27 @@
                 </div>
                 <div class="chat-input">
                     <form id="chat-form">
-                        <input type="text" class="form-control" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                        <div id="formatting-toolbar"></div>
+                        <textarea class="form-control" id="chat-input" placeholder="Type a message... Use **bold**, *italic*, :smile: for emojis!" autocomplete="off" rows="2"></textarea>
+                        <div class="message-preview" id="message-preview" style="display: none;"></div>
+                        <div class="input-group mt-2">
+                            <button type="button" class="btn btn-outline-secondary emoji-trigger" onclick="showEmojiPicker()" title="Add Emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="showFormattingHelp()" title="Formatting Help">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Emoji Picker Container -->
+        <div id="emoji-picker-container"></div>
 
         <!-- Controls Bar -->
         <div class="controls-bar">
@@ -326,6 +396,12 @@
             <button class="control-btn inactive" id="chat-toggle-btn" title="Toggle Chat">
                 <i class="fas fa-comments"></i>
             </button>
+            <button class="control-btn inactive" id="audio-settings-btn" title="Audio Settings" onclick="toggleAudioSettings()">
+                <i class="fas fa-sliders-h"></i>
+            </button>
+            <button class="control-btn inactive" id="audio-test-btn" title="Audio Test" onclick="toggleAudioTest()">
+                <i class="fas fa-vial"></i>
+            </button>
             <button class="control-btn danger" id="end-call-btn" title="End Call">
                 <i class="fas fa-phone-slash"></i>
             </button>
@@ -338,6 +414,61 @@
                 <!-- Participants will be listed here -->
             </div>
         </div>
+
+        <!-- Audio Settings Panel -->
+        <div class="audio-panel" id="audio-settings-panel" style="display: none;">
+            <div class="panel-header">
+                <h6><i class="fas fa-sliders-h"></i> Audio Settings</h6>
+                <button class="btn btn-sm btn-outline-light" onclick="toggleAudioSettings()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-content">
+                <!-- Volume Meter -->
+                <div class="audio-section">
+                    <label>Microphone Level</label>
+                    <div id="microphone-volume-meter"></div>
+                </div>
+
+                <!-- Audio Controls -->
+                <div class="audio-section">
+                    <div id="audio-control-panel"></div>
+                </div>
+
+                <!-- Device Indicators -->
+                <div class="audio-section">
+                    <label>Device Status</label>
+                    <div id="device-indicators"></div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="audio-section">
+                    <div id="audio-settings-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Test Panel -->
+        <div class="audio-panel" id="audio-test-panel" style="display: none;">
+            <div class="panel-header">
+                <h6><i class="fas fa-vial"></i> Audio Test</h6>
+                <button class="btn btn-sm btn-outline-light" onclick="toggleAudioTest()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div id="audio-test-content"></div>
+                <div id="audio-troubleshooting-content"></div>
+            </div>
+        </div>
+
+        <!-- Audio Quality Warnings -->
+        <div id="audio-quality-warnings-container"></div>
+
+        <!-- Audio Permission Prompt -->
+        <div id="audio-permission-prompt" style="display: none;">
+            <div id="permission-content"></div>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -345,7 +476,15 @@
     <script src="../src/services/recordingManager.js"></script>
     <script src="../src/services/audioQualityMonitor.js"></script>
     <script src="../src/services/audioFilters.js"></script>
+    <script src="../src/services/audioCompression.js"></script>
+    <script src="../src/services/audioSynchronization.js"></script>
+    <script src="../src/services/audioFallback.js"></script>
+    <script src="../src/services/audioQualityAdaptation.js"></script>
+    <script src="../src/services/audioRecordingOptimization.js"></script>
+    <script src="../src/services/audioUIComponents.js"></script>
     <script src="../src/services/audioControls.js"></script>
+    <script src="../src/components/EmojiPicker.js"></script>
+    <script src="../src/components/MessageFormatter.js"></script>
     <script src="../src/services/chatClient.js"></script>
     <script>
         class InterviewRoom {
@@ -364,6 +503,9 @@
                 this.participantCount = 0;
                 this.autoRecordingStarted = false;
                 this.audioControls = window.audioControls;
+                this.emojiPicker = null;
+                this.messageFormatter = null;
+                this.websocket = null;
                 this.init();
             }
 
@@ -372,6 +514,8 @@
                 this.loadRoomData();
                 this.setupLocalMedia();
                 this.connectToRoom();
+                this.initializeEmojiPicker();
+                this.initializeMessageFormatter();
             }
 
             bindEvents() {
@@ -702,14 +846,35 @@
             }
 
             sendChatMessage() {
-                const input = document.getElementById('chat-input');
-                const message = input.value.trim();
-                
+                const message = this.messageFormatter ? this.messageFormatter.getText().trim() : document.getElementById('chat-input').value.trim();
+
                 if (message) {
-                    this.addChatMessage('You', message);
-                    input.value = '';
-                    
+                    // Parse formatting and emojis in message
+                    const formattedMessage = this.parseFormattingAndEmojis(message);
+                    this.addChatMessage('You', formattedMessage);
+
+                    // Clear the input
+                    if (this.messageFormatter) {
+                        this.messageFormatter.clear();
+                    } else {
+                        document.getElementById('chat-input').value = '';
+                    }
+
                     // Here you would send the message via WebSocket/API
+                    // Include formatting and emoji metadata
+                    const messageData = {
+                        type: 'message',
+                        message: message,
+                        formatted_message: formattedMessage,
+                        has_formatting: this.hasFormatting(message),
+                        has_emojis: this.hasEmojis(message),
+                        timestamp: Date.now()
+                    };
+
+                    // Send via WebSocket if connected
+                    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                        this.websocket.send(JSON.stringify(messageData));
+                    }
                 }
             }
 
@@ -1032,9 +1197,399 @@
             }
         }
 
+        // Audio UI state
+        let audioSettingsVisible = false;
+        let audioTestVisible = false;
+
+        /**
+         * Initialize audio UI components
+         */
+        function initializeAudioUI() {
+            try {
+                // Wait for audioUIComponents to be available
+                if (typeof window.audioUIComponents === 'undefined') {
+                    setTimeout(initializeAudioUI, 100);
+                    return;
+                }
+
+                // Create volume meter for microphone
+                const volumeMeterContainer = document.getElementById('microphone-volume-meter');
+                if (volumeMeterContainer) {
+                    window.audioUIComponents.createVolumeMeter('host', volumeMeterContainer);
+                }
+
+                // Create audio control panel
+                const controlPanelContainer = document.getElementById('audio-control-panel');
+                if (controlPanelContainer) {
+                    window.audioUIComponents.createControlPanel('host', controlPanelContainer);
+                }
+
+                // Create device indicators
+                const deviceIndicatorsContainer = document.getElementById('device-indicators');
+                if (deviceIndicatorsContainer) {
+                    // Add microphone indicator
+                    const micIndicator = document.createElement('div');
+                    micIndicator.style.marginBottom = '10px';
+                    window.audioUIComponents.createDeviceIndicator('microphone', 'Microphone', micIndicator);
+                    deviceIndicatorsContainer.appendChild(micIndicator);
+
+                    // Add speaker indicator
+                    const speakerIndicator = document.createElement('div');
+                    window.audioUIComponents.createDeviceIndicator('speakers', 'Speakers', speakerIndicator);
+                    deviceIndicatorsContainer.appendChild(speakerIndicator);
+                }
+
+                // Create settings panel
+                const settingsContainer = document.getElementById('audio-settings-content');
+                if (settingsContainer) {
+                    window.audioUIComponents.createSettingsPanel(settingsContainer);
+                }
+
+                // Create test panel
+                const testContainer = document.getElementById('audio-test-content');
+                if (testContainer) {
+                    window.audioUIComponents.createAudioTestPanel(testContainer);
+                }
+
+                // Create troubleshooting panel
+                const troubleshootingContainer = document.getElementById('audio-troubleshooting-content');
+                if (troubleshootingContainer) {
+                    window.audioUIComponents.createTroubleshootingPanel(troubleshootingContainer);
+                }
+
+                // Create quality warning system
+                const warningsContainer = document.getElementById('audio-quality-warnings-container');
+                if (warningsContainer) {
+                    window.audioUIComponents.createQualityWarningSystem(warningsContainer);
+                }
+
+                // Check for microphone permission
+                checkMicrophonePermission();
+
+                console.log('Audio UI components initialized successfully');
+
+            } catch (error) {
+                console.error('Failed to initialize audio UI:', error);
+            }
+        }
+
+        /**
+         * Check microphone permission and show prompt if needed
+         */
+        async function checkMicrophonePermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+
+                // Permission granted, hide prompt
+                const permissionPrompt = document.getElementById('audio-permission-prompt');
+                if (permissionPrompt) {
+                    permissionPrompt.style.display = 'none';
+                }
+
+            } catch (error) {
+                // Permission denied or not available, show prompt
+                const permissionPrompt = document.getElementById('audio-permission-prompt');
+                const permissionContent = document.getElementById('permission-content');
+
+                if (permissionPrompt && permissionContent) {
+                    window.audioUIComponents.createPermissionPrompt(permissionContent, 'microphone');
+                    permissionPrompt.style.display = 'block';
+                }
+            }
+        }
+
+        /**
+         * Toggle audio settings panel
+         */
+        function toggleAudioSettings() {
+            const panel = document.getElementById('audio-settings-panel');
+            const btn = document.getElementById('audio-settings-btn');
+
+            if (audioSettingsVisible) {
+                panel.style.display = 'none';
+                btn.classList.remove('active');
+                btn.classList.add('inactive');
+                audioSettingsVisible = false;
+            } else {
+                panel.style.display = 'block';
+                btn.classList.remove('inactive');
+                btn.classList.add('active');
+                audioSettingsVisible = true;
+
+                // Hide test panel if open
+                if (audioTestVisible) {
+                    toggleAudioTest();
+                }
+            }
+
+            // Emoji Picker Methods
+            initializeEmojiPicker() {
+                const container = document.getElementById('emoji-picker-container');
+                this.emojiPicker = new EmojiPicker({
+                    container: container,
+                    websocket: this.websocket,
+                    currentRoom: this.roomId,
+                    onEmojiSelect: (emoji, name) => {
+                        this.insertEmojiIntoMessage(emoji);
+                    },
+                    onReactionSelect: (messageId, emoji) => {
+                        this.addReactionToMessage(messageId, emoji);
+                    }
+                });
+            }
+
+            // Message Formatter Methods
+            initializeMessageFormatter() {
+                const textArea = document.getElementById('chat-input');
+                const toolbar = document.getElementById('formatting-toolbar');
+                const preview = document.getElementById('message-preview');
+
+                this.messageFormatter = new MessageFormatter({
+                    textArea: textArea,
+                    toolbarContainer: toolbar,
+                    previewContainer: preview,
+                    websocket: this.websocket,
+                    onFormatChange: (text) => {
+                        // Update character count or other UI elements
+                        this.updateMessageStats(text);
+                    }
+                });
+            }
+
+            updateMessageStats(text) {
+                // Could add character count, word count, etc.
+                const charCount = text.length;
+                const maxChars = 2000;
+
+                // Update UI if needed
+                if (charCount > maxChars * 0.9) {
+                    // Warn user approaching limit
+                    console.log(`Approaching character limit: ${charCount}/${maxChars}`);
+                }
+            }
+
+            insertEmojiIntoMessage(emoji) {
+                const input = document.getElementById('chat-input');
+                const cursorPos = input.selectionStart;
+                const textBefore = input.value.substring(0, cursorPos);
+                const textAfter = input.value.substring(cursorPos);
+
+                input.value = textBefore + emoji + textAfter;
+                input.focus();
+                input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+            }
+
+            parseFormattingAndEmojis(message) {
+                // First parse markdown formatting
+                let formatted = this.parseMarkdown(message);
+
+                // Then parse emojis
+                formatted = this.parseEmojisInMessage(formatted);
+
+                return formatted;
+            }
+
+            parseMarkdown(text) {
+                let html = text;
+
+                // Escape HTML first
+                html = html.replace(/&/g, '&amp;')
+                          .replace(/</g, '&lt;')
+                          .replace(/>/g, '&gt;');
+
+                // Apply formatting rules in order
+                const rules = [
+                    // Code blocks (must be first to protect content)
+                    { pattern: /```([\s\S]*?)```/g, replacement: '<pre><code>$1</code></pre>' },
+                    // Inline code
+                    { pattern: /`([^`]+)`/g, replacement: '<code>$1</code>' },
+                    // Bold
+                    { pattern: /\*\*(.*?)\*\*/g, replacement: '<strong>$1</strong>' },
+                    // Italic
+                    { pattern: /\*(.*?)\*/g, replacement: '<em>$1</em>' },
+                    // Underline
+                    { pattern: /__(.*?)__/g, replacement: '<u>$1</u>' },
+                    // Strikethrough
+                    { pattern: /~~(.*?)~~/g, replacement: '<span class="strikethrough">$1</span>' },
+                    // Quotes
+                    { pattern: /^> (.+)$/gm, replacement: '<blockquote>$1</blockquote>' },
+                    // Mentions
+                    { pattern: /@([a-zA-Z0-9_]+)/g, replacement: '<span class="mention">@$1</span>' },
+                    // Links
+                    { pattern: /(https?:\/\/[^\s<>"']+)/gi, replacement: '<a href="$1" target="_blank" rel="noopener" class="message-link">$1</a>' },
+                    // Line breaks
+                    { pattern: /\n/g, replacement: '<br>' }
+                ];
+
+                rules.forEach(rule => {
+                    html = html.replace(rule.pattern, rule.replacement);
+                });
+
+                return html;
+            }
+
+            parseEmojisInMessage(message) {
+                // Simple emoji shortcode parsing
+                const emojiMap = {
+                    ':smile:': '😀',
+                    ':grin:': '😁',
+                    ':joy:': '😂',
+                    ':heart:': '❤️',
+                    ':thumbsup:': '👍',
+                    ':thumbsdown:': '👎',
+                    ':fire:': '🔥',
+                    ':star:': '⭐',
+                    ':clap:': '👏',
+                    ':thinking:': '🤔',
+                    ':wink:': '😉',
+                    ':cry:': '😢',
+                    ':angry:': '😡',
+                    ':surprised:': '😮',
+                    ':party:': '🎉',
+                    ':100:': '💯'
+                };
+
+                let parsed = message;
+                for (const [shortcode, emoji] of Object.entries(emojiMap)) {
+                    parsed = parsed.replace(new RegExp(shortcode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), emoji);
+                }
+
+                return parsed;
+            }
+
+            hasFormatting(message) {
+                const formattingPatterns = [
+                    /\*\*(.*?)\*\*/,     // Bold
+                    /\*(.*?)\*/,         // Italic
+                    /__(.*?)__/,         // Underline
+                    /~~(.*?)~~/,         // Strikethrough
+                    /`([^`]+)`/,         // Inline code
+                    /```([\s\S]*?)```/,  // Code blocks
+                    /^> (.+)$/m,         // Quotes
+                    /@([a-zA-Z0-9_]+)/,  // Mentions
+                    /(https?:\/\/[^\s<>"']+)/i // Links
+                ];
+
+                return formattingPatterns.some(pattern => pattern.test(message));
+            }
+
+            hasEmojis(message) {
+                // Check for emoji shortcodes or Unicode emojis
+                const emojiPattern = /:([\w\+\-]+):|[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u;
+                return emojiPattern.test(message);
+            }
+
+            addReactionToMessage(messageId, emoji) {
+                // Find the message element and add reaction
+                const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    let reactionsContainer = messageElement.querySelector('.message-reactions');
+                    if (!reactionsContainer) {
+                        reactionsContainer = document.createElement('div');
+                        reactionsContainer.className = 'message-reactions';
+                        messageElement.appendChild(reactionsContainer);
+                    }
+
+                    // Check if reaction already exists
+                    const existingReaction = reactionsContainer.querySelector(`[data-emoji="${emoji}"]`);
+                    if (existingReaction) {
+                        // Toggle existing reaction
+                        const count = parseInt(existingReaction.querySelector('.reaction-count').textContent);
+                        if (existingReaction.classList.contains('user-reacted')) {
+                            // Remove reaction
+                            if (count > 1) {
+                                existingReaction.querySelector('.reaction-count').textContent = count - 1;
+                                existingReaction.classList.remove('user-reacted');
+                            } else {
+                                existingReaction.remove();
+                            }
+                        } else {
+                            // Add reaction
+                            existingReaction.querySelector('.reaction-count').textContent = count + 1;
+                            existingReaction.classList.add('user-reacted');
+                        }
+                    } else {
+                        // Create new reaction
+                        const reactionBtn = document.createElement('button');
+                        reactionBtn.className = 'reaction-btn user-reacted';
+                        reactionBtn.dataset.emoji = emoji;
+                        reactionBtn.innerHTML = `
+                            <span class="reaction-emoji">${emoji}</span>
+                            <span class="reaction-count">1</span>
+                        `;
+                        reactionBtn.onclick = () => this.addReactionToMessage(messageId, emoji);
+                        reactionsContainer.appendChild(reactionBtn);
+                    }
+                }
+
+                // Send reaction via WebSocket if connected
+                if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                    this.websocket.send(JSON.stringify({
+                        type: 'reaction',
+                        messageId: messageId,
+                        emoji: emoji
+                    }));
+                }
+            }
+        }
+
+        /**
+         * Toggle audio test panel
+         */
+        function toggleAudioTest() {
+            const panel = document.getElementById('audio-test-panel');
+            const btn = document.getElementById('audio-test-btn');
+
+            if (audioTestVisible) {
+                panel.style.display = 'none';
+                btn.classList.remove('active');
+                btn.classList.add('inactive');
+                audioTestVisible = false;
+            } else {
+                panel.style.display = 'block';
+                btn.classList.remove('inactive');
+                btn.classList.add('active');
+                audioTestVisible = true;
+
+                // Hide settings panel if open
+                if (audioSettingsVisible) {
+                    toggleAudioSettings();
+                }
+            }
+        }
+
+        // Global functions for emoji picker
+        let interviewRoom;
+
+        function showEmojiPicker() {
+            if (interviewRoom && interviewRoom.emojiPicker) {
+                interviewRoom.emojiPicker.show();
+            }
+        }
+
+        function showReactionPicker(messageId, event) {
+            if (interviewRoom && interviewRoom.emojiPicker) {
+                event.stopPropagation();
+                const rect = event.target.getBoundingClientRect();
+                interviewRoom.emojiPicker.show({
+                    x: rect.left,
+                    y: rect.top - 400
+                });
+            }
+        }
+
+        function showFormattingHelp() {
+            if (interviewRoom && interviewRoom.messageFormatter) {
+                interviewRoom.messageFormatter.showFormattingHelp();
+            }
+        }
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new InterviewRoom();
+            interviewRoom = new InterviewRoom();
+            // Initialize audio UI after a short delay
+            setTimeout(initializeAudioUI, 1000);
         });
     </script>
 </body>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4.2.3 Chat Moderation Tools Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), #cc0000);
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--card-dark);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .chat-simulation {
+            background: var(--input-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .simulated-message {
+            background: var(--card-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .message-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .message-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-light);
+            padding: 0.25rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .message-action-btn:hover {
+            background: var(--primary-color);
+        }
+
+        .moderation-log {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 0.5rem;
+            border-left: 3px solid var(--primary-color);
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .log-timestamp {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .log-action {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--input-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .moderation-panel-container {
+            position: relative;
+            min-height: 200px;
+        }
+
+        .flagged-message {
+            border-left: 4px solid #f39c12;
+            background: rgba(243, 156, 18, 0.1);
+        }
+
+        .blocked-message {
+            border-left: 4px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            opacity: 0.7;
+        }
+
+        .blocked-message .message-content {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1><i class="fas fa-shield-alt"></i> 4.2.3 Complete!</h1>
+            <p>Comprehensive Chat Moderation Tools with Real-time Monitoring</p>
+            <div class="mt-4">
+                <span class="badge bg-success fs-6 me-2">✅ Auto Moderation</span>
+                <span class="badge bg-success fs-6 me-2">✅ Manual Controls</span>
+                <span class="badge bg-success fs-6 me-2">✅ User Management</span>
+                <span class="badge bg-success fs-6">✅ Analytics</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Feature Overview -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h4>Auto Moderation</h4>
+                <p>AI-powered content filtering with profanity detection, spam prevention, and automated actions.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h4>Manual Controls</h4>
+                <p>Comprehensive moderator tools for muting, banning, warning users, and managing chat rooms.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4>Analytics & Reporting</h4>
+                <p>Detailed moderation statistics, user history tracking, and violation reporting system.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <h4>Configurable Rules</h4>
+                <p>Customizable moderation settings, thresholds, and automated response configurations.</p>
+            </div>
+        </div>
+
+        <!-- Live Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-play text-danger me-2"></i>Live Moderation Demo</h2>
+            <p class="text-muted">Experience the chat moderation system in action</p>
+
+            <!-- Demo Controls -->
+            <div class="demo-controls">
+                <button class="btn btn-primary" onclick="openModerationPanel()">
+                    <i class="fas fa-shield-alt me-2"></i>Open Moderation Panel
+                </button>
+                <button class="btn btn-outline-primary" onclick="simulateSpamMessage()">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Simulate Spam
+                </button>
+                <button class="btn btn-outline-primary" onclick="simulateProfanity()">
+                    <i class="fas fa-ban me-2"></i>Simulate Profanity
+                </button>
+                <button class="btn btn-outline-primary" onclick="simulateNormalMessage()">
+                    <i class="fas fa-comment me-2"></i>Add Normal Message
+                </button>
+                <button class="btn btn-outline-primary" onclick="clearChat()">
+                    <i class="fas fa-broom me-2"></i>Clear Chat
+                </button>
+            </div>
+
+            <!-- Chat Simulation -->
+            <div class="chat-simulation" id="chat-simulation">
+                <div class="simulated-message">
+                    <div class="message-header">
+                        <div class="user-avatar">J</div>
+                        <span class="user-name">John Doe</span>
+                        <span class="message-time">2 minutes ago</span>
+                    </div>
+                    <div class="message-content">
+                        Welcome to the moderation demo! This is a normal message.
+                    </div>
+                    <div class="message-actions">
+                        <button class="message-action-btn" onclick="deleteMessage(this)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="message-action-btn" onclick="warnUser(this)" title="Warn User">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="simulated-message flagged-message">
+                    <div class="message-header">
+                        <div class="user-avatar">S</div>
+                        <span class="user-name">SpamBot</span>
+                        <span class="message-time">1 minute ago</span>
+                    </div>
+                    <div class="message-content">
+                        🔥🔥🔥 AMAZING DEAL!!! Click here NOW!!! 🔥🔥🔥
+                    </div>
+                    <div class="message-actions">
+                        <button class="message-action-btn" onclick="deleteMessage(this)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="message-action-btn" onclick="banUser(this)" title="Ban User">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-warning">⚠️ Flagged: Spam detected (Score: 45)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moderation Panel Container -->
+            <div class="moderation-panel-container" id="moderation-panel-container"></div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="demo-section">
+            <h2><i class="fas fa-chart-bar text-danger me-2"></i>Moderation Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-messages">156</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="flagged-messages">12</div>
+                    <div class="stat-label">Flagged Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="blocked-messages">3</div>
+                    <div class="stat-label">Blocked Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-mutes">2</div>
+                    <div class="stat-label">Active Mutes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-bans">1</div>
+                    <div class="stat-label">Active Bans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="auto-actions">8</div>
+                    <div class="stat-label">Auto Actions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moderation Log -->
+        <div class="demo-section">
+            <h2><i class="fas fa-list text-danger me-2"></i>Moderation Log</h2>
+            <div class="moderation-log" id="moderation-log">
+                <div class="log-entry">
+                    <div class="log-timestamp">2024-01-15 14:30:25</div>
+                    <div class="log-action">AUTO-MUTE: User "SpamBot" muted for 5 minutes</div>
+                    <div class="text-muted">Reason: Excessive spam detected (Score: 85)</div>
+                </div>
+                <div class="log-entry">
+                    <div class="log-timestamp">2024-01-15 14:28:15</div>
+                    <div class="log-action">MESSAGE BLOCKED: Profanity filter triggered</div>
+                    <div class="text-muted">User: "BadUser123" - Message contained inappropriate content</div>
+                </div>
+                <div class="log-entry">
+                    <div class="log-timestamp">2024-01-15 14:25:10</div>
+                    <div class="log-action">MANUAL BAN: User "TrollUser" banned by Moderator</div>
+                    <div class="text-muted">Reason: Harassment and repeated violations</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="demo-section">
+            <h2><i class="fas fa-cogs text-danger me-2"></i>Technical Implementation</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Backend Services</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <strong>ChatModerationService.php</strong><br>
+                            <small class="text-muted">Comprehensive moderation engine with auto-detection and manual controls</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-network-wired text-primary me-2"></i>
+                            <strong>Enhanced ChatServer.php</strong><br>
+                            <small class="text-muted">Real-time moderation integration with WebSocket handling</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-database text-primary me-2"></i>
+                            <strong>File-based Storage</strong><br>
+                            <small class="text-muted">Persistent moderation logs, user history, and violation tracking</small>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Frontend Components</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-desktop text-primary me-2"></i>
+                            <strong>ModerationPanel.js</strong><br>
+                            <small class="text-muted">Interactive moderation interface with real-time controls</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-chart-line text-primary me-2"></i>
+                            <strong>Real-time Statistics</strong><br>
+                            <small class="text-muted">Live moderation metrics and user history tracking</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-mobile-alt text-primary me-2"></i>
+                            <strong>Mobile Responsive</strong><br>
+                            <small class="text-muted">Optimized moderation tools for mobile devices</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/ModerationPanel.js"></script>
+    <script>
+        // Demo functionality
+        let messageCount = 2;
+        let flaggedCount = 1;
+        let blockedCount = 0;
+        let moderationPanel;
+
+        // Initialize moderation panel
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('moderation-panel-container');
+            
+            // Create a mock WebSocket for demo
+            const mockWebSocket = {
+                readyState: WebSocket.OPEN,
+                send: function(data) {
+                    console.log('Mock WebSocket send:', data);
+                    // Simulate responses for demo
+                    setTimeout(() => {
+                        const message = JSON.parse(data);
+                        if (message.type === 'get_moderation_stats') {
+                            this.onmessage({
+                                data: JSON.stringify({
+                                    type: 'moderation_stats',
+                                    data: {
+                                        total_actions: 15,
+                                        mutes: 8,
+                                        bans: 3,
+                                        warnings: 4,
+                                        deleted_messages: 6
+                                    }
+                                })
+                            });
+                        }
+                    }, 500);
+                },
+                addEventListener: function(event, handler) {
+                    if (event === 'message') {
+                        this.onmessage = handler;
+                    }
+                }
+            };
+
+            moderationPanel = new ModerationPanel({
+                container: container,
+                websocket: mockWebSocket,
+                currentRoom: 'demo-room',
+                userRole: 'admin'
+            });
+        });
+
+        function openModerationPanel() {
+            if (moderationPanel) {
+                moderationPanel.show();
+            }
+        }
+
+        function simulateSpamMessage() {
+            const chatContainer = document.getElementById('chat-simulation');
+            const spamMessages = [
+                "🔥🔥🔥 CLICK HERE FOR AMAZING DEALS!!! 🔥🔥🔥",
+                "FREE MONEY!!! VISIT WWW.SCAM.COM NOW!!!",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "BUY BUY BUY!!! CHEAP CHEAP CHEAP!!!"
+            ];
+            
+            const message = spamMessages[Math.floor(Math.random() * spamMessages.length)];
+            addSimulatedMessage("SpamBot", message, true, false);
+            
+            flaggedCount++;
+            updateStats();
+            addLogEntry("AUTO-FLAG", `Spam message detected from SpamBot`, "Excessive promotional content");
+        }
+
+        function simulateProfanity() {
+            const chatContainer = document.getElementById('chat-simulation');
+            addSimulatedMessage("BadUser", "This message contains *** and *** words", false, true);
+            
+            blockedCount++;
+            updateStats();
+            addLogEntry("AUTO-BLOCK", `Profanity detected from BadUser`, "Message blocked by profanity filter");
+        }
+
+        function simulateNormalMessage() {
+            const normalMessages = [
+                "Great interview! Really enjoyed the discussion.",
+                "Thanks for sharing your insights!",
+                "Looking forward to the next session.",
+                "Excellent questions from the host."
+            ];
+            
+            const message = normalMessages[Math.floor(Math.random() * normalMessages.length)];
+            const users = ["Alice", "Bob", "Charlie", "Diana"];
+            const user = users[Math.floor(Math.random() * users.length)];
+            
+            addSimulatedMessage(user, message, false, false);
+            updateStats();
+        }
+
+        function addSimulatedMessage(username, content, flagged, blocked) {
+            const chatContainer = document.getElementById('chat-simulation');
+            messageCount++;
+            
+            const messageClass = blocked ? 'blocked-message' : (flagged ? 'flagged-message' : '');
+            const avatar = username.charAt(0).toUpperCase();
+            
+            const messageHTML = `
+                <div class="simulated-message ${messageClass}">
+                    <div class="message-header">
+                        <div class="user-avatar">${avatar}</div>
+                        <span class="user-name">${username}</span>
+                        <span class="message-time">Just now</span>
+                    </div>
+                    <div class="message-content">${content}</div>
+                    <div class="message-actions">
+                        <button class="message-action-btn" onclick="deleteMessage(this)" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="message-action-btn" onclick="warnUser(this)" title="Warn User">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                    </div>
+                    ${flagged ? '<div class="mt-2"><small class="text-warning">⚠️ Flagged: Spam detected</small></div>' : ''}
+                    ${blocked ? '<div class="mt-2"><small class="text-danger">🚫 Blocked: Profanity filter</small></div>' : ''}
+                </div>
+            `;
+            
+            chatContainer.insertAdjacentHTML('beforeend', messageHTML);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function deleteMessage(button) {
+            const message = button.closest('.simulated-message');
+            const username = message.querySelector('.user-name').textContent;
+            
+            message.style.opacity = '0.5';
+            message.style.textDecoration = 'line-through';
+            
+            addLogEntry("MESSAGE DELETED", `Message deleted from ${username}`, "Manual moderation action");
+            
+            setTimeout(() => {
+                message.remove();
+            }, 2000);
+        }
+
+        function warnUser(button) {
+            const message = button.closest('.simulated-message');
+            const username = message.querySelector('.user-name').textContent;
+            
+            addLogEntry("USER WARNED", `Warning issued to ${username}`, "Manual moderation action");
+            
+            // Add warning indicator
+            const warningBadge = document.createElement('div');
+            warningBadge.className = 'mt-2';
+            warningBadge.innerHTML = '<small class="text-warning">⚠️ User warned by moderator</small>';
+            message.appendChild(warningBadge);
+        }
+
+        function banUser(button) {
+            const message = button.closest('.simulated-message');
+            const username = message.querySelector('.user-name').textContent;
+            
+            message.style.opacity = '0.3';
+            addLogEntry("USER BANNED", `${username} has been banned`, "Repeated violations");
+        }
+
+        function clearChat() {
+            const chatContainer = document.getElementById('chat-simulation');
+            chatContainer.innerHTML = '<p class="text-muted text-center">Chat cleared by moderator</p>';
+            
+            messageCount = 0;
+            flaggedCount = 0;
+            blockedCount = 0;
+            updateStats();
+            addLogEntry("CHAT CLEARED", "All messages removed", "Manual moderation action");
+        }
+
+        function updateStats() {
+            document.getElementById('total-messages').textContent = messageCount;
+            document.getElementById('flagged-messages').textContent = flaggedCount;
+            document.getElementById('blocked-messages').textContent = blockedCount;
+        }
+
+        function addLogEntry(action, description, reason) {
+            const logContainer = document.getElementById('moderation-log');
+            const timestamp = new Date().toLocaleString();
+            
+            const logHTML = `
+                <div class="log-entry">
+                    <div class="log-timestamp">${timestamp}</div>
+                    <div class="log-action">${action}: ${description}</div>
+                    <div class="text-muted">${reason}</div>
+                </div>
+            `;
+            
+            logContainer.insertAdjacentHTML('afterbegin', logHTML);
+            
+            // Keep only last 10 entries
+            const entries = logContainer.querySelectorAll('.log-entry');
+            if (entries.length > 10) {
+                entries[entries.length - 1].remove();
+            }
+        }
+    </script>
+</body>
+</html>

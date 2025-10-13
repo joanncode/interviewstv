@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4.2.4 User Muting & Banning Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), #cc0000);
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--card-dark);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .user-management-container {
+            position: relative;
+            min-height: 600px;
+            background: var(--input-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--input-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .escalation-demo {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .escalation-step {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .appeals-demo {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .appeal-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f39c12;
+        }
+
+        .appeal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .appeal-user {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .appeal-status {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: #f39c12;
+            color: white;
+        }
+
+        .appeal-reason {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+
+        .appeal-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .technical-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .technical-card {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .technical-card h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+
+        .code-snippet {
+            background: #000;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-snippet code {
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .violation-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .violation-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--primary-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 1rem 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -0.75rem;
+            top: 1.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        .timeline-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-left: 1rem;
+        }
+
+        .timeline-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-action {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .timeline-reason {
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1><i class="fas fa-user-shield"></i> 4.2.4 Complete!</h1>
+            <p>Advanced User Muting & Banning with Appeals System</p>
+            <div class="mt-4">
+                <span class="badge bg-success fs-6 me-2">✅ Escalation System</span>
+                <span class="badge bg-success fs-6 me-2">✅ Appeals Process</span>
+                <span class="badge bg-success fs-6 me-2">✅ User Tracking</span>
+                <span class="badge bg-success fs-6">✅ Bulk Actions</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Feature Overview -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-level-up-alt"></i>
+                </div>
+                <h4>Smart Escalation</h4>
+                <p>Automatic escalation from warnings to mutes to bans based on user behavior and violation history.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <h4>Appeals System</h4>
+                <p>Fair appeals process allowing users to contest moderation actions with moderator review.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h4>User History</h4>
+                <p>Comprehensive tracking of user violations, reputation scores, and moderation history.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h4>Bulk Management</h4>
+                <p>Efficient bulk actions for clearing violations, managing multiple users, and cleanup operations.</p>
+            </div>
+        </div>
+
+        <!-- Live Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-play text-danger me-2"></i>User Management Demo</h2>
+            <p class="text-muted">Experience the advanced user moderation system</p>
+
+            <!-- Demo Controls -->
+            <div class="demo-controls">
+                <button class="btn btn-primary" onclick="openUserManagement()">
+                    <i class="fas fa-users-cog me-2"></i>Open User Management
+                </button>
+                <button class="btn btn-outline-primary" onclick="simulateViolation()">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Simulate Violation
+                </button>
+                <button class="btn btn-outline-primary" onclick="simulateAppeal()">
+                    <i class="fas fa-balance-scale me-2"></i>Submit Appeal
+                </button>
+                <button class="btn btn-outline-primary" onclick="showEscalation()">
+                    <i class="fas fa-level-up-alt me-2"></i>Show Escalation
+                </button>
+            </div>
+
+            <!-- User Management Container -->
+            <div class="user-management-container" id="user-management-container">
+                <div class="text-center">
+                    <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Click "Open User Management" to see the advanced user moderation interface</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="demo-section">
+            <h2><i class="fas fa-chart-line text-danger me-2"></i>Moderation Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-users">45</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-mutes">3</div>
+                    <div class="stat-label">Active Mutes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-bans">1</div>
+                    <div class="stat-label">Active Bans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pending-appeals">2</div>
+                    <div class="stat-label">Pending Appeals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="escalations">5</div>
+                    <div class="stat-label">Auto Escalations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="reputation-avg">78</div>
+                    <div class="stat-label">Avg Reputation</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Escalation System Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-level-up-alt text-danger me-2"></i>Smart Escalation System</h2>
+            <div class="escalation-demo">
+                <div class="escalation-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Warning Phase</div>
+                        <div class="step-description">First violation triggers a warning with reputation impact</div>
+                    </div>
+                </div>
+                <div class="escalation-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Mute Escalation</div>
+                        <div class="step-description">Repeated violations result in temporary muting with increasing duration</div>
+                    </div>
+                </div>
+                <div class="escalation-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Ban Escalation</div>
+                        <div class="step-description">5+ mutes automatically escalate to temporary ban</div>
+                    </div>
+                </div>
+                <div class="escalation-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Permanent Ban</div>
+                        <div class="step-description">3+ temporary bans result in permanent ban</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appeals System Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-balance-scale text-danger me-2"></i>Appeals System</h2>
+            <div class="appeals-demo">
+                <div class="appeal-item">
+                    <div class="appeal-header">
+                        <span class="appeal-user">JohnDoe</span>
+                        <span class="appeal-status">Pending</span>
+                    </div>
+                    <div class="appeal-reason">
+                        "I was not spamming, I was just excited about the interview topic and sent multiple messages quickly. I understand the rules now and will be more careful."
+                    </div>
+                    <div class="appeal-actions">
+                        <button class="btn btn-sm btn-success" onclick="reviewAppeal('approve')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="reviewAppeal('deny')">
+                            <i class="fas fa-times"></i> Deny
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="appeal-item">
+                    <div class="appeal-header">
+                        <span class="appeal-user">SpamBot</span>
+                        <span class="appeal-status">Under Review</span>
+                    </div>
+                    <div class="appeal-reason">
+                        "My account was hacked and someone else was posting those promotional messages. I have secured my account now."
+                    </div>
+                    <div class="appeal-actions">
+                        <button class="btn btn-sm btn-success" onclick="reviewAppeal('approve')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="reviewAppeal('deny')">
+                            <i class="fas fa-times"></i> Deny
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Violation Timeline -->
+        <div class="demo-section">
+            <h2><i class="fas fa-history text-danger me-2"></i>User Violation Timeline</h2>
+            <div class="violation-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-time">2024-01-15 14:30:25</div>
+                        <div class="timeline-action">MUTE ESCALATED TO BAN</div>
+                        <div class="timeline-reason">User "SpamBot" - 5th mute triggered automatic ban escalation</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-time">2024-01-15 14:25:10</div>
+                        <div class="timeline-action">TEMPORARY MUTE</div>
+                        <div class="timeline-reason">User "SpamBot" - Excessive promotional content (30 minutes)</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-time">2024-01-15 14:20:05</div>
+                        <div class="timeline-action">WARNING ISSUED</div>
+                        <div class="timeline-reason">User "SpamBot" - Repeated similar messages detected</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-time">2024-01-15 14:15:30</div>
+                        <div class="timeline-action">APPEAL APPROVED</div>
+                        <div class="timeline-reason">User "JohnDoe" - Mute reversed due to valid appeal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <div class="demo-section">
+            <h2><i class="fas fa-cogs text-danger me-2"></i>Technical Implementation</h2>
+            <div class="technical-grid">
+                <div class="technical-card">
+                    <h5>Backend Services</h5>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-shield-alt"></i> UserModerationService.php - Advanced user management</li>
+                        <li><i class="fas fa-level-up-alt"></i> Smart escalation algorithms</li>
+                        <li><i class="fas fa-balance-scale"></i> Appeals processing system</li>
+                        <li><i class="fas fa-database"></i> Comprehensive violation tracking</li>
+                        <li><i class="fas fa-clock"></i> Automatic expiration handling</li>
+                    </ul>
+                </div>
+                <div class="technical-card">
+                    <h5>Frontend Components</h5>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-desktop"></i> UserManagementPanel.js - Interactive interface</li>
+                        <li><i class="fas fa-search"></i> Advanced user search and filtering</li>
+                        <li><i class="fas fa-chart-bar"></i> Real-time statistics dashboard</li>
+                        <li><i class="fas fa-mobile-alt"></i> Mobile-responsive design</li>
+                        <li><i class="fas fa-bell"></i> Real-time notifications</li>
+                    </ul>
+                </div>
+                <div class="technical-card">
+                    <h5>Key Features</h5>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-robot"></i> Automated escalation thresholds</li>
+                        <li><i class="fas fa-user-check"></i> Reputation scoring system</li>
+                        <li><i class="fas fa-clock"></i> Duration calculation algorithms</li>
+                        <li><i class="fas fa-shield-alt"></i> IP tracking and fingerprinting</li>
+                        <li><i class="fas fa-broom"></i> Bulk cleanup operations</li>
+                    </ul>
+                </div>
+                <div class="technical-card">
+                    <h5>Security & Compliance</h5>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-lock"></i> Role-based access control</li>
+                        <li><i class="fas fa-file-alt"></i> Comprehensive audit logging</li>
+                        <li><i class="fas fa-user-secret"></i> Privacy-compliant data handling</li>
+                        <li><i class="fas fa-shield-virus"></i> Anti-evasion measures</li>
+                        <li><i class="fas fa-balance-scale"></i> Fair appeals process</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/UserManagementPanel.js"></script>
+    <script>
+        // Demo functionality
+        let userManagementPanel;
+        let violationCount = 0;
+        let appealCount = 2;
+
+        // Initialize user management panel
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('user-management-container');
+            
+            // Create a mock WebSocket for demo
+            const mockWebSocket = {
+                readyState: WebSocket.OPEN,
+                send: function(data) {
+                    console.log('Mock WebSocket send:', data);
+                    // Simulate responses for demo
+                    setTimeout(() => {
+                        const message = JSON.parse(data);
+                        if (message.type === 'user_moderation_action') {
+                            this.onmessage({
+                                data: JSON.stringify({
+                                    type: 'user_moderation_success',
+                                    action: message.action,
+                                    target_user_id: message.target_user_id
+                                })
+                            });
+                        }
+                    }, 500);
+                },
+                addEventListener: function(event, handler) {
+                    if (event === 'message') {
+                        this.onmessage = handler;
+                    }
+                }
+            };
+
+            userManagementPanel = new UserManagementPanel({
+                container: container,
+                websocket: mockWebSocket,
+                currentRoom: 'demo-room',
+                userRole: 'admin'
+            });
+        });
+
+        function openUserManagement() {
+            if (userManagementPanel) {
+                userManagementPanel.show();
+            }
+        }
+
+        function simulateViolation() {
+            violationCount++;
+            updateStats();
+            
+            // Add to timeline
+            addTimelineEntry('VIOLATION DETECTED', `User violated community guidelines (Violation #${violationCount})`);
+            
+            showNotification(`Violation #${violationCount} detected and processed`, 'warning');
+        }
+
+        function simulateAppeal() {
+            appealCount++;
+            updateStats();
+            
+            addTimelineEntry('APPEAL SUBMITTED', 'User submitted appeal for recent mute');
+            showNotification('New appeal submitted for review', 'info');
+        }
+
+        function showEscalation() {
+            const escalationSteps = document.querySelectorAll('.escalation-step');
+            escalationSteps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.style.background = 'rgba(255, 0, 0, 0.1)';
+                    step.style.borderLeftColor = '#FF0000';
+                    setTimeout(() => {
+                        step.style.background = 'rgba(255, 255, 255, 0.05)';
+                        step.style.borderLeftColor = 'var(--primary-color)';
+                    }, 1000);
+                }, index * 500);
+            });
+        }
+
+        function reviewAppeal(decision) {
+            const action = decision === 'approve' ? 'approved' : 'denied';
+            addTimelineEntry(`APPEAL ${action.toUpperCase()}`, `Moderator ${action} user appeal`);
+            showNotification(`Appeal ${action}`, decision === 'approve' ? 'success' : 'error');
+            
+            if (decision === 'approve') {
+                appealCount = Math.max(0, appealCount - 1);
+                updateStats();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('pending-appeals').textContent = appealCount;
+            
+            // Simulate other stat changes
+            const escalations = document.getElementById('escalations');
+            if (violationCount % 3 === 0) {
+                escalations.textContent = parseInt(escalations.textContent) + 1;
+            }
+        }
+
+        function addTimelineEntry(action, description) {
+            const timeline = document.querySelector('.violation-timeline');
+            const timestamp = new Date().toLocaleString();
+            
+            const timelineHTML = `
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-time">${timestamp}</div>
+                        <div class="timeline-action">${action}</div>
+                        <div class="timeline-reason">${description}</div>
+                    </div>
+                </div>
+            `;
+            
+            timeline.insertAdjacentHTML('afterbegin', timelineHTML);
+            
+            // Keep only last 5 entries
+            const entries = timeline.querySelectorAll('.timeline-item');
+            if (entries.length > 5) {
+                entries[entries.length - 1].remove();
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 2000; min-width: 300px;';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('fade');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

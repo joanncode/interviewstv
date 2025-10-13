@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Commands System - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .container-fluid {
+            padding: 2rem;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .demo-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        .demo-section {
+            background: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .command-demo-container {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-input-demo {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .chat-input-demo input {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input-demo input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .chat-input-demo input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .command-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .command-category {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .command-category h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .command-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .command-item {
+            background: var(--bg-dark);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .command-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+        }
+
+        .command-name {
+            font-family: monospace;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .command-description {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .command-usage {
+            font-family: monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .role-selector {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+        }
+
+        .role-selector:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .keyboard-shortcuts {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .keyboard-shortcuts h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .shortcut-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .shortcut-key {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .shortcut-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 1rem;
+            }
+            
+            .demo-header {
+                padding: 1.5rem;
+            }
+            
+            .demo-section {
+                padding: 1.5rem;
+            }
+            
+            .command-categories {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .shortcut-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Live Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="profanity-filter-demo.html">
+                            <i class="fas fa-filter me-1"></i>Profanity Filter
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="chat-commands-demo.html">
+                            <i class="fas fa-terminal me-1"></i>Chat Commands
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Demo Header -->
+        <div class="demo-header">
+            <h1><i class="fas fa-terminal me-3"></i>Advanced Chat Commands System</h1>
+            <p>Powerful slash commands for moderation, information, and user interaction with intelligent autocomplete and help system</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="text-center">
+            <div class="status-indicator disconnected" id="connection-status">
+                <i class="fas fa-circle"></i>
+                <span>Disconnected</span>
+            </div>
+        </div>
+
+        <!-- Demo Info -->
+        <div class="demo-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Demo Information</h6>
+            <p>This demo showcases the comprehensive chat commands system with intelligent autocomplete, command history, help system, and role-based permissions. Type "/" in the input below to see command suggestions, use Tab/Enter to autocomplete, and F1 for help.</p>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="demo-section">
+            <h3><i class="fas fa-play me-2"></i>Interactive Demo</h3>
+            
+            <div class="demo-controls">
+                <button class="btn btn-primary" id="connect-websocket">
+                    <i class="fas fa-plug me-2"></i>Connect WebSocket
+                </button>
+                <select class="role-selector" id="role-selector">
+                    <option value="guest">Guest</option>
+                    <option value="participant">Participant</option>
+                    <option value="host">Host</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="admin" selected>Admin</option>
+                </select>
+                <button class="btn btn-secondary" id="show-help">
+                    <i class="fas fa-question-circle me-2"></i>Show Help
+                </button>
+                <button class="btn btn-secondary" id="clear-history">
+                    <i class="fas fa-trash me-2"></i>Clear History
+                </button>
+            </div>
+        </div>
+
+        <!-- Command Input Demo -->
+        <div class="demo-section">
+            <h3><i class="fas fa-keyboard me-2"></i>Command Input</h3>
+            <div class="command-demo-container">
+                <div class="chat-input-demo">
+                    <input type="text" id="command-input" placeholder="Type / to see available commands..." autocomplete="off">
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Try typing: <code>/help</code>, <code>/mute</code>, <code>/me</code>, or <code>/poll</code>
+                </p>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts -->
+        <div class="demo-section">
+            <div class="keyboard-shortcuts">
+                <h5><i class="fas fa-keyboard me-2"></i>Keyboard Shortcuts</h5>
+                <div class="shortcut-list">
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Show command suggestions</span>
+                        <kbd class="shortcut-key">/</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Autocomplete command</span>
+                        <kbd class="shortcut-key">Tab</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Execute command</span>
+                        <kbd class="shortcut-key">Enter</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Navigate suggestions</span>
+                        <kbd class="shortcut-key">↑ ↓</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Command history</span>
+                        <kbd class="shortcut-key">↑ ↓</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Show command help</span>
+                        <kbd class="shortcut-key">F1</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-description">Hide suggestions</span>
+                        <kbd class="shortcut-key">Esc</kbd>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Commands -->
+        <div class="demo-section">
+            <h3><i class="fas fa-list me-2"></i>Available Commands by Category</h3>
+            <div class="command-categories" id="command-categories">
+                <!-- Commands will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Command Interface Component -->
+    <script src="../src/components/ChatCommandInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let commandInterface = null;
+        let currentRole = 'admin';
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+            populateCommandCategories();
+        });
+        
+        function initializeDemo() {
+            const commandInput = document.getElementById('command-input');
+            
+            // Initialize command interface
+            if (commandInput && typeof ChatCommandInterface !== 'undefined') {
+                commandInterface = new ChatCommandInterface({
+                    chatInput: commandInput,
+                    websocket: websocket,
+                    userRole: currentRole,
+                    onCommandExecuted: (command) => {
+                        console.log('Command executed:', command);
+                        showNotification(`Command executed: ${command}`, 'success');
+                    }
+                });
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect WebSocket
+            document.getElementById('connect-websocket')?.addEventListener('click', connectWebSocket);
+            
+            // Role selector
+            document.getElementById('role-selector')?.addEventListener('change', (e) => {
+                currentRole = e.target.value;
+                if (commandInterface) {
+                    commandInterface.setUserRole(currentRole);
+                }
+                populateCommandCategories();
+                showNotification(`Role changed to: ${currentRole}`, 'info');
+            });
+            
+            // Show help
+            document.getElementById('show-help')?.addEventListener('click', () => {
+                if (commandInterface) {
+                    commandInterface.displayGeneralHelp();
+                }
+            });
+            
+            // Clear history
+            document.getElementById('clear-history')?.addEventListener('click', () => {
+                if (commandInterface) {
+                    commandInterface.commandHistory = [];
+                    commandInterface.historyIndex = -1;
+                    showNotification('Command history cleared', 'info');
+                }
+            });
+        }
+        
+        function connectWebSocket() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log('WebSocket already connected');
+                return;
+            }
+            
+            try {
+                // Connect to WebSocket server (adjust URL as needed)
+                websocket = new WebSocket('ws://localhost:8080');
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus(true);
+                    
+                    // Update command interface with WebSocket
+                    if (commandInterface) {
+                        commandInterface.setWebSocket(websocket);
+                    }
+                    
+                    // Send authentication (demo)
+                    websocket.send(JSON.stringify({
+                        type: 'auth',
+                        token: 'demo_admin_token',
+                        room_id: 'demo_room'
+                    }));
+                };
+                
+                websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message:', data);
+                    
+                    // Handle command-related messages
+                    if (commandInterface) {
+                        commandInterface.handleWebSocketMessage(data);
+                    }
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket disconnected');
+                    updateConnectionStatus(false);
+                    websocket = null;
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false);
+                };
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+        }
+        
+        function populateCommandCategories() {
+            const container = document.getElementById('command-categories');
+            if (!container) return;
+            
+            // Mock command data based on role
+            const allCommands = {
+                moderation: [
+                    {
+                        name: 'mute',
+                        description: 'Mute a user for a specified duration',
+                        usage: '/mute <username> [duration] [reason]',
+                        roles: ['admin', 'moderator', 'host']
+                    },
+                    {
+                        name: 'unmute',
+                        description: 'Remove mute from a user',
+                        usage: '/unmute <username> [reason]',
+                        roles: ['admin', 'moderator', 'host']
+                    },
+                    {
+                        name: 'kick',
+                        description: 'Remove a user from the chat temporarily',
+                        usage: '/kick <username> [reason]',
+                        roles: ['admin', 'moderator', 'host']
+                    },
+                    {
+                        name: 'ban',
+                        description: 'Permanently ban a user from the chat',
+                        usage: '/ban <username> [reason]',
+                        roles: ['admin', 'moderator']
+                    },
+                    {
+                        name: 'warn',
+                        description: 'Issue a warning to a user',
+                        usage: '/warn <username> <reason>',
+                        roles: ['admin', 'moderator', 'host']
+                    }
+                ],
+                information: [
+                    {
+                        name: 'help',
+                        description: 'Show available commands and usage',
+                        usage: '/help [command]',
+                        roles: ['admin', 'moderator', 'host', 'participant', 'guest']
+                    },
+                    {
+                        name: 'status',
+                        description: 'Check user status and moderation history',
+                        usage: '/status [username]',
+                        roles: ['admin', 'moderator', 'host']
+                    },
+                    {
+                        name: 'online',
+                        description: 'List online users in the chat',
+                        usage: '/online [role]',
+                        roles: ['admin', 'moderator', 'host', 'participant']
+                    }
+                ],
+                utility: [
+                    {
+                        name: 'clear',
+                        description: 'Clear chat messages (moderator only)',
+                        usage: '/clear [count]',
+                        roles: ['admin', 'moderator']
+                    },
+                    {
+                        name: 'slow',
+                        description: 'Enable slow mode with message delay',
+                        usage: '/slow <seconds>',
+                        roles: ['admin', 'moderator', 'host']
+                    }
+                ],
+                engagement: [
+                    {
+                        name: 'me',
+                        description: 'Send an action message',
+                        usage: '/me <action>',
+                        roles: ['admin', 'moderator', 'host', 'participant', 'guest']
+                    },
+                    {
+                        name: 'poll',
+                        description: 'Create a quick poll',
+                        usage: '/poll <question> <option1> <option2> [option3] [option4]',
+                        roles: ['admin', 'moderator', 'host']
+                    }
+                ]
+            };
+            
+            let html = '';
+            
+            Object.keys(allCommands).forEach(category => {
+                const commands = allCommands[category].filter(cmd => cmd.roles.includes(currentRole));
+                
+                if (commands.length > 0) {
+                    const categoryIcons = {
+                        moderation: 'fas fa-shield-alt',
+                        information: 'fas fa-info-circle',
+                        utility: 'fas fa-tools',
+                        engagement: 'fas fa-users'
+                    };
+                    
+                    html += `
+                        <div class="command-category">
+                            <h5><i class="${categoryIcons[category]} me-2"></i>${category.charAt(0).toUpperCase() + category.slice(1)}</h5>
+                            <ul class="command-list">
+                    `;
+                    
+                    commands.forEach(command => {
+                        html += `
+                            <li class="command-item">
+                                <div class="command-name">/${command.name}</div>
+                                <div class="command-description">${command.description}</div>
+                                <div class="command-usage">${command.usage}</div>
+                            </li>
+                        `;
+                    });
+                    
+                    html += '</ul></div>';
+                }
+            });
+            
+            if (html === '') {
+                html = '<div class="text-center text-muted">No commands available for this role.</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `command-notification notification-${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Auto-connect on page load for demo
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+    </script>
+</body>
+</html>

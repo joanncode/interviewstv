@@ -35,32 +35,219 @@ class ChatService {
 
     
     /**
-     * Save a chat message
+     * Save a chat message with enhanced persistence
      */
     public function saveMessage(array $messageData) {
         try {
             $roomId = $messageData['room_id'];
+            $messageId = uniqid('msg_', true);
 
             $message = [
+                'id' => $messageId,
                 'room_id' => $roomId,
                 'user_id' => $messageData['user_id'],
                 'user_name' => $messageData['user_name'],
                 'message' => $messageData['message'],
                 'message_type' => $messageData['message_type'] ?? 'text',
                 'timestamp' => $messageData['timestamp'],
+                'created_at' => date('Y-m-d H:i:s'),
                 'edited_at' => null,
                 'is_deleted' => false,
-                'metadata' => $messageData['metadata'] ?? []
+                'is_pinned' => false,
+                'reply_to' => $messageData['reply_to'] ?? null,
+                'metadata' => $messageData['metadata'] ?? [],
+                'reactions' => [],
+                'thread_count' => 0
             ];
 
             // Append message to room's message file
             $this->storage->append('chat/messages', $roomId, $message);
 
-            return $message['id'] ?? uniqid();
+            // Update room statistics
+            $this->updateRoomStats($roomId, 'message_sent');
+
+            // Create message index for faster searching
+            $this->indexMessage($message);
+
+            return $messageId;
 
         } catch (\Exception $e) {
             throw new \Exception("Failed to save message: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Get chat message history with advanced filtering
+     */
+    public function getMessageHistory(string $roomId, array $options = []) {
+        try {
+            $limit = $options['limit'] ?? 50;
+            $offset = $options['offset'] ?? 0;
+            $before = $options['before'] ?? null; // timestamp
+            $after = $options['after'] ?? null; // timestamp
+            $messageType = $options['message_type'] ?? null;
+            $userId = $options['user_id'] ?? null;
+            $search = $options['search'] ?? null;
+            $includeDeleted = $options['include_deleted'] ?? false;
+
+            $messages = $this->storage->getArray('chat/messages', $roomId);
+
+            // Apply filters
+            $messages = array_filter($messages, function($msg) use ($before, $after, $messageType, $userId, $includeDeleted) {
+                // Filter deleted messages
+                if (!$includeDeleted && ($msg['is_deleted'] ?? false)) {
+                    return false;
+                }
+
+                // Filter by timestamp range
+                if ($before && ($msg['timestamp'] ?? 0) >= $before) {
+                    return false;
+                }
+                if ($after && ($msg['timestamp'] ?? 0) <= $after) {
+                    return false;
+                }
+
+                // Filter by message type
+                if ($messageType && ($msg['message_type'] ?? 'text') !== $messageType) {
+                    return false;
+                }
+
+                // Filter by user
+                if ($userId && ($msg['user_id'] ?? '') !== $userId) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Search in message content
+            if ($search) {
+                $messages = array_filter($messages, function($msg) use ($search) {
+                    return stripos($msg['message'] ?? '', $search) !== false ||
+                           stripos($msg['user_name'] ?? '', $search) !== false;
+                });
+            }
+
+            // Sort by timestamp (newest first for pagination, then reverse)
+            usort($messages, function($a, $b) {
+                return ($b['timestamp'] ?? 0) - ($a['timestamp'] ?? 0);
+            });
+
+            // Apply offset and limit
+            if ($offset > 0) {
+                $messages = array_slice($messages, $offset);
+            }
+
+            if ($limit > 0) {
+                $messages = array_slice($messages, 0, $limit);
+            }
+
+            // Reverse to get chronological order
+            $messages = array_reverse($messages);
+
+            // Add additional metadata
+            foreach ($messages as &$message) {
+                $message['is_edited'] = !empty($message['edited_at']);
+                $message['reaction_count'] = count($message['reactions'] ?? []);
+                $message['has_replies'] = ($message['thread_count'] ?? 0) > 0;
+            }
+
+            return [
+                'messages' => $messages,
+                'total_count' => $this->getMessageCount($roomId),
+                'has_more' => count($messages) === $limit
+            ];
+
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to get message history: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get message count for a room
+     */
+    public function getMessageCount(string $roomId, bool $includeDeleted = false) {
+        try {
+            $messages = $this->storage->getArray('chat/messages', $roomId);
+
+            if (!$includeDeleted) {
+                $messages = array_filter($messages, function($msg) {
+                    return !($msg['is_deleted'] ?? false);
+                });
+            }
+
+            return count($messages);
+
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Update room statistics
+     */
+    private function updateRoomStats(string $roomId, string $action) {
+        try {
+            $stats = $this->storage->load('chat/stats', $roomId) ?? [
+                'total_messages' => 0,
+                'last_message_at' => null,
+                'active_users' => 0,
+                'peak_users' => 0
+            ];
+
+            switch ($action) {
+                case 'message_sent':
+                    $stats['total_messages']++;
+                    $stats['last_message_at'] = time();
+                    break;
+            }
+
+            $this->storage->save('chat/stats', $roomId, $stats);
+
+        } catch (\Exception $e) {
+            // Silently fail stats update
+        }
+    }
+
+    /**
+     * Index message for search functionality
+     */
+    private function indexMessage(array $message) {
+        try {
+            $index = $this->storage->load('chat/search_index', 'global') ?? [];
+
+            $indexEntry = [
+                'message_id' => $message['id'],
+                'room_id' => $message['room_id'],
+                'user_id' => $message['user_id'],
+                'content' => strtolower($message['message']),
+                'timestamp' => $message['timestamp'],
+                'keywords' => $this->extractKeywords($message['message'])
+            ];
+
+            $index[] = $indexEntry;
+
+            // Keep only last 10000 messages in index
+            if (count($index) > 10000) {
+                $index = array_slice($index, -10000);
+            }
+
+            $this->storage->save('chat/search_index', 'global', $index);
+
+        } catch (\Exception $e) {
+            // Silently fail indexing
+        }
+    }
+
+    /**
+     * Extract keywords from message for search
+     */
+    private function extractKeywords(string $message) {
+        $words = preg_split('/\s+/', strtolower($message));
+        $words = array_filter($words, function($word) {
+            return strlen($word) > 2; // Only words longer than 2 characters
+        });
+        return array_unique($words);
     }
     
     /**

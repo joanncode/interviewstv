@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4.2.2 Message Formatting Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), #cc0000);
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chat-container {
+            background-color: var(--input-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .message-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .message-content {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .message-input {
+            background: var(--card-dark);
+            border: 1px solid #555;
+            border-radius: 0 0 8px 8px;
+            padding: 0.75rem;
+            color: var(--text-light);
+            resize: vertical;
+            min-height: 100px;
+            max-height: 200px;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 1rem;
+            align-self: flex-start;
+        }
+
+        .send-btn:hover {
+            background: #cc0000;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--card-dark);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--input-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .examples-section {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .example-input {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+
+        .example-arrow {
+            color: var(--primary-color);
+        }
+
+        .example-output {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1><i class="fas fa-font"></i> 4.2.2 Complete!</h1>
+            <p>Rich Text Message Formatting with Live Preview</p>
+            <div class="mt-4">
+                <span class="badge bg-success fs-6 me-2">✅ Markdown Support</span>
+                <span class="badge bg-success fs-6 me-2">✅ Live Preview</span>
+                <span class="badge bg-success fs-6 me-2">✅ Formatting Toolbar</span>
+                <span class="badge bg-success fs-6">✅ Keyboard Shortcuts</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Feature Overview -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bold"></i>
+                </div>
+                <h4>Rich Text Formatting</h4>
+                <p>Bold, italic, underline, strikethrough, and more with markdown syntax support.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h4>Live Preview</h4>
+                <p>Real-time preview of formatted messages with toggle between edit and preview modes.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h4>Formatting Toolbar</h4>
+                <p>Interactive toolbar with buttons for all formatting options and keyboard shortcuts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h4>Safe HTML Output</h4>
+                <p>Sanitized HTML output with XSS protection and validation of formatting syntax.</p>
+            </div>
+        </div>
+
+        <!-- Live Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-edit text-danger me-2"></i>Live Formatting Demo</h2>
+            <p class="text-muted">Try the rich text formatting system with live preview</p>
+
+            <!-- Demo Controls -->
+            <div class="demo-controls">
+                <button class="btn btn-primary" onclick="insertSampleText()">
+                    <i class="fas fa-plus me-2"></i>Insert Sample Text
+                </button>
+                <button class="btn btn-outline-primary" onclick="clearEditor()">
+                    <i class="fas fa-trash me-2"></i>Clear Editor
+                </button>
+                <button class="btn btn-outline-primary" onclick="showFormattingHelp()">
+                    <i class="fas fa-question-circle me-2"></i>Formatting Help
+                </button>
+            </div>
+
+            <!-- Formatting Interface -->
+            <div class="formatting-interface">
+                <div id="formatting-toolbar"></div>
+                <textarea class="message-input" id="message-input" placeholder="Type your message here... Use **bold**, *italic*, __underline__, ~~strikethrough~~, `code`, ```code blocks```, > quotes, @mentions, and URLs!"></textarea>
+                <div class="message-preview" id="message-preview"></div>
+                <button class="send-btn" onclick="sendFormattedMessage()">
+                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="demo-section">
+            <h2><i class="fas fa-comments text-danger me-2"></i>Formatted Messages</h2>
+            <div class="chat-container" id="chat-container">
+                <div class="message">
+                    <div class="message-header">
+                        <div class="user-avatar">J</div>
+                        <span class="user-name">John Doe</span>
+                        <span class="message-time">2 minutes ago</span>
+                    </div>
+                    <div class="message-content">
+                        Welcome to the <strong>message formatting</strong> demo! You can use <em>italic text</em>, <u>underlined text</u>, and even <code>inline code</code>.
+                    </div>
+                </div>
+
+                <div class="message">
+                    <div class="message-header">
+                        <div class="user-avatar">S</div>
+                        <span class="user-name">Sarah Smith</span>
+                        <span class="message-time">1 minute ago</span>
+                    </div>
+                    <div class="message-content">
+                        <blockquote>This is a quoted message</blockquote>
+                        And here's some <span class="strikethrough">strikethrough text</span> with a <span class="mention">@mention</span>!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formatting Examples -->
+        <div class="demo-section">
+            <h2><i class="fas fa-book text-danger me-2"></i>Formatting Examples</h2>
+            <div class="examples-section">
+                <div class="example-item">
+                    <div class="example-input">**bold text**</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><strong>bold text</strong></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">*italic text*</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><em>italic text</em></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">__underlined text__</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><u>underlined text</u></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">~~strikethrough~~</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><span class="strikethrough">strikethrough</span></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">`inline code`</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><code>inline code</code></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">> quoted text</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><blockquote>quoted text</blockquote></div>
+                </div>
+                <div class="example-item">
+                    <div class="example-input">@username</div>
+                    <div class="example-arrow">→</div>
+                    <div class="example-output"><span class="mention">@username</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="demo-section">
+            <h2><i class="fas fa-chart-bar text-danger me-2"></i>Formatting Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="messages-sent">0</div>
+                    <div class="stat-label">Messages Sent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="formatted-messages">0</div>
+                    <div class="stat-label">Formatted Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="most-used-format">Bold</div>
+                    <div class="stat-label">Most Used Format</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-formats">0</div>
+                    <div class="stat-label">Total Formats Used</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="demo-section">
+            <h2><i class="fas fa-cogs text-danger me-2"></i>Technical Implementation</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Backend Services</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-file-code text-primary me-2"></i>
+                            <strong>MessageFormattingService.php</strong><br>
+                            <small class="text-muted">Markdown parsing, HTML sanitization, validation</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-network-wired text-primary me-2"></i>
+                            <strong>Enhanced ChatServer.php</strong><br>
+                            <small class="text-muted">Real-time formatting, validation, help system</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-shield-alt text-primary me-2"></i>
+                            <strong>XSS Protection</strong><br>
+                            <small class="text-muted">HTML sanitization, allowed tags filtering</small>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Frontend Components</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-tools text-primary me-2"></i>
+                            <strong>MessageFormatter.js</strong><br>
+                            <small class="text-muted">Interactive toolbar, live preview, shortcuts</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-eye text-primary me-2"></i>
+                            <strong>Live Preview</strong><br>
+                            <small class="text-muted">Real-time markdown rendering and validation</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-keyboard text-primary me-2"></i>
+                            <strong>Keyboard Shortcuts</strong><br>
+                            <small class="text-muted">Ctrl+B/I/U/K for quick formatting</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/MessageFormatter.js"></script>
+    <script>
+        // Demo functionality
+        let messageCount = 2;
+        let formattedMessageCount = 0;
+        let totalFormats = 0;
+        let formatUsage = {};
+        let messageFormatter;
+
+        // Initialize message formatter
+        document.addEventListener('DOMContentLoaded', function() {
+            const textArea = document.getElementById('message-input');
+            const toolbar = document.getElementById('formatting-toolbar');
+            const preview = document.getElementById('message-preview');
+
+            messageFormatter = new MessageFormatter({
+                textArea: textArea,
+                toolbarContainer: toolbar,
+                previewContainer: preview,
+                onFormatChange: (text) => {
+                    updateStats();
+                }
+            });
+        });
+
+        function insertSampleText() {
+            const samples = [
+                "This is **bold text** and *italic text* with __underlined__ content!",
+                "Here's some `inline code` and a > quoted message",
+                "~~Strikethrough~~ text with @username mention",
+                "```\nfunction hello() {\n    console.log('Hello World!');\n}\n```",
+                "Check out this link: https://example.com and **bold** text!"
+            ];
+            
+            const sample = samples[Math.floor(Math.random() * samples.length)];
+            messageFormatter.setText(sample);
+        }
+
+        function clearEditor() {
+            messageFormatter.clear();
+            updateStats();
+        }
+
+        function showFormattingHelp() {
+            messageFormatter.showFormattingHelp();
+        }
+
+        function sendFormattedMessage() {
+            const text = messageFormatter.getText().trim();
+            
+            if (text) {
+                messageCount++;
+                const chatContainer = document.getElementById('chat-container');
+                
+                // Parse the message
+                const formattedText = parseMarkdown(text);
+                const hasFormatting = text !== formattedText.replace(/<[^>]*>/g, '');
+                
+                if (hasFormatting) {
+                    formattedMessageCount++;
+                    countFormats(text);
+                }
+                
+                const messageHtml = `
+                    <div class="message">
+                        <div class="message-header">
+                            <div class="user-avatar">Y</div>
+                            <span class="user-name">You</span>
+                            <span class="message-time">Just now</span>
+                        </div>
+                        <div class="message-content">${formattedText}</div>
+                    </div>
+                `;
+                
+                chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                messageFormatter.clear();
+                updateStats();
+            }
+        }
+
+        function parseMarkdown(text) {
+            let html = text;
+            
+            // Escape HTML first
+            html = html.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;');
+            
+            // Apply formatting rules
+            const rules = [
+                { pattern: /```([\s\S]*?)```/g, replacement: '<pre><code>$1</code></pre>' },
+                { pattern: /`([^`]+)`/g, replacement: '<code>$1</code>' },
+                { pattern: /\*\*(.*?)\*\*/g, replacement: '<strong>$1</strong>' },
+                { pattern: /\*(.*?)\*/g, replacement: '<em>$1</em>' },
+                { pattern: /__(.*?)__/g, replacement: '<u>$1</u>' },
+                { pattern: /~~(.*?)~~/g, replacement: '<span class="strikethrough">$1</span>' },
+                { pattern: /^> (.+)$/gm, replacement: '<blockquote>$1</blockquote>' },
+                { pattern: /@([a-zA-Z0-9_]+)/g, replacement: '<span class="mention">@$1</span>' },
+                { pattern: /(https?:\/\/[^\s<>"']+)/gi, replacement: '<a href="$1" target="_blank" rel="noopener">$1</a>' },
+                { pattern: /\n/g, replacement: '<br>' }
+            ];
+            
+            rules.forEach(rule => {
+                html = html.replace(rule.pattern, rule.replacement);
+            });
+            
+            return html;
+        }
+
+        function countFormats(text) {
+            const formats = {
+                'bold': /\*\*(.*?)\*\*/g,
+                'italic': /\*(.*?)\*/g,
+                'underline': /__(.*?)__/g,
+                'strikethrough': /~~(.*?)~~/g,
+                'code': /`([^`]+)`/g,
+                'code_block': /```([\s\S]*?)```/g,
+                'quote': /^> (.+)$/gm,
+                'mention': /@([a-zA-Z0-9_]+)/g,
+                'link': /(https?:\/\/[^\s<>"']+)/gi
+            };
+            
+            for (const [format, pattern] of Object.entries(formats)) {
+                const matches = (text.match(pattern) || []).length;
+                if (matches > 0) {
+                    formatUsage[format] = (formatUsage[format] || 0) + matches;
+                    totalFormats += matches;
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('messages-sent').textContent = messageCount;
+            document.getElementById('formatted-messages').textContent = formattedMessageCount;
+            document.getElementById('total-formats').textContent = totalFormats;
+            
+            // Find most used format
+            let mostUsed = 'None';
+            let maxCount = 0;
+            for (const [format, count] of Object.entries(formatUsage)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    mostUsed = format.charAt(0).toUpperCase() + format.slice(1);
+                }
+            }
+            document.getElementById('most-used-format').textContent = mostUsed;
+        }
+
+        // Auto-resize textarea
+        document.getElementById('message-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        // Send message on Ctrl+Enter
+        document.getElementById('message-input').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                sendFormattedMessage();
+            }
+        });
+    </script>
+</body>
+</html>

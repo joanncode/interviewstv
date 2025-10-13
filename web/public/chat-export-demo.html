@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Export System - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .container-fluid {
+            padding: 2rem;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .demo-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .user-selector {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+        }
+
+        .user-selector:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 1rem;
+            }
+            
+            .demo-header {
+                padding: 1.5rem;
+            }
+            
+            .demo-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Live Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="private-messaging-demo.html">
+                            <i class="fas fa-envelope me-1"></i>Private Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="chat-export-demo.html">
+                            <i class="fas fa-download me-1"></i>Chat Export
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Demo Header -->
+        <div class="demo-header">
+            <h1><i class="fas fa-download me-3"></i>Advanced Chat Export System</h1>
+            <p>Comprehensive data export functionality with multiple formats, encryption, and compliance features</p>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="demo-controls">
+            <div class="status-indicator disconnected" id="connection-status">
+                <i class="fas fa-circle"></i>
+                <span>Disconnected</span>
+            </div>
+            <select class="user-selector" id="user-selector">
+                <option value="participant">Participant</option>
+                <option value="host">Host</option>
+                <option value="moderator">Moderator</option>
+                <option value="admin" selected>Admin</option>
+            </select>
+            <button class="btn btn-primary" id="connect-btn">
+                <i class="fas fa-plug me-2"></i>Connect
+            </button>
+            <button class="btn btn-secondary" id="stats-btn">
+                <i class="fas fa-chart-bar me-2"></i>Statistics
+            </button>
+        </div>
+
+        <!-- Demo Info -->
+        <div class="demo-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Chat Export System</h6>
+            <p>Export chat messages, private conversations, and moderation logs in multiple formats (JSON, CSV, TXT, HTML, PDF) with encryption, compression, and compliance features. Supports rate limiting, user permissions, and automated cleanup.</p>
+        </div>
+
+        <!-- Export Interface Container -->
+        <div class="export-container" id="export-container">
+            <!-- Export Header -->
+            <div class="export-header">
+                <h3><i class="fas fa-download me-2"></i>Chat Export System</h3>
+                <p>Export your chat data in various formats with advanced filtering and security options</p>
+            </div>
+
+            <!-- Export Content -->
+            <div class="export-content">
+                <!-- Export Statistics -->
+                <div class="export-stats" id="export-stats" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-total-exports">0</div>
+                        <div class="stat-label">Total Exports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-room-exports">0</div>
+                        <div class="stat-label">Room Chat Exports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-pm-exports">0</div>
+                        <div class="stat-label">Private Message Exports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-mod-exports">0</div>
+                        <div class="stat-label">Moderation Log Exports</div>
+                    </div>
+                </div>
+
+                <!-- Room Chat Export -->
+                <div class="export-section">
+                    <h4><i class="fas fa-comments me-2"></i>Room Chat Export</h4>
+                    <p>Export all messages from a specific chat room with filtering options</p>
+                    
+                    <div class="export-form">
+                        <div class="form-group">
+                            <label for="room-id">Room ID</label>
+                            <input type="text" id="room-id" class="form-control" value="demo_room" placeholder="Enter room ID">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="room-format">Export Format</label>
+                                <select id="room-format" class="form-control">
+                                    <option value="json">JSON</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="txt">Plain Text</option>
+                                    <option value="html">HTML</option>
+                                    <option value="pdf">PDF</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="room-limit">Message Limit</label>
+                                <input type="number" id="room-limit" class="form-control" value="1000" min="1" max="10000">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="room-start-date">Start Date</label>
+                                <input type="date" id="room-start-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="room-end-date">End Date</label>
+                                <input type="date" id="room-end-date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="include-deleted" checked>
+                            <label for="include-deleted">Include deleted messages</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="include-moderated" checked>
+                            <label for="include-moderated">Include moderated messages</label>
+                        </div>
+                        
+                        <button class="export-btn" id="export-room-btn">
+                            <i class="fas fa-download me-2"></i>Export Room Chat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Private Messages Export -->
+                <div class="export-section">
+                    <h4><i class="fas fa-envelope me-2"></i>Private Messages Export</h4>
+                    <p>Export your private message conversations</p>
+                    
+                    <div class="export-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pm-format">Export Format</label>
+                                <select id="pm-format" class="form-control">
+                                    <option value="json">JSON</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="txt">Plain Text</option>
+                                    <option value="html">HTML</option>
+                                    <option value="pdf">PDF</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="pm-limit">Message Limit</label>
+                                <input type="number" id="pm-limit" class="form-control" value="1000" min="1" max="10000">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="pm-start-date">Start Date</label>
+                                <input type="date" id="pm-start-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="pm-end-date">End Date</label>
+                                <input type="date" id="pm-end-date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <button class="export-btn" id="export-pm-btn">
+                            <i class="fas fa-download me-2"></i>Export Private Messages
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Moderation Logs Export (Admin/Moderator only) -->
+                <div class="export-section" id="moderation-section" style="display: none;">
+                    <h4><i class="fas fa-shield-alt me-2"></i>Moderation Logs Export</h4>
+                    <p>Export moderation activity logs and user actions</p>
+                    
+                    <div class="export-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mod-format">Export Format</label>
+                                <select id="mod-format" class="form-control">
+                                    <option value="json">JSON</option>
+                                    <option value="csv">CSV</option>
+                                    <option value="txt">Plain Text</option>
+                                    <option value="html">HTML</option>
+                                    <option value="pdf">PDF</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="mod-limit">Log Limit</label>
+                                <input type="number" id="mod-limit" class="form-control" value="1000" min="1" max="10000">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mod-start-date">Start Date</label>
+                                <input type="date" id="mod-start-date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="mod-end-date">End Date</label>
+                                <input type="date" id="mod-end-date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <button class="export-btn" id="export-mod-btn">
+                            <i class="fas fa-download me-2"></i>Export Moderation Logs
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Export Status -->
+                <div class="export-status">
+                    <h5><i class="fas fa-clock me-2"></i>Export Status</h5>
+                    <div id="export-list">
+                        <div class="empty-state">
+                            <i class="fas fa-download"></i>
+                            <h4>No Active Exports</h4>
+                            <p>Start an export to see the progress here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Export Interface Component -->
+    <script src="../src/components/ChatExportInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let chatExportInterface = null;
+        let currentUserRole = 'admin';
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+            updateUserInterface();
+        });
+        
+        function initializeDemo() {
+            // Initialize chat export interface
+            if (typeof ChatExportInterface !== 'undefined') {
+                chatExportInterface = new ChatExportInterface({
+                    websocket: websocket,
+                    currentUserId: 'demo_user',
+                    currentUserRole: currentUserRole,
+                    roomId: 'demo_room',
+                    onExportReady: handleExportReady,
+                    onExportError: handleExportError
+                });
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect button
+            document.getElementById('connect-btn')?.addEventListener('click', toggleConnection);
+            
+            // User role selector
+            document.getElementById('user-selector')?.addEventListener('change', (e) => {
+                currentUserRole = e.target.value;
+                if (chatExportInterface) {
+                    chatExportInterface.setUserInfo('demo_user', currentUserRole);
+                }
+                updateUserInterface();
+            });
+            
+            // Statistics button
+            document.getElementById('stats-btn')?.addEventListener('click', toggleStatistics);
+            
+            // Export buttons
+            document.getElementById('export-room-btn')?.addEventListener('click', exportRoomChat);
+            document.getElementById('export-pm-btn')?.addEventListener('click', exportPrivateMessages);
+            document.getElementById('export-mod-btn')?.addEventListener('click', exportModerationLogs);
+        }
+        
+        function toggleConnection() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                disconnectWebSocket();
+            } else {
+                connectWebSocket();
+            }
+        }
+        
+        function connectWebSocket() {
+            try {
+                // Connect to WebSocket server (adjust URL as needed)
+                websocket = new WebSocket('ws://localhost:8080');
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus(true);
+                    
+                    // Update chat export interface
+                    if (chatExportInterface) {
+                        chatExportInterface.setWebSocket(websocket);
+                    }
+                    
+                    // Send authentication
+                    websocket.send(JSON.stringify({
+                        type: 'auth',
+                        token: `demo_${currentUserRole}_token`,
+                        room_id: 'demo_room'
+                    }));
+                };
+                
+                websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message:', data);
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket disconnected');
+                    updateConnectionStatus(false);
+                    websocket = null;
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false);
+                };
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+            
+            if (connectBtn) {
+                if (connected) {
+                    connectBtn.innerHTML = '<i class="fas fa-unlink me-2"></i>Disconnect';
+                    connectBtn.className = 'btn btn-secondary';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Connect';
+                    connectBtn.className = 'btn btn-primary';
+                }
+            }
+        }
+        
+        function updateUserInterface() {
+            // Show/hide moderation section based on role
+            const moderationSection = document.getElementById('moderation-section');
+            if (moderationSection) {
+                if (['admin', 'moderator'].includes(currentUserRole)) {
+                    moderationSection.style.display = 'block';
+                } else {
+                    moderationSection.style.display = 'none';
+                }
+            }
+            
+            // Update export button states
+            updateExportButtons();
+        }
+        
+        function updateExportButtons() {
+            const roomBtn = document.getElementById('export-room-btn');
+            const pmBtn = document.getElementById('export-pm-btn');
+            const modBtn = document.getElementById('export-mod-btn');
+            
+            const connected = websocket && websocket.readyState === WebSocket.OPEN;
+            
+            if (roomBtn) {
+                roomBtn.disabled = !connected || !chatExportInterface?.canExport('room_chat');
+            }
+            
+            if (pmBtn) {
+                pmBtn.disabled = !connected || !chatExportInterface?.canExport('private_messages');
+            }
+            
+            if (modBtn) {
+                modBtn.disabled = !connected || !chatExportInterface?.canExport('moderation_logs');
+            }
+        }
+        
+        function exportRoomChat() {
+            if (!chatExportInterface) return;
+            
+            const roomId = document.getElementById('room-id').value.trim();
+            const format = document.getElementById('room-format').value;
+            const limit = parseInt(document.getElementById('room-limit').value);
+            const startDate = document.getElementById('room-start-date').value;
+            const endDate = document.getElementById('room-end-date').value;
+            const includeDeleted = document.getElementById('include-deleted').checked;
+            const includeModerated = document.getElementById('include-moderated').checked;
+            
+            if (!roomId) {
+                alert('Please enter a room ID');
+                return;
+            }
+            
+            try {
+                const requestId = chatExportInterface.exportRoomChat(roomId, {
+                    format,
+                    limit,
+                    startDate: startDate || null,
+                    endDate: endDate || null,
+                    includeDeleted,
+                    includeModerated
+                });
+                
+                addExportToList(requestId, 'Room Chat', format, 'pending');
+                
+            } catch (error) {
+                alert('Export failed: ' + error.message);
+            }
+        }
+        
+        function exportPrivateMessages() {
+            if (!chatExportInterface) return;
+            
+            const format = document.getElementById('pm-format').value;
+            const limit = parseInt(document.getElementById('pm-limit').value);
+            const startDate = document.getElementById('pm-start-date').value;
+            const endDate = document.getElementById('pm-end-date').value;
+            
+            try {
+                const requestId = chatExportInterface.exportPrivateMessages(null, {
+                    format,
+                    limit,
+                    startDate: startDate || null,
+                    endDate: endDate || null
+                });
+                
+                addExportToList(requestId, 'Private Messages', format, 'pending');
+                
+            } catch (error) {
+                alert('Export failed: ' + error.message);
+            }
+        }
+        
+        function exportModerationLogs() {
+            if (!chatExportInterface) return;
+            
+            const format = document.getElementById('mod-format').value;
+            const limit = parseInt(document.getElementById('mod-limit').value);
+            const startDate = document.getElementById('mod-start-date').value;
+            const endDate = document.getElementById('mod-end-date').value;
+            
+            try {
+                const requestId = chatExportInterface.exportModerationLogs({
+                    format,
+                    limit,
+                    startDate: startDate || null,
+                    endDate: endDate || null
+                });
+                
+                addExportToList(requestId, 'Moderation Logs', format, 'pending');
+                
+            } catch (error) {
+                alert('Export failed: ' + error.message);
+            }
+        }
+        
+        function toggleStatistics() {
+            const statsSection = document.getElementById('export-stats');
+            if (statsSection.style.display === 'none') {
+                if (chatExportInterface) {
+                    chatExportInterface.getExportStatistics(30);
+                }
+                statsSection.style.display = 'grid';
+                document.getElementById('stats-btn').innerHTML = '<i class="fas fa-chart-bar me-2"></i>Hide Statistics';
+            } else {
+                statsSection.style.display = 'none';
+                document.getElementById('stats-btn').innerHTML = '<i class="fas fa-chart-bar me-2"></i>Statistics';
+            }
+        }
+        
+        function handleExportReady(exportData) {
+            console.log('Export ready:', exportData);
+            
+            // Update export item in list
+            updateExportInList(exportData.exportId, 'ready', exportData);
+            
+            // Update statistics (mock)
+            updateMockStatistics();
+        }
+        
+        function handleExportError(error) {
+            console.error('Export error:', error);
+        }
+        
+        function addExportToList(requestId, type, format, status) {
+            const exportList = document.getElementById('export-list');
+            
+            // Remove empty state if present
+            const emptyState = exportList.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const exportItem = document.createElement('div');
+            exportItem.className = 'export-item';
+            exportItem.id = `export-${requestId}`;
+            exportItem.innerHTML = `
+                <div class="export-item-info">
+                    <div class="export-item-title">${type} Export</div>
+                    <div class="export-item-details">Format: ${format.toUpperCase()} | <span class="status-badge ${status}">${status.toUpperCase()}</span></div>
+                </div>
+                <div class="export-item-actions">
+                    <button class="export-item-btn secondary" onclick="cancelExport('${requestId}')">Cancel</button>
+                </div>
+            `;
+            
+            exportList.appendChild(exportItem);
+        }
+        
+        function updateExportInList(exportId, status, exportData = null) {
+            // This is a simplified version - in a real app you'd match by export ID
+            const exportItems = document.querySelectorAll('.export-item');
+            if (exportItems.length > 0) {
+                const lastItem = exportItems[exportItems.length - 1];
+                const statusBadge = lastItem.querySelector('.status-badge');
+                const actions = lastItem.querySelector('.export-item-actions');
+                
+                if (statusBadge) {
+                    statusBadge.className = `status-badge ${status}`;
+                    statusBadge.textContent = status.toUpperCase();
+                }
+                
+                if (status === 'ready' && exportData) {
+                    actions.innerHTML = `
+                        <button class="export-item-btn" onclick="downloadExport('${exportData.downloadUrl}', '${exportData.filename}')">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                    `;
+                    
+                    // Update details
+                    const details = lastItem.querySelector('.export-item-details');
+                    details.innerHTML = `Format: ${exportData.format.toUpperCase()} | Size: ${formatFileSize(exportData.fileSize)} | Records: ${exportData.recordCount} | <span class="status-badge ${status}">${status.toUpperCase()}</span>`;
+                }
+            }
+        }
+        
+        function cancelExport(requestId) {
+            if (chatExportInterface) {
+                chatExportInterface.cancelExport(requestId);
+            }
+            
+            const exportItem = document.getElementById(`export-${requestId}`);
+            if (exportItem) {
+                exportItem.remove();
+            }
+            
+            // Show empty state if no exports
+            const exportList = document.getElementById('export-list');
+            if (exportList.children.length === 0) {
+                exportList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-download"></i>
+                        <h4>No Active Exports</h4>
+                        <p>Start an export to see the progress here</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function downloadExport(downloadUrl, filename) {
+            if (chatExportInterface) {
+                chatExportInterface.downloadExport(downloadUrl, filename);
+            }
+        }
+        
+        function updateMockStatistics() {
+            // Mock statistics update
+            const totalExports = document.getElementById('stat-total-exports');
+            const roomExports = document.getElementById('stat-room-exports');
+            const pmExports = document.getElementById('stat-pm-exports');
+            const modExports = document.getElementById('stat-mod-exports');
+            
+            if (totalExports) {
+                totalExports.textContent = parseInt(totalExports.textContent) + 1;
+            }
+            
+            // Update specific counters based on last export type
+            // This is simplified for demo purposes
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Auto-connect on page load
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+        
+        // Update export buttons when connection changes
+        setInterval(() => {
+            updateExportButtons();
+        }, 1000);
+    </script>
+</body>
+</html>

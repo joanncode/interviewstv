@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat Interface - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 76px);
+        }
+
+        .demo-sidebar {
+            width: 300px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .demo-section {
+            margin-bottom: 2rem;
+        }
+
+        .demo-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .demo-control {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .demo-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+            margin-right: 0.5rem;
+        }
+
+        .simulation-controls {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .simulation-controls h6 {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .simulation-btn {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.25rem;
+        }
+
+        .simulation-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                padding: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Basic Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="private-messaging-demo.html">
+                            <i class="fas fa-envelope me-1"></i>Private Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-export-demo.html">
+                            <i class="fas fa-download me-1"></i>Export
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="modern-chat-demo.html">
+                            <i class="fas fa-sparkles me-1"></i>Modern Chat
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Demo Sidebar -->
+        <div class="demo-sidebar">
+            <!-- Connection Status -->
+            <div class="demo-section">
+                <h5><i class="fas fa-wifi me-2"></i>Connection</h5>
+                <div class="demo-controls">
+                    <div class="status-indicator disconnected" id="connection-status">
+                        <i class="fas fa-circle"></i>
+                        <span>Disconnected</span>
+                    </div>
+                    <button class="btn btn-primary" id="connect-btn">
+                        <i class="fas fa-plug me-2"></i>Connect
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Settings -->
+            <div class="demo-section">
+                <h5><i class="fas fa-user me-2"></i>User Settings</h5>
+                <div class="demo-controls">
+                    <select class="demo-control" id="user-role">
+                        <option value="participant">Participant</option>
+                        <option value="host">Host</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin" selected>Admin</option>
+                    </select>
+                    <input type="text" class="demo-control" id="user-name" placeholder="Your name" value="Demo User">
+                    <input type="text" class="demo-control" id="room-id" placeholder="Room ID" value="demo_room">
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="demo-section">
+                <h5><i class="fas fa-star me-2"></i>Features</h5>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Real-time messaging</li>
+                    <li><i class="fas fa-check"></i>Emoji support & reactions</li>
+                    <li><i class="fas fa-check"></i>Message formatting</li>
+                    <li><i class="fas fa-check"></i>Typing indicators</li>
+                    <li><i class="fas fa-check"></i>User list & online status</li>
+                    <li><i class="fas fa-check"></i>Message search</li>
+                    <li><i class="fas fa-check"></i>Private messaging</li>
+                    <li><i class="fas fa-check"></i>Chat commands</li>
+                    <li><i class="fas fa-check"></i>Moderation tools</li>
+                    <li><i class="fas fa-check"></i>Export functionality</li>
+                    <li><i class="fas fa-check"></i>Theme customization</li>
+                    <li><i class="fas fa-check"></i>Mobile responsive</li>
+                </ul>
+            </div>
+
+            <!-- Simulation Controls -->
+            <div class="simulation-controls">
+                <h6><i class="fas fa-robot me-2"></i>Simulate Activity</h6>
+                <button class="simulation-btn" onclick="simulateMessage()">
+                    <i class="fas fa-comment me-1"></i>Message
+                </button>
+                <button class="simulation-btn" onclick="simulateUser()">
+                    <i class="fas fa-user-plus me-1"></i>User Join
+                </button>
+                <button class="simulation-btn" onclick="simulateTyping()">
+                    <i class="fas fa-keyboard me-1"></i>Typing
+                </button>
+                <button class="simulation-btn" onclick="simulateReaction()">
+                    <i class="fas fa-heart me-1"></i>Reaction
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Modern Chat Interface</h6>
+                <p>Experience the complete chat system with all features integrated into a modern, responsive interface. Includes real-time messaging, emoji support, moderation tools, private messaging, search, export functionality, and comprehensive customization options.</p>
+            </div>
+
+            <!-- Chat Interface -->
+            <div id="modern-chat-container" style="flex: 1;"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Components -->
+    <script src="../src/components/EmojiInterface.js"></script>
+    <script src="../src/components/ChatModerationInterface.js"></script>
+    <script src="../src/components/ChatCommandInterface.js"></script>
+    <script src="../src/components/PrivateMessageInterface.js"></script>
+    <script src="../src/components/ChatExportInterface.js"></script>
+    <script src="../src/components/ModernChatInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let modernChatInterface = null;
+        let currentUserRole = 'admin';
+        let currentUserName = 'Demo User';
+        let currentRoomId = 'demo_room';
+        
+        // Mock data for simulation
+        const mockUsers = [
+            { id: 'user1', name: 'Alice Johnson', role: 'host' },
+            { id: 'user2', name: 'Bob Smith', role: 'participant' },
+            { id: 'user3', name: 'Carol Davis', role: 'moderator' },
+            { id: 'user4', name: 'David Wilson', role: 'participant' }
+        ];
+        
+        const mockMessages = [
+            "Hello everyone! Welcome to the interview.",
+            "Thanks for having me here today.",
+            "Could you tell us about your background?",
+            "I have 5 years of experience in software development.",
+            "That's impressive! What technologies do you work with?",
+            "Primarily JavaScript, React, and Node.js.",
+            "Great! Do you have any questions for us?",
+            "What's the team culture like here?",
+            "We have a very collaborative environment.",
+            "That sounds perfect for me!"
+        ];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+        });
+        
+        function initializeDemo() {
+            // Initialize modern chat interface
+            const container = document.getElementById('modern-chat-container');
+            
+            if (typeof ModernChatInterface !== 'undefined') {
+                modernChatInterface = new ModernChatInterface({
+                    container: container,
+                    websocket: websocket,
+                    currentUserId: 'demo_user',
+                    currentUserRole: currentUserRole,
+                    roomId: currentRoomId,
+                    settings: {
+                        theme: 'dark',
+                        fontSize: 'medium',
+                        soundEnabled: true,
+                        notificationsEnabled: true,
+                        showTimestamps: true,
+                        showAvatars: true,
+                        compactMode: false,
+                        autoScroll: true
+                    }
+                });
+                
+                // Set global reference for onclick handlers
+                window.modernChat = modernChatInterface;
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect button
+            document.getElementById('connect-btn')?.addEventListener('click', toggleConnection);
+            
+            // User settings
+            document.getElementById('user-role')?.addEventListener('change', (e) => {
+                currentUserRole = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setUserInfo('demo_user', currentUserRole);
+                }
+            });
+            
+            document.getElementById('user-name')?.addEventListener('change', (e) => {
+                currentUserName = e.target.value;
+            });
+            
+            document.getElementById('room-id')?.addEventListener('change', (e) => {
+                currentRoomId = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setRoomId(currentRoomId);
+                }
+            });
+        }
+        
+        function toggleConnection() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                disconnectWebSocket();
+            } else {
+                connectWebSocket();
+            }
+        }
+        
+        function connectWebSocket() {
+            try {
+                // Simulate WebSocket connection
+                websocket = {
+                    readyState: WebSocket.OPEN,
+                    send: function(data) {
+                        console.log('Sending:', JSON.parse(data));
+                        // Simulate server responses
+                        setTimeout(() => {
+                            const message = JSON.parse(data);
+                            handleMockResponse(message);
+                        }, 100);
+                    },
+                    addEventListener: function(event, handler) {
+                        this[event] = handler;
+                    },
+                    close: function() {
+                        this.readyState = WebSocket.CLOSED;
+                        if (this.onclose) this.onclose();
+                    }
+                };
+                
+                console.log('Mock WebSocket connected');
+                updateConnectionStatus(true);
+                
+                // Update chat interface
+                if (modernChatInterface) {
+                    modernChatInterface.setWebSocket(websocket);
+                }
+                
+                // Simulate initial user list
+                setTimeout(() => {
+                    if (websocket.message) {
+                        websocket.message({
+                            data: JSON.stringify({
+                                type: 'user_list',
+                                users: mockUsers
+                            })
+                        });
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+            
+            if (connectBtn) {
+                if (connected) {
+                    connectBtn.innerHTML = '<i class="fas fa-unlink me-2"></i>Disconnect';
+                    connectBtn.className = 'btn btn-secondary';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Connect';
+                    connectBtn.className = 'btn btn-primary';
+                }
+            }
+        }
+        
+        function handleMockResponse(message) {
+            if (!websocket || !websocket.message) return;
+            
+            switch (message.type) {
+                case 'chat_message':
+                    // Echo the message back
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'chat_message',
+                            id: 'msg_' + Date.now(),
+                            message: message.message,
+                            user_id: 'demo_user',
+                            user_name: currentUserName,
+                            user_role: currentUserRole,
+                            timestamp: Date.now(),
+                            room_id: message.room_id,
+                            reply_to: message.reply_to
+                        })
+                    });
+                    break;
+                    
+                case 'typing_start':
+                    // Simulate someone else typing
+                    setTimeout(() => {
+                        if (websocket.message) {
+                            websocket.message({
+                                data: JSON.stringify({
+                                    type: 'typing_start',
+                                    user_name: 'Alice Johnson'
+                                })
+                            });
+                        }
+                    }, 1000);
+                    break;
+                    
+                case 'get_chat_history':
+                    // Send some mock history
+                    setTimeout(() => {
+                        if (websocket.message) {
+                            mockMessages.slice(0, 3).forEach((msg, index) => {
+                                websocket.message({
+                                    data: JSON.stringify({
+                                        type: 'chat_message',
+                                        id: 'history_' + index,
+                                        message: msg,
+                                        user_id: mockUsers[index % mockUsers.length].id,
+                                        user_name: mockUsers[index % mockUsers.length].name,
+                                        user_role: mockUsers[index % mockUsers.length].role,
+                                        timestamp: Date.now() - (300000 * (3 - index)),
+                                        room_id: message.room_id
+                                    })
+                                });
+                            });
+                        }
+                    }, 200);
+                    break;
+            }
+        }
+        
+        // Simulation functions
+        function simulateMessage() {
+            if (!websocket || !websocket.message) return;
+            
+            const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+            const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'chat_message',
+                    id: 'sim_' + Date.now(),
+                    message: randomMessage,
+                    user_id: randomUser.id,
+                    user_name: randomUser.name,
+                    user_role: randomUser.role,
+                    timestamp: Date.now(),
+                    room_id: currentRoomId
+                })
+            });
+        }
+        
+        function simulateUser() {
+            if (!websocket || !websocket.message) return;
+            
+            const newUser = {
+                id: 'user_' + Date.now(),
+                name: 'New User ' + Math.floor(Math.random() * 100),
+                role: 'participant'
+            };
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'user_joined',
+                    user: newUser
+                })
+            });
+        }
+        
+        function simulateTyping() {
+            if (!websocket || !websocket.message) return;
+            
+            const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'typing_start',
+                    user_name: randomUser.name
+                })
+            });
+            
+            setTimeout(() => {
+                if (websocket && websocket.message) {
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'typing_stop',
+                            user_name: randomUser.name
+                        })
+                    });
+                }
+            }, 3000);
+        }
+        
+        function simulateReaction() {
+            // This would integrate with the emoji interface
+            console.log('Simulating reaction...');
+        }
+        
+        // Auto-connect on page load
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+    </script>
+</body>
+</html>

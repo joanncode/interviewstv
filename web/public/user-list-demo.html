@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List with Online Status - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 76px);
+        }
+
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .demo-section {
+            margin-bottom: 2rem;
+        }
+
+        .demo-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .demo-control {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .demo-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-list li {
+            padding: 0.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+            margin-right: 0.5rem;
+        }
+
+        .user-stats {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .user-stats h6 {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .simulation-controls {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .simulation-controls h6 {
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .simulation-btn {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.25rem;
+        }
+
+        .simulation-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .user-demo-controls {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .user-demo-controls h6 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .role-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .role-btn {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .role-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .role-btn.admin { border-color: #dc3545; }
+        .role-btn.moderator { border-color: #ffc107; }
+        .role-btn.host { border-color: #17a2b8; }
+        .role-btn.participant { border-color: #28a745; }
+        .role-btn.guest { border-color: #6c757d; }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+                padding: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Basic Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="private-messaging-demo.html">
+                            <i class="fas fa-envelope me-1"></i>Private Messages
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-export-demo.html">
+                            <i class="fas fa-download me-1"></i>Export
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="modern-chat-demo.html">
+                            <i class="fas fa-sparkles me-1"></i>Modern Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="message-threading-demo.html">
+                            <i class="fas fa-comments me-1"></i>Threading
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="typing-indicators-demo.html">
+                            <i class="fas fa-keyboard me-1"></i>Typing
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="user-list-demo.html">
+                            <i class="fas fa-users me-1"></i>User List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Demo Sidebar -->
+        <div class="demo-sidebar">
+            <!-- Connection Status -->
+            <div class="demo-section">
+                <h5><i class="fas fa-wifi me-2"></i>Connection</h5>
+                <div class="demo-controls">
+                    <div class="status-indicator disconnected" id="connection-status">
+                        <i class="fas fa-circle"></i>
+                        <span>Disconnected</span>
+                    </div>
+                    <button class="btn btn-primary" id="connect-btn">
+                        <i class="fas fa-plug me-2"></i>Connect
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Settings -->
+            <div class="demo-section">
+                <h5><i class="fas fa-user me-2"></i>User Settings</h5>
+                <div class="demo-controls">
+                    <select class="demo-control" id="user-role">
+                        <option value="participant">Participant</option>
+                        <option value="host">Host</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin" selected>Admin</option>
+                    </select>
+                    <input type="text" class="demo-control" id="user-name" placeholder="Your name" value="Demo User">
+                    <input type="text" class="demo-control" id="room-id" placeholder="Room ID" value="demo_room">
+                </div>
+            </div>
+
+            <!-- User List Features -->
+            <div class="demo-section">
+                <h5><i class="fas fa-users me-2"></i>User List Features</h5>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Real-time online status</li>
+                    <li><i class="fas fa-check"></i>User role indicators</li>
+                    <li><i class="fas fa-check"></i>User avatars & profiles</li>
+                    <li><i class="fas fa-check"></i>Last seen timestamps</li>
+                    <li><i class="fas fa-check"></i>User search & filtering</li>
+                    <li><i class="fas fa-check"></i>Role-based grouping</li>
+                    <li><i class="fas fa-check"></i>User actions & moderation</li>
+                    <li><i class="fas fa-check"></i>Presence tracking</li>
+                    <li><i class="fas fa-check"></i>User statistics</li>
+                    <li><i class="fas fa-check"></i>Export functionality</li>
+                </ul>
+            </div>
+
+            <!-- User Statistics -->
+            <div class="user-stats">
+                <h6><i class="fas fa-chart-bar me-2"></i>User Statistics</h6>
+                <div class="stat-item">
+                    <span class="stat-label">Total Users:</span>
+                    <span class="stat-value" id="total-users">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Online Users:</span>
+                    <span class="stat-value" id="online-users">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Offline Users:</span>
+                    <span class="stat-value" id="offline-users">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Admins:</span>
+                    <span class="stat-value" id="admin-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Moderators:</span>
+                    <span class="stat-value" id="moderator-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Participants:</span>
+                    <span class="stat-value" id="participant-count">0</span>
+                </div>
+            </div>
+
+            <!-- User Demo Controls -->
+            <div class="user-demo-controls">
+                <h6><i class="fas fa-robot me-2"></i>User Simulation</h6>
+                <button class="simulation-btn" onclick="addRandomUser()">
+                    <i class="fas fa-user-plus me-1"></i>Add User
+                </button>
+                <button class="simulation-btn" onclick="removeRandomUser()">
+                    <i class="fas fa-user-minus me-1"></i>Remove User
+                </button>
+                <button class="simulation-btn" onclick="toggleUserStatus()">
+                    <i class="fas fa-toggle-on me-1"></i>Toggle Status
+                </button>
+                <button class="simulation-btn" onclick="simulateUserActivity()">
+                    <i class="fas fa-fire me-1"></i>User Activity
+                </button>
+                <button class="simulation-btn" onclick="updateUserStats()">
+                    <i class="fas fa-sync me-1"></i>Update Stats
+                </button>
+                
+                <div style="margin-top: 0.75rem;">
+                    <label style="color: var(--text-muted); font-size: 0.8rem;">Add user with role:</label>
+                    <div class="role-selector">
+                        <button class="role-btn admin" onclick="addUserWithRole('admin')">Admin</button>
+                        <button class="role-btn moderator" onclick="addUserWithRole('moderator')">Moderator</button>
+                        <button class="role-btn host" onclick="addUserWithRole('host')">Host</button>
+                        <button class="role-btn participant" onclick="addUserWithRole('participant')">Participant</button>
+                        <button class="role-btn guest" onclick="addUserWithRole('guest')">Guest</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Simulation Controls -->
+            <div class="simulation-controls">
+                <h6><i class="fas fa-robot me-2"></i>General Simulation</h6>
+                <button class="simulation-btn" onclick="simulateMessage()">
+                    <i class="fas fa-comment me-1"></i>Message
+                </button>
+                <button class="simulation-btn" onclick="simulateTyping()">
+                    <i class="fas fa-keyboard me-1"></i>Typing
+                </button>
+                <button class="simulation-btn" onclick="clearAllUsers()">
+                    <i class="fas fa-trash me-1"></i>Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <h6><i class="fas fa-info-circle me-2"></i>User List with Online Status</h6>
+                <p>Experience comprehensive user management with real-time online status, role-based organization, user search and filtering, presence tracking, and advanced user actions. The user list shows all participants with their current status, roles, and last activity.</p>
+            </div>
+
+            <!-- Chat Interface -->
+            <div id="modern-chat-container" style="flex: 1;"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Components -->
+    <script src="../src/components/EmojiInterface.js"></script>
+    <script src="../src/components/ChatModerationInterface.js"></script>
+    <script src="../src/components/ChatCommandInterface.js"></script>
+    <script src="../src/components/PrivateMessageInterface.js"></script>
+    <script src="../src/components/ChatExportInterface.js"></script>
+    <script src="../src/components/MessageThreadingInterface.js"></script>
+    <script src="../src/components/TypingIndicatorInterface.js"></script>
+    <script src="../src/components/UserListInterface.js"></script>
+    <script src="../src/components/ModernChatInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let modernChatInterface = null;
+        let userListInterface = null;
+        let currentUserRole = 'admin';
+        let currentUserName = 'Demo User';
+        let currentRoomId = 'demo_room';
+        let userCounter = 1;
+        
+        // Mock data for simulation
+        const mockUserNames = [
+            'Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson', 'Emma Brown',
+            'Frank Miller', 'Grace Lee', 'Henry Taylor', 'Ivy Chen', 'Jack Anderson',
+            'Kate Williams', 'Liam Garcia', 'Maya Patel', 'Noah Rodriguez', 'Olivia Martinez',
+            'Paul Thompson', 'Quinn O\'Brien', 'Ruby Kim', 'Sam Jackson', 'Tara Singh'
+        ];
+        
+        const mockRoles = ['admin', 'moderator', 'host', 'participant', 'guest'];
+        const mockStatuses = ['online', 'away', 'busy', 'offline'];
+        
+        const mockMessages = [
+            "Welcome to the interview! Let's start with introductions.",
+            "Hi everyone! I'm excited to be here today.",
+            "Could you tell us about your background in software development?",
+            "I have 5 years of experience working with JavaScript and React.",
+            "That's impressive! What's your favorite project you've worked on?",
+            "I built a real-time chat application with WebSocket support."
+        ];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+        });
+        
+        function initializeDemo() {
+            // Initialize modern chat interface with user list
+            const container = document.getElementById('modern-chat-container');
+            
+            if (typeof ModernChatInterface !== 'undefined') {
+                modernChatInterface = new ModernChatInterface({
+                    container: container,
+                    websocket: websocket,
+                    currentUserId: 'demo_user',
+                    currentUserRole: currentUserRole,
+                    roomId: currentRoomId,
+                    settings: {
+                        theme: 'dark',
+                        fontSize: 'medium',
+                        soundEnabled: true,
+                        notificationsEnabled: true,
+                        showTimestamps: true,
+                        showAvatars: true,
+                        compactMode: false,
+                        autoScroll: true
+                    }
+                });
+                
+                // Set global reference for onclick handlers
+                window.modernChat = modernChatInterface;
+                
+                // Get user list interface reference
+                userListInterface = modernChatInterface.userListInterface;
+                window.userList = userListInterface;
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect button
+            document.getElementById('connect-btn')?.addEventListener('click', toggleConnection);
+            
+            // User settings
+            document.getElementById('user-role')?.addEventListener('change', (e) => {
+                currentUserRole = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setUserInfo('demo_user', currentUserRole);
+                }
+            });
+            
+            document.getElementById('user-name')?.addEventListener('change', (e) => {
+                currentUserName = e.target.value;
+            });
+            
+            document.getElementById('room-id')?.addEventListener('change', (e) => {
+                currentRoomId = e.target.value;
+                if (modernChatInterface) {
+                    modernChatInterface.setRoomId(currentRoomId);
+                }
+            });
+        }
+        
+        function toggleConnection() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                disconnectWebSocket();
+            } else {
+                connectWebSocket();
+            }
+        }
+        
+        function connectWebSocket() {
+            try {
+                // Simulate WebSocket connection
+                websocket = {
+                    readyState: WebSocket.OPEN,
+                    send: function(data) {
+                        console.log('Sending:', JSON.parse(data));
+                        // Simulate server responses
+                        setTimeout(() => {
+                            const message = JSON.parse(data);
+                            handleMockResponse(message);
+                        }, 100);
+                    },
+                    addEventListener: function(event, handler) {
+                        this[event] = handler;
+                    },
+                    close: function() {
+                        this.readyState = WebSocket.CLOSED;
+                        if (this.onclose) this.onclose();
+                    }
+                };
+                
+                console.log('Mock WebSocket connected');
+                updateConnectionStatus(true);
+                
+                // Update chat interface
+                if (modernChatInterface) {
+                    modernChatInterface.setWebSocket(websocket);
+                }
+                
+                // Add initial users
+                setTimeout(() => {
+                    addInitialUsers();
+                }, 500);
+                
+                // Add some initial messages
+                setTimeout(() => {
+                    mockMessages.slice(0, 3).forEach((msg, index) => {
+                        setTimeout(() => {
+                            simulateMessage(msg);
+                        }, index * 1000);
+                    });
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+            
+            if (connectBtn) {
+                if (connected) {
+                    connectBtn.innerHTML = '<i class="fas fa-unlink me-2"></i>Disconnect';
+                    connectBtn.className = 'btn btn-secondary';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Connect';
+                    connectBtn.className = 'btn btn-primary';
+                }
+            }
+        }
+        
+        function handleMockResponse(message) {
+            if (!websocket || !websocket.message) return;
+            
+            switch (message.type) {
+                case 'chat_message':
+                    // Echo the message back
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'chat_message',
+                            id: 'msg_' + Date.now(),
+                            message: message.message,
+                            user_id: 'demo_user',
+                            user_name: currentUserName,
+                            user_role: currentUserRole,
+                            timestamp: Date.now(),
+                            room_id: message.room_id
+                        })
+                    });
+                    break;
+                    
+                case 'get_user_list':
+                    // Send current user list
+                    if (userListInterface) {
+                        const users = Array.from(userListInterface.users.values());
+                        websocket.message({
+                            data: JSON.stringify({
+                                type: 'user_list',
+                                users: users
+                            })
+                        });
+                    }
+                    break;
+            }
+        }
+        
+        function addInitialUsers() {
+            // Add some initial users with different roles and statuses
+            const initialUsers = [
+                { name: 'Alice Johnson', role: 'admin', status: 'online' },
+                { name: 'Bob Smith', role: 'moderator', status: 'online' },
+                { name: 'Carol Davis', role: 'host', status: 'away' },
+                { name: 'David Wilson', role: 'participant', status: 'online' },
+                { name: 'Emma Brown', role: 'participant', status: 'offline' },
+                { name: 'Frank Miller', role: 'guest', status: 'online' }
+            ];
+            
+            initialUsers.forEach((userData, index) => {
+                setTimeout(() => {
+                    addUser(userData.name, userData.role, userData.status);
+                }, index * 200);
+            });
+        }
+        
+        // Simulation functions
+        function simulateMessage(customMessage = null) {
+            if (!websocket || !websocket.message) return;
+            
+            const message = customMessage || mockMessages[Math.floor(Math.random() * mockMessages.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'chat_message',
+                    id: 'sim_' + Date.now(),
+                    message: message,
+                    user_id: 'demo_user',
+                    user_name: currentUserName,
+                    user_role: currentUserRole,
+                    timestamp: Date.now(),
+                    room_id: currentRoomId
+                })
+            });
+        }
+        
+        function simulateTyping() {
+            if (!websocket || !websocket.message || !userListInterface) return;
+            
+            const users = Array.from(userListInterface.users.values()).filter(u => u.isOnline && u.id !== 'demo_user');
+            if (users.length === 0) return;
+            
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'typing_start',
+                    user_id: randomUser.id,
+                    user_name: randomUser.name,
+                    user_role: randomUser.role
+                })
+            });
+            
+            setTimeout(() => {
+                if (websocket && websocket.message) {
+                    websocket.message({
+                        data: JSON.stringify({
+                            type: 'typing_stop',
+                            user_id: randomUser.id
+                        })
+                    });
+                }
+            }, Math.random() * 3000 + 2000);
+        }
+        
+        // User simulation functions
+        function addRandomUser() {
+            const name = mockUserNames[Math.floor(Math.random() * mockUserNames.length)] + ' ' + userCounter++;
+            const role = mockRoles[Math.floor(Math.random() * mockRoles.length)];
+            const status = Math.random() > 0.2 ? 'online' : mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
+            
+            addUser(name, role, status);
+        }
+        
+        function addUserWithRole(role) {
+            const name = mockUserNames[Math.floor(Math.random() * mockUserNames.length)] + ' ' + userCounter++;
+            const status = Math.random() > 0.2 ? 'online' : mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
+            
+            addUser(name, role, status);
+        }
+        
+        function addUser(name, role, status) {
+            if (!websocket || !websocket.message) return;
+            
+            const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            websocket.message({
+                data: JSON.stringify({
+                    type: 'user_joined',
+                    user: {
+                        id: userId,
+                        name: name,
+                        role: role,
+                        status: status,
+                        is_online: status === 'online' || status === 'away' || status === 'busy',
+                        joined_at: Date.now(),
+                        last_seen: Date.now()
+                    }
+                })
+            });
+        }
+        
+        function removeRandomUser() {
+            if (!userListInterface) return;
+            
+            const users = Array.from(userListInterface.users.values()).filter(u => u.id !== 'demo_user');
+            if (users.length === 0) return;
+            
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            
+            if (websocket && websocket.message) {
+                websocket.message({
+                    data: JSON.stringify({
+                        type: 'user_left',
+                        user_id: randomUser.id
+                    })
+                });
+            }
+        }
+        
+        function toggleUserStatus() {
+            if (!userListInterface) return;
+            
+            const users = Array.from(userListInterface.users.values()).filter(u => u.id !== 'demo_user');
+            if (users.length === 0) return;
+            
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            const newStatus = randomUser.isOnline ? 'offline' : 'online';
+            
+            if (websocket && websocket.message) {
+                websocket.message({
+                    data: JSON.stringify({
+                        type: 'user_status_update',
+                        user_id: randomUser.id,
+                        status: newStatus,
+                        is_online: newStatus !== 'offline',
+                        last_seen: Date.now()
+                    })
+                });
+            }
+        }
+        
+        function simulateUserActivity() {
+            // Simulate multiple user activities
+            addRandomUser();
+            
+            setTimeout(() => {
+                toggleUserStatus();
+            }, 1000);
+            
+            setTimeout(() => {
+                simulateTyping();
+            }, 2000);
+            
+            setTimeout(() => {
+                updateUserStats();
+            }, 3000);
+        }
+        
+        function clearAllUsers() {
+            if (!userListInterface) return;
+            
+            const users = Array.from(userListInterface.users.values()).filter(u => u.id !== 'demo_user');
+            
+            users.forEach((user, index) => {
+                setTimeout(() => {
+                    if (websocket && websocket.message) {
+                        websocket.message({
+                            data: JSON.stringify({
+                                type: 'user_left',
+                                user_id: user.id
+                            })
+                        });
+                    }
+                }, index * 100);
+            });
+            
+            setTimeout(() => {
+                updateUserStats();
+            }, users.length * 100 + 500);
+        }
+        
+        function updateUserStats() {
+            if (!userListInterface) return;
+            
+            const stats = userListInterface.getUserStatistics();
+            
+            document.getElementById('total-users').textContent = stats.totalUsers;
+            document.getElementById('online-users').textContent = stats.onlineUsers;
+            document.getElementById('offline-users').textContent = stats.offlineUsers;
+            document.getElementById('admin-count').textContent = stats.roleStats.admin || 0;
+            document.getElementById('moderator-count').textContent = stats.roleStats.moderator || 0;
+            document.getElementById('participant-count').textContent = stats.roleStats.participant || 0;
+        }
+        
+        // Auto-connect on page load
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+        
+        // Update stats periodically
+        setInterval(() => {
+            if (userListInterface) {
+                updateUserStats();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

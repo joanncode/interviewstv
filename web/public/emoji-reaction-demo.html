@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4.2.1 Emoji & Reaction System Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), #cc0000);
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chat-container {
+            background-color: var(--input-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .message-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .message-content {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .message-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .emoji-trigger {
+            background: none;
+            border: 1px dashed #666;
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .emoji-trigger:hover {
+            color: var(--text-light);
+            border-color: #888;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            background: var(--card-dark);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-light);
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .send-btn:hover {
+            background: #cc0000;
+        }
+
+        .emoji-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--input-dark);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--card-dark);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .connection-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1><i class="fas fa-smile"></i> 4.2.1 Complete!</h1>
+            <p>Emoji & Reaction System with Interactive Picker</p>
+            <div class="mt-4">
+                <span class="badge bg-success fs-6 me-2">✅ Emoji Picker</span>
+                <span class="badge bg-success fs-6 me-2">✅ Reaction System</span>
+                <span class="badge bg-success fs-6 me-2">✅ Real-time Updates</span>
+                <span class="badge bg-success fs-6">✅ 300+ Emojis</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Feature Overview -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-smile"></i>
+                </div>
+                <h4>Interactive Emoji Picker</h4>
+                <p>300+ emojis organized in 6 categories with search functionality and popular emoji tracking.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h4>Message Reactions</h4>
+                <p>Real-time reactions with toggle support, reaction limits, and user tracking for each message.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <h4>Emoji Parsing</h4>
+                <p>Automatic emoji shortcode parsing (:smile:) and custom emoji support in chat messages.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h4>Usage Analytics</h4>
+                <p>Track popular emojis, reaction statistics, and user engagement metrics in real-time.</p>
+            </div>
+        </div>
+
+        <!-- Live Demo -->
+        <div class="demo-section">
+            <h2><i class="fas fa-comments text-danger me-2"></i>Live Chat Demo</h2>
+            <p class="text-muted">Try the emoji picker and reaction system in action</p>
+
+            <!-- Connection Status -->
+            <div class="mb-3">
+                <span id="connection-status" class="connection-status disconnected">
+                    <i class="fas fa-circle me-2"></i>Disconnected
+                </span>
+            </div>
+
+            <!-- Demo Controls -->
+            <div class="demo-controls">
+                <button class="btn btn-primary" onclick="connectToChat()">
+                    <i class="fas fa-plug me-2"></i>Connect to Chat
+                </button>
+                <button class="btn btn-outline-primary" onclick="addSampleMessage()">
+                    <i class="fas fa-plus me-2"></i>Add Sample Message
+                </button>
+                <button class="btn btn-outline-primary" onclick="showEmojiPicker()">
+                    <i class="fas fa-smile me-2"></i>Show Emoji Picker
+                </button>
+                <button class="btn btn-outline-primary" onclick="clearChat()">
+                    <i class="fas fa-trash me-2"></i>Clear Chat
+                </button>
+            </div>
+
+            <!-- Chat Container -->
+            <div class="chat-container" id="chat-container">
+                <div class="message">
+                    <div class="message-header">
+                        <div class="user-avatar">J</div>
+                        <span class="user-name">John Doe</span>
+                        <span class="message-time">2 minutes ago</span>
+                    </div>
+                    <div class="message-content">
+                        Welcome to the emoji and reaction demo! 🎉 Try clicking the + button below to add reactions.
+                    </div>
+                    <div class="message-reactions" id="msg-1-reactions">
+                        <button class="reaction-btn" onclick="toggleReaction('msg-1', '👍')">
+                            <span class="reaction-emoji">👍</span>
+                            <span class="reaction-count">3</span>
+                        </button>
+                        <button class="reaction-btn" onclick="toggleReaction('msg-1', '❤️')">
+                            <span class="reaction-emoji">❤️</span>
+                            <span class="reaction-count">1</span>
+                        </button>
+                        <button class="add-reaction-btn emoji-trigger" onclick="showReactionPicker('msg-1', event)">+</button>
+                    </div>
+                </div>
+
+                <div class="message">
+                    <div class="message-header">
+                        <div class="user-avatar">S</div>
+                        <span class="user-name">Sarah Smith</span>
+                        <span class="message-time">1 minute ago</span>
+                    </div>
+                    <div class="message-content">
+                        This emoji system is amazing! :fire: :star: I love how smooth the reactions are.
+                    </div>
+                    <div class="message-reactions" id="msg-2-reactions">
+                        <button class="reaction-btn user-reacted" onclick="toggleReaction('msg-2', '🔥')">
+                            <span class="reaction-emoji">🔥</span>
+                            <span class="reaction-count">2</span>
+                        </button>
+                        <button class="add-reaction-btn emoji-trigger" onclick="showReactionPicker('msg-2', event)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="input-container">
+                <textarea class="message-input" id="message-input" placeholder="Type a message... Use :smile: for emojis!" rows="1"></textarea>
+                <button class="emoji-trigger" onclick="showEmojiPicker()" title="Add Emoji">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="demo-section">
+            <h2><i class="fas fa-chart-bar text-danger me-2"></i>Emoji Statistics</h2>
+            <div class="emoji-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-emojis">300+</div>
+                    <div class="stat-label">Available Emojis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="reactions-sent">0</div>
+                    <div class="stat-label">Reactions Sent</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="messages-with-emojis">0</div>
+                    <div class="stat-label">Messages with Emojis</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="popular-emoji">😀</div>
+                    <div class="stat-label">Most Popular</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="demo-section">
+            <h2><i class="fas fa-cogs text-danger me-2"></i>Technical Implementation</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Backend Services</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-file-code text-primary me-2"></i>
+                            <strong>EmojiService.php</strong><br>
+                            <small class="text-muted">300+ emojis, reaction management, statistics</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-network-wired text-primary me-2"></i>
+                            <strong>Enhanced ChatServer.php</strong><br>
+                            <small class="text-muted">Real-time reaction broadcasting, emoji parsing</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-database text-primary me-2"></i>
+                            <strong>Message Storage</strong><br>
+                            <small class="text-muted">Persistent reactions, emoji metadata tracking</small>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Frontend Components</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-smile text-primary me-2"></i>
+                            <strong>EmojiPicker.js</strong><br>
+                            <small class="text-muted">Interactive picker with search and categories</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-heart text-primary me-2"></i>
+                            <strong>Reaction System</strong><br>
+                            <small class="text-muted">Real-time updates, toggle functionality</small>
+                        </li>
+                        <li class="list-group-item bg-transparent text-light border-secondary">
+                            <i class="fas fa-magic text-primary me-2"></i>
+                            <strong>Emoji Parsing</strong><br>
+                            <small class="text-muted">Shortcode conversion, custom emoji support</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji Picker Container -->
+    <div id="emoji-picker-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/EmojiPicker.js"></script>
+    <script>
+        // Demo functionality
+        let messageCount = 2;
+        let reactionCount = 0;
+        let emojiMessageCount = 0;
+        let emojiPicker;
+        let currentMessageId = null;
+
+        // Initialize emoji picker
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('emoji-picker-container');
+            emojiPicker = new EmojiPicker({
+                container: container,
+                onEmojiSelect: (emoji, name) => {
+                    insertEmojiIntoMessage(emoji);
+                    updateStats();
+                },
+                onReactionSelect: (messageId, emoji) => {
+                    addReactionToMessage(messageId, emoji);
+                    updateStats();
+                }
+            });
+        });
+
+        function connectToChat() {
+            const status = document.getElementById('connection-status');
+            status.className = 'connection-status connected';
+            status.innerHTML = '<i class="fas fa-circle me-2"></i>Connected';
+            
+            // Simulate loading emoji data
+            setTimeout(() => {
+                console.log('Emoji data loaded');
+            }, 1000);
+        }
+
+        function addSampleMessage() {
+            messageCount++;
+            const chatContainer = document.getElementById('chat-container');
+            const sampleMessages = [
+                "Great presentation! 👏 Really enjoyed the insights.",
+                "Thanks for sharing! This is very helpful :thumbsup:",
+                "Looking forward to the next session! 🎉",
+                "Excellent work team! :fire: :star:",
+                "Can we discuss this further? 🤔"
+            ];
+            
+            const message = sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
+            const messageHtml = `
+                <div class="message">
+                    <div class="message-header">
+                        <div class="user-avatar">U</div>
+                        <span class="user-name">User ${messageCount}</span>
+                        <span class="message-time">Just now</span>
+                    </div>
+                    <div class="message-content">${parseEmojis(message)}</div>
+                    <div class="message-reactions" id="msg-${messageCount}-reactions">
+                        <button class="add-reaction-btn emoji-trigger" onclick="showReactionPicker('msg-${messageCount}', event)">+</button>
+                    </div>
+                </div>
+            `;
+            
+            chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            if (message.includes(':') || /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/u.test(message)) {
+                emojiMessageCount++;
+            }
+            
+            updateStats();
+        }
+
+        function showEmojiPicker() {
+            currentMessageId = null;
+            emojiPicker.show();
+        }
+
+        function showReactionPicker(messageId, event) {
+            event.stopPropagation();
+            currentMessageId = messageId;
+            const rect = event.target.getBoundingClientRect();
+            emojiPicker.show({
+                x: rect.left,
+                y: rect.top - 400
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                messageCount++;
+                const chatContainer = document.getElementById('chat-container');
+                const messageHtml = `
+                    <div class="message">
+                        <div class="message-header">
+                            <div class="user-avatar">Y</div>
+                            <span class="user-name">You</span>
+                            <span class="message-time">Just now</span>
+                        </div>
+                        <div class="message-content">${parseEmojis(message)}</div>
+                        <div class="message-reactions" id="msg-${messageCount}-reactions">
+                            <button class="add-reaction-btn emoji-trigger" onclick="showReactionPicker('msg-${messageCount}', event)">+</button>
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                input.value = '';
+                
+                if (message.includes(':') || /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/u.test(message)) {
+                    emojiMessageCount++;
+                }
+                
+                updateStats();
+            }
+        }
+
+        function insertEmojiIntoMessage(emoji) {
+            const input = document.getElementById('message-input');
+            const cursorPos = input.selectionStart;
+            const textBefore = input.value.substring(0, cursorPos);
+            const textAfter = input.value.substring(cursorPos);
+            
+            input.value = textBefore + emoji + textAfter;
+            input.focus();
+            input.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+        }
+
+        function toggleReaction(messageId, emoji) {
+            const reactionsContainer = document.getElementById(`${messageId}-reactions`);
+            const existingReaction = reactionsContainer.querySelector(`[onclick*="${emoji}"]`);
+            
+            if (existingReaction && existingReaction.classList.contains('user-reacted')) {
+                // Remove reaction
+                const count = parseInt(existingReaction.querySelector('.reaction-count').textContent);
+                if (count > 1) {
+                    existingReaction.querySelector('.reaction-count').textContent = count - 1;
+                    existingReaction.classList.remove('user-reacted');
+                } else {
+                    existingReaction.remove();
+                }
+                reactionCount--;
+            } else if (existingReaction) {
+                // Add to existing reaction
+                const count = parseInt(existingReaction.querySelector('.reaction-count').textContent);
+                existingReaction.querySelector('.reaction-count').textContent = count + 1;
+                existingReaction.classList.add('user-reacted');
+                reactionCount++;
+            } else {
+                // Create new reaction
+                const addBtn = reactionsContainer.querySelector('.add-reaction-btn');
+                const reactionHtml = `
+                    <button class="reaction-btn user-reacted" onclick="toggleReaction('${messageId}', '${emoji}')">
+                        <span class="reaction-emoji">${emoji}</span>
+                        <span class="reaction-count">1</span>
+                    </button>
+                `;
+                addBtn.insertAdjacentHTML('beforebegin', reactionHtml);
+                reactionCount++;
+            }
+            
+            updateStats();
+        }
+
+        function parseEmojis(text) {
+            // Simple emoji shortcode parsing
+            const emojiMap = {
+                ':smile:': '😀',
+                ':thumbsup:': '👍',
+                ':heart:': '❤️',
+                ':fire:': '🔥',
+                ':star:': '⭐',
+                ':clap:': '👏',
+                ':thinking:': '🤔'
+            };
+            
+            let parsed = text;
+            for (const [shortcode, emoji] of Object.entries(emojiMap)) {
+                parsed = parsed.replace(new RegExp(shortcode, 'g'), emoji);
+            }
+            
+            return parsed;
+        }
+
+        function clearChat() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.innerHTML = '';
+            messageCount = 0;
+            reactionCount = 0;
+            emojiMessageCount = 0;
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('reactions-sent').textContent = reactionCount;
+            document.getElementById('messages-with-emojis').textContent = emojiMessageCount;
+        }
+
+        // Auto-resize textarea
+        document.getElementById('message-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Send message on Enter
+        document.getElementById('message-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

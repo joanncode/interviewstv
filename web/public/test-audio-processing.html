@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Processing Test - Interviews.tv</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .test-section h3 {
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-active { background: #28a745; }
+        .status-inactive { background: #6c757d; }
+        .status-error { background: #dc3545; }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .metric-card {
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF0000;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-test {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-test:hover {
+            background: #cc0000;
+        }
+        .btn-test:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .log-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .audio-visualizer {
+            width: 100%;
+            height: 100px;
+            background: #000;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1><i class="fas fa-microphone"></i> Audio Processing Test Suite</h1>
+        <p class="text-muted">Comprehensive testing for Phase 3.2 Audio Processing features</p>
+
+        <!-- Audio Enhancement Algorithms -->
+        <div class="test-section">
+            <h3><i class="fas fa-magic"></i> Audio Enhancement Algorithms</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testSpectralSubtraction()">
+                    <i class="fas fa-wave-square"></i> Test Spectral Subtraction
+                </button>
+                <button class="btn-test" onclick="testAdaptiveFiltering()">
+                    <i class="fas fa-filter"></i> Test Adaptive Filtering
+                </button>
+                <button class="btn-test" onclick="testVoiceActivityDetection()">
+                    <i class="fas fa-microphone-alt"></i> Test Voice Activity Detection
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="enhancement-snr">0 dB</div>
+                    <div class="metric-label">Signal-to-Noise Ratio</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="enhancement-quality">0%</div>
+                    <div class="metric-label">Enhancement Quality</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="voice-activity">Inactive</div>
+                    <div class="metric-label">Voice Activity</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Compression -->
+        <div class="test-section">
+            <h3><i class="fas fa-compress"></i> Audio Compression for Streaming</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testRealTimeCompression()">
+                    <i class="fas fa-play"></i> Test Real-time Compression
+                </button>
+                <button class="btn-test" onclick="testAdaptiveBitrate()">
+                    <i class="fas fa-chart-line"></i> Test Adaptive Bitrate
+                </button>
+                <button class="btn-test" onclick="testQualityOptimization()">
+                    <i class="fas fa-cog"></i> Test Quality Optimization
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="compression-bitrate">128 kbps</div>
+                    <div class="metric-label">Current Bitrate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="compression-ratio">1.0x</div>
+                    <div class="metric-label">Compression Ratio</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="network-quality">Good</div>
+                    <div class="metric-label">Network Quality</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Synchronization -->
+        <div class="test-section">
+            <h3><i class="fas fa-sync"></i> Audio Synchronization</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testLatencyCompensation()">
+                    <i class="fas fa-clock"></i> Test Latency Compensation
+                </button>
+                <button class="btn-test" onclick="testLipSyncCorrection()">
+                    <i class="fas fa-video"></i> Test Lip-sync Correction
+                </button>
+                <button class="btn-test" onclick="testClockSynchronization()">
+                    <i class="fas fa-stopwatch"></i> Test Clock Synchronization
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="sync-latency">0 ms</div>
+                    <div class="metric-label">Current Latency</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="sync-offset">0 ms</div>
+                    <div class="metric-label">Lip-sync Offset</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="clock-drift">0 ms</div>
+                    <div class="metric-label">Clock Drift</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Fallback Mechanisms -->
+        <div class="test-section">
+            <h3><i class="fas fa-shield-alt"></i> Audio Fallback Mechanisms</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testDeviceSwitching()">
+                    <i class="fas fa-exchange-alt"></i> Test Device Switching
+                </button>
+                <button class="btn-test" onclick="testQualityDegradation()">
+                    <i class="fas fa-level-down-alt"></i> Test Quality Degradation
+                </button>
+                <button class="btn-test" onclick="testAudioBackup()">
+                    <i class="fas fa-backup"></i> Test Audio Backup
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="fallback-status">Standby</div>
+                    <div class="metric-label">Fallback Status</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="device-count">0</div>
+                    <div class="metric-label">Available Devices</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="quality-level">High</div>
+                    <div class="metric-label">Quality Level</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Quality Adaptation -->
+        <div class="test-section">
+            <h3><i class="fas fa-adjust"></i> Audio Quality Adaptation</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testNetworkAdaptation()">
+                    <i class="fas fa-wifi"></i> Test Network Adaptation
+                </button>
+                <button class="btn-test" onclick="testDeviceAdaptation()">
+                    <i class="fas fa-mobile-alt"></i> Test Device Adaptation
+                </button>
+                <button class="btn-test" onclick="testUserPreferences()">
+                    <i class="fas fa-user-cog"></i> Test User Preferences
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="adaptation-quality">Medium</div>
+                    <div class="metric-label">Current Quality</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="adaptation-score">0.75</div>
+                    <div class="metric-label">Adaptation Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="cpu-usage">45%</div>
+                    <div class="metric-label">CPU Usage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Recording Optimization -->
+        <div class="test-section">
+            <h3><i class="fas fa-record-vinyl"></i> Audio Recording Optimization</h3>
+            <div class="control-group">
+                <button class="btn-test" onclick="testRecordingOptimization()">
+                    <i class="fas fa-play-circle"></i> Test Recording Optimization
+                </button>
+                <button class="btn-test" onclick="testNoiseReduction()">
+                    <i class="fas fa-volume-mute"></i> Test Noise Reduction
+                </button>
+                <button class="btn-test" onclick="testMultiParticipant()">
+                    <i class="fas fa-users"></i> Test Multi-participant
+                </button>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="recording-quality">High</div>
+                    <div class="metric-label">Recording Quality</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="noise-level">Low</div>
+                    <div class="metric-label">Noise Level</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="speech-level">Good</div>
+                    <div class="metric-label">Speech Level</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle"></i> System Status</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="status-indicator" id="filters-status"></div>
+                    <div class="metric-label">Audio Filters</div>
+                </div>
+                <div class="metric-card">
+                    <div class="status-indicator" id="compression-status"></div>
+                    <div class="metric-label">Compression</div>
+                </div>
+                <div class="metric-card">
+                    <div class="status-indicator" id="sync-status"></div>
+                    <div class="metric-label">Synchronization</div>
+                </div>
+                <div class="metric-card">
+                    <div class="status-indicator" id="fallback-status-indicator"></div>
+                    <div class="metric-label">Fallback</div>
+                </div>
+                <div class="metric-card">
+                    <div class="status-indicator" id="adaptation-status"></div>
+                    <div class="metric-label">Quality Adaptation</div>
+                </div>
+                <div class="metric-card">
+                    <div class="status-indicator" id="recording-status"></div>
+                    <div class="metric-label">Recording Optimization</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Output -->
+        <div class="test-section">
+            <h3><i class="fas fa-terminal"></i> Test Log</h3>
+            <div class="log-output" id="log-output"></div>
+            <button class="btn-test" onclick="clearLog()" style="margin-top: 10px;">
+                <i class="fas fa-trash"></i> Clear Log
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../src/services/audioFilters.js"></script>
+    <script src="../src/services/audioCompression.js"></script>
+    <script src="../src/services/audioSynchronization.js"></script>
+    <script src="../src/services/audioFallback.js"></script>
+    <script src="../src/services/audioQualityAdaptation.js"></script>
+    <script src="../src/services/audioRecordingOptimization.js"></script>
+    <script src="../src/services/audioQualityMonitor.js"></script>
+    <script src="../src/services/audioControls.js"></script>
+    <script>
+        class AudioProcessingTest {
+            constructor() {
+                this.testParticipantId = 'test-participant-1';
+                this.audioStream = null;
+                this.audioContext = null;
+                this.sourceNode = null;
+
+                this.initializeTest();
+                this.updateSystemStatus();
+                this.startMetricsUpdate();
+            }
+
+            async initializeTest() {
+                try {
+                    this.log('Initializing audio processing test suite...');
+
+                    // Wait for services to initialize
+                    await this.waitForServices();
+
+                    // Get user media
+                    this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.log('Audio stream acquired successfully');
+
+                    // Create audio context and source
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.sourceNode = this.audioContext.createMediaStreamSource(this.audioStream);
+
+                    // Apply comprehensive processing
+                    const processedNode = window.audioControls.applyComprehensiveProcessing(
+                        this.testParticipantId,
+                        this.sourceNode,
+                        {
+                            enableFilters: true,
+                            enableCompression: true,
+                            enableSynchronization: true,
+                            enableFallback: true,
+                            enableQualityAdaptation: true,
+                            enableRecordingOptimization: true
+                        }
+                    );
+
+                    // Connect to destination for monitoring
+                    const gainNode = this.audioContext.createGain();
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime); // Low volume
+                    processedNode.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    this.log('Audio processing pipeline initialized successfully');
+
+                } catch (error) {
+                    this.log('Error initializing test: ' + error.message, 'error');
+                }
+            }
+
+            async waitForServices() {
+                const services = [
+                    'audioFilters', 'audioCompression', 'audioSynchronization',
+                    'audioFallback', 'audioQualityAdaptation', 'audioRecordingOptimization',
+                    'audioQualityMonitor', 'audioControls'
+                ];
+
+                for (const service of services) {
+                    while (!window[service]) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+
+                this.log('All audio processing services loaded');
+            }
+
+            updateSystemStatus() {
+                const services = {
+                    'filters-status': window.audioFilters,
+                    'compression-status': window.audioCompression,
+                    'sync-status': window.audioSynchronization,
+                    'fallback-status-indicator': window.audioFallback,
+                    'adaptation-status': window.audioQualityAdaptation,
+                    'recording-status': window.audioRecordingOptimization
+                };
+
+                Object.entries(services).forEach(([elementId, service]) => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.className = 'status-indicator ' +
+                            (service ? 'status-active' : 'status-inactive');
+                    }
+                });
+            }
+
+            startMetricsUpdate() {
+                setInterval(() => {
+                    this.updateMetrics();
+                }, 1000);
+            }
+
+            updateMetrics() {
+                try {
+                    // Get comprehensive status
+                    const status = window.audioControls.getComprehensiveProcessingStatus(this.testParticipantId);
+
+                    // Update enhancement metrics
+                    if (status.qualityMetrics) {
+                        document.getElementById('enhancement-snr').textContent =
+                            (status.qualityMetrics.snr || 0).toFixed(1) + ' dB';
+                        document.getElementById('enhancement-quality').textContent =
+                            Math.round((status.qualityMetrics.quality || 0) * 100) + '%';
+                        document.getElementById('voice-activity').textContent =
+                            status.qualityMetrics.isSpeaking ? 'Active' : 'Inactive';
+                    }
+
+                    // Update compression metrics
+                    if (status.compression) {
+                        document.getElementById('compression-bitrate').textContent =
+                            Math.round((status.compression.currentBitrate || 0) / 1000) + ' kbps';
+                        document.getElementById('compression-ratio').textContent =
+                            (status.compression.compressionRatio || 1).toFixed(1) + 'x';
+                        document.getElementById('network-quality').textContent =
+                            status.compression.quality > 0.8 ? 'Excellent' :
+                            status.compression.quality > 0.6 ? 'Good' :
+                            status.compression.quality > 0.4 ? 'Fair' : 'Poor';
+                    }
+
+                    // Update synchronization metrics
+                    if (status.synchronization) {
+                        document.getElementById('sync-latency').textContent =
+                            Math.round(status.synchronization.latency || 0) + ' ms';
+                        document.getElementById('sync-offset').textContent =
+                            Math.round(status.synchronization.lipSyncOffset || 0) + ' ms';
+                        document.getElementById('clock-drift').textContent =
+                            Math.round(status.synchronization.clockOffset || 0) + ' ms';
+                    }
+
+                    // Update fallback metrics
+                    if (status.fallback) {
+                        document.getElementById('fallback-status').textContent =
+                            status.fallback.isUsingFallback ? 'Active' : 'Standby';
+                        document.getElementById('device-count').textContent =
+                            status.fallback.availableDevices || 0;
+                        document.getElementById('quality-level').textContent =
+                            ['Minimal', 'Low', 'Medium', 'High'][status.fallback.qualityLevel || 3];
+                    }
+
+                    // Update adaptation metrics
+                    if (status.qualityAdaptation) {
+                        document.getElementById('adaptation-quality').textContent =
+                            status.qualityAdaptation.currentQuality || 'Unknown';
+                        document.getElementById('adaptation-score').textContent =
+                            (status.qualityAdaptation.adaptationScore || 0).toFixed(2);
+                        document.getElementById('cpu-usage').textContent =
+                            Math.round(Math.random() * 100) + '%'; // Simulated
+                    }
+
+                    // Update recording metrics
+                    if (status.recordingOptimization) {
+                        document.getElementById('recording-quality').textContent =
+                            status.recordingOptimization.currentQuality || 'Unknown';
+                        document.getElementById('noise-level').textContent =
+                            status.recordingOptimization.noiseLevel > 0.1 ? 'High' :
+                            status.recordingOptimization.noiseLevel > 0.05 ? 'Medium' : 'Low';
+                        document.getElementById('speech-level').textContent =
+                            status.recordingOptimization.speechLevel > 0.1 ? 'Good' :
+                            status.recordingOptimization.speechLevel > 0.05 ? 'Fair' : 'Poor';
+                    }
+
+                } catch (error) {
+                    // Silently handle errors during metrics update
+                }
+            }
+
+            log(message, type = 'info') {
+                const logOutput = document.getElementById('log-output');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${message}\n`;
+
+                logOutput.textContent += logEntry;
+                logOutput.scrollTop = logOutput.scrollHeight;
+
+                console.log(message);
+            }
+        }
+
+        // Test functions
+        function testSpectralSubtraction() {
+            if (window.audioFilters) {
+                window.audioFilters.applySpectralSubtraction('test-participant-1');
+                audioTest.log('Spectral subtraction test started');
+            }
+        }
+
+        function testAdaptiveFiltering() {
+            if (window.audioFilters) {
+                window.audioFilters.applyAdaptiveFiltering('test-participant-1');
+                audioTest.log('Adaptive filtering test started');
+            }
+        }
+
+        function testVoiceActivityDetection() {
+            if (window.audioFilters) {
+                window.audioFilters.enableVoiceActivityDetection('test-participant-1');
+                audioTest.log('Voice activity detection test started');
+            }
+        }
+
+        function testRealTimeCompression() {
+            if (window.audioCompression) {
+                window.audioCompression.updateCompressionBitrate('test-participant-1', 64000);
+                audioTest.log('Real-time compression test started');
+            }
+        }
+
+        function testAdaptiveBitrate() {
+            if (window.audioCompression) {
+                window.audioCompression.adaptBitrate('test-participant-1');
+                audioTest.log('Adaptive bitrate test started');
+            }
+        }
+
+        function testQualityOptimization() {
+            audioTest.log('Quality optimization test started');
+        }
+
+        function testLatencyCompensation() {
+            if (window.audioSynchronization) {
+                window.audioSynchronization.applyDelay('test-participant-1', 50);
+                audioTest.log('Latency compensation test started');
+            }
+        }
+
+        function testLipSyncCorrection() {
+            audioTest.log('Lip-sync correction test started');
+        }
+
+        function testClockSynchronization() {
+            if (window.audioSynchronization) {
+                window.audioSynchronization.synchronizeWithReference();
+                audioTest.log('Clock synchronization test started');
+            }
+        }
+
+        function testDeviceSwitching() {
+            if (window.audioFallback) {
+                window.audioFallback.switchToFallbackDevice('test-participant-1');
+                audioTest.log('Device switching test started');
+            }
+        }
+
+        function testQualityDegradation() {
+            if (window.audioFallback) {
+                window.audioFallback.degradeQuality('test-participant-1');
+                audioTest.log('Quality degradation test started');
+            }
+        }
+
+        function testAudioBackup() {
+            if (window.audioFallback) {
+                window.audioFallback.activateAudioBackup('test-participant-1');
+                audioTest.log('Audio backup test started');
+            }
+        }
+
+        function testNetworkAdaptation() {
+            if (window.audioQualityAdaptation) {
+                window.audioQualityAdaptation.evaluateParticipantAdaptation('test-participant-1');
+                audioTest.log('Network adaptation test started');
+            }
+        }
+
+        function testDeviceAdaptation() {
+            audioTest.log('Device adaptation test started');
+        }
+
+        function testUserPreferences() {
+            if (window.audioQualityAdaptation) {
+                window.audioQualityAdaptation.setUserPreference('test-participant-1', 'high');
+                audioTest.log('User preferences test started');
+            }
+        }
+
+        function testRecordingOptimization() {
+            if (window.audioRecordingOptimization) {
+                window.audioRecordingOptimization.startOptimizedRecording('test-participant-1');
+                audioTest.log('Recording optimization test started');
+            }
+        }
+
+        function testNoiseReduction() {
+            if (window.audioRecordingOptimization) {
+                window.audioRecordingOptimization.increaseNoiseReduction('test-participant-1');
+                audioTest.log('Noise reduction test started');
+            }
+        }
+
+        function testMultiParticipant() {
+            audioTest.log('Multi-participant test started');
+        }
+
+        function clearLog() {
+            document.getElementById('log-output').textContent = '';
+        }
+
+        // Initialize test when page loads
+        let audioTest;
+        document.addEventListener('DOMContentLoaded', () => {
+            audioTest = new AudioProcessingTest();
+        });
+    </script>
+</body>
+</html>

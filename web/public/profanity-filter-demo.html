@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profanity Filter Management - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .container-fluid {
+            padding: 2rem;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-dark);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .demo-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        .demo-section {
+            background: var(--card-dark);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: var(--input-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+        }
+
+        .feature-card h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card ul {
+            color: var(--text-muted);
+            margin-bottom: 0;
+        }
+
+        .feature-card ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .profanity-filter-container {
+            min-height: 400px;
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 26, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            color: var(--primary-color);
+            font-size: 2rem;
+        }
+
+        .code-example {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .code-example pre {
+            margin: 0;
+            color: var(--text-light);
+        }
+
+        .highlight {
+            background-color: rgba(255, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 1rem;
+            }
+            
+            .demo-header {
+                padding: 1.5rem;
+            }
+            
+            .demo-section {
+                padding: 1.5rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .demo-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Live Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="profanity-filter-demo.html">
+                            <i class="fas fa-filter me-1"></i>Profanity Filter
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Demo Header -->
+        <div class="demo-header">
+            <h1><i class="fas fa-filter me-3"></i>Advanced Profanity Filter System</h1>
+            <p>Comprehensive content filtering with multiple detection methods, customizable rules, and real-time management</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="text-center">
+            <div class="status-indicator disconnected" id="connection-status">
+                <i class="fas fa-circle"></i>
+                <span>Disconnected</span>
+            </div>
+        </div>
+
+        <!-- Demo Info -->
+        <div class="demo-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Demo Information</h6>
+            <p>This demo showcases the advanced profanity filtering system with real-time configuration, word list management, filter testing, and comprehensive analytics. The system supports multiple detection methods including exact matching, leetspeak detection, phonetic analysis, and context-aware filtering.</p>
+        </div>
+
+        <!-- Key Features -->
+        <div class="demo-section">
+            <h3><i class="fas fa-star me-2"></i>Key Features</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h5><i class="fas fa-search me-2"></i>Multiple Detection Methods</h5>
+                    <ul>
+                        <li>Exact word matching</li>
+                        <li>Partial word detection</li>
+                        <li>Leetspeak decoding (f4ck → f*ck)</li>
+                        <li>Phonetic analysis (fuk → f*ck)</li>
+                        <li>Context-aware filtering</li>
+                        <li>Pattern detection (caps, repeated chars)</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h5><i class="fas fa-cogs me-2"></i>Advanced Configuration</h5>
+                    <ul>
+                        <li>Severity levels (mild, moderate, severe, extreme)</li>
+                        <li>Configurable replacement methods</li>
+                        <li>Strict mode enforcement</li>
+                        <li>Custom word lists</li>
+                        <li>Whitelist management</li>
+                        <li>Learning from user reports</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h5><i class="fas fa-shield-alt me-2"></i>Smart Moderation</h5>
+                    <ul>
+                        <li>Automatic content replacement</li>
+                        <li>Severity-based actions</li>
+                        <li>False positive detection</li>
+                        <li>User appeal system</li>
+                        <li>Comprehensive logging</li>
+                        <li>Real-time statistics</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Analytics & Reporting</h5>
+                    <ul>
+                        <li>Real-time filtering statistics</li>
+                        <li>Method effectiveness tracking</li>
+                        <li>Violation trend analysis</li>
+                        <li>False positive reports</li>
+                        <li>User behavior insights</li>
+                        <li>Export/import capabilities</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Controls -->
+        <div class="demo-section">
+            <h3><i class="fas fa-play me-2"></i>Interactive Demo</h3>
+            
+            <div class="demo-controls">
+                <button class="btn btn-primary" id="connect-websocket">
+                    <i class="fas fa-plug me-2"></i>Connect WebSocket
+                </button>
+                <button class="btn btn-success" id="open-filter-panel">
+                    <i class="fas fa-filter me-2"></i>Open Filter Management
+                </button>
+                <button class="btn btn-info" id="test-filter-samples">
+                    <i class="fas fa-vial me-2"></i>Test Sample Content
+                </button>
+                <button class="btn btn-warning" id="view-statistics">
+                    <i class="fas fa-chart-line me-2"></i>View Statistics
+                </button>
+                <button class="btn btn-secondary" id="export-config">
+                    <i class="fas fa-download me-2"></i>Export Config
+                </button>
+            </div>
+        </div>
+
+        <!-- Profanity Filter Panel Container -->
+        <div class="demo-section">
+            <h3><i class="fas fa-tools me-2"></i>Filter Management Panel</h3>
+            <div class="profanity-filter-container" id="profanity-filter-container">
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Test Cases -->
+        <div class="demo-section">
+            <h3><i class="fas fa-flask me-2"></i>Sample Test Cases</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Clean Content Examples</h5>
+                    <div class="code-example">
+                        <pre>• "Hello everyone, great interview!"
+• "I have a question about the project"
+• "Thanks for the detailed explanation"
+• "Looking forward to the next session"</pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Filtered Content Examples</h5>
+                    <div class="code-example">
+                        <pre>• "This is <span class="highlight">damn</span> good content" → "This is **** good content"
+• "What the <span class="highlight">f*ck</span> is this?" → "What the **** is this?"
+• "You're such an <span class="highlight">idiot</span>" → "You're such an *****"
+• "<span class="highlight">STOP SHOUTING</span>" → Pattern detected (excessive caps)</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <div class="demo-section">
+            <h3><i class="fas fa-code me-2"></i>Technical Implementation</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Backend Architecture</h5>
+                    <ul>
+                        <li><strong>ProfanityFilterService.php</strong> - Core filtering engine</li>
+                        <li><strong>Multiple detection algorithms</strong> - Exact, fuzzy, phonetic matching</li>
+                        <li><strong>Configurable severity levels</strong> - Mild to extreme classifications</li>
+                        <li><strong>Real-time WebSocket integration</strong> - Live filtering and management</li>
+                        <li><strong>Comprehensive logging</strong> - Detailed violation tracking</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Frontend Features</h5>
+                    <ul>
+                        <li><strong>ProfanityFilterPanel.js</strong> - Interactive management interface</li>
+                        <li><strong>Real-time configuration</strong> - Live settings updates</li>
+                        <li><strong>Word list management</strong> - Add/remove profanity and whitelist words</li>
+                        <li><strong>Filter testing</strong> - Test content with live preview</li>
+                        <li><strong>Analytics dashboard</strong> - Statistics and trend analysis</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Profanity Filter Panel Component -->
+    <script src="../src/components/ProfanityFilterPanel.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let profanityFilterPanel = null;
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+        });
+        
+        function initializeDemo() {
+            // Hide loading overlay initially
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            // Initialize profanity filter panel
+            const container = document.getElementById('profanity-filter-container');
+            if (container && typeof ProfanityFilterPanel !== 'undefined') {
+                profanityFilterPanel = new ProfanityFilterPanel({
+                    container: container,
+                    websocket: websocket,
+                    userRole: 'admin' // Demo as admin user
+                });
+            }
+        }
+        
+        function attachEventListeners() {
+            // Connect WebSocket
+            document.getElementById('connect-websocket')?.addEventListener('click', connectWebSocket);
+            
+            // Open filter panel
+            document.getElementById('open-filter-panel')?.addEventListener('click', openFilterPanel);
+            
+            // Test filter samples
+            document.getElementById('test-filter-samples')?.addEventListener('click', testFilterSamples);
+            
+            // View statistics
+            document.getElementById('view-statistics')?.addEventListener('click', viewStatistics);
+            
+            // Export configuration
+            document.getElementById('export-config')?.addEventListener('click', exportConfiguration);
+        }
+        
+        function connectWebSocket() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log('WebSocket already connected');
+                return;
+            }
+            
+            try {
+                // Connect to WebSocket server (adjust URL as needed)
+                websocket = new WebSocket('ws://localhost:8080');
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus(true);
+                    
+                    // Update profanity filter panel with WebSocket
+                    if (profanityFilterPanel) {
+                        profanityFilterPanel.setWebSocket(websocket);
+                    }
+                    
+                    // Send authentication (demo)
+                    websocket.send(JSON.stringify({
+                        type: 'auth',
+                        token: 'demo_admin_token',
+                        room_id: 'demo_room'
+                    }));
+                };
+                
+                websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message:', data);
+                    
+                    // Handle profanity filter messages
+                    if (profanityFilterPanel) {
+                        profanityFilterPanel.handleWebSocketMessage(data);
+                    }
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket disconnected');
+                    updateConnectionStatus(false);
+                    websocket = null;
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false);
+                };
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+        }
+        
+        function openFilterPanel() {
+            if (profanityFilterPanel) {
+                profanityFilterPanel.show();
+            } else {
+                alert('Profanity filter panel not initialized. Please refresh the page.');
+            }
+        }
+        
+        function testFilterSamples() {
+            if (!profanityFilterPanel) {
+                alert('Please initialize the profanity filter panel first.');
+                return;
+            }
+            
+            const sampleTexts = [
+                "This is damn good content",
+                "What the f*ck is this?",
+                "You're such an idiot",
+                "STOP SHOUTING AT ME",
+                "Hello everyone, great interview!",
+                "I have a question about the project"
+            ];
+            
+            // Open the panel and populate test content
+            profanityFilterPanel.show();
+            
+            // Simulate testing each sample
+            setTimeout(() => {
+                const testContent = document.querySelector('#test-content');
+                if (testContent) {
+                    testContent.value = sampleTexts[0];
+                    
+                    // Trigger test
+                    const testBtn = document.querySelector('#test-filter');
+                    if (testBtn) {
+                        testBtn.click();
+                    }
+                }
+            }, 500);
+        }
+        
+        function viewStatistics() {
+            if (profanityFilterPanel) {
+                profanityFilterPanel.show();
+                
+                // Scroll to statistics section
+                setTimeout(() => {
+                    const statsSection = document.querySelector('.statistics-section');
+                    if (statsSection) {
+                        statsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 500);
+            } else {
+                alert('Please initialize the profanity filter panel first.');
+            }
+        }
+        
+        function exportConfiguration() {
+            if (profanityFilterPanel) {
+                profanityFilterPanel.exportConfiguration();
+            } else {
+                // Fallback demo export
+                const demoConfig = {
+                    config: {
+                        enabled: true,
+                        strict_mode: false,
+                        filter_methods: {
+                            exact_match: true,
+                            leetspeak: true,
+                            phonetic: true,
+                            context_analysis: true
+                        }
+                    },
+                    export_timestamp: Date.now()
+                };
+                
+                const blob = new Blob([JSON.stringify(demoConfig, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'profanity-filter-demo-config.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        // Auto-connect on page load for demo
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+    </script>
+</body>
+</html>

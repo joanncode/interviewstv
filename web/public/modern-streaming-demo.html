@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Streaming Interface - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .demo-overlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #444;
+            max-width: 300px;
+        }
+        
+        .demo-overlay h5 {
+            color: #FF0000;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        
+        .demo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .demo-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-btn.active {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .demo-stats {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .demo-stats h6 {
+            color: #28a745;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #cccccc;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2001;
+            background: #FF0000;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toggle-demo:hover {
+            background: #cc0000;
+            transform: scale(1.1);
+        }
+        
+        .demo-overlay.hidden {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .streaming-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        /* Keyboard shortcuts help */
+        .shortcuts-help {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #444;
+            font-size: 0.8rem;
+            max-width: 250px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .shortcuts-help.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        .shortcuts-help h6 {
+            color: #FF0000;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .shortcut-key {
+            background: #2a2a2a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.7rem;
+        }
+        
+        .shortcut-desc {
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Controls Overlay -->
+    <div class="demo-overlay" id="demo-overlay">
+        <h5><i class="fas fa-video me-2"></i>Streaming Demo</h5>
+        
+        <div class="demo-info">
+            <h6><i class="fas fa-info-circle me-1"></i>Modern Interface</h6>
+            <p>Professional streaming interface with modern UI/UX design, comprehensive controls, and enterprise-grade features.</p>
+        </div>
+        
+        <div class="demo-controls">
+            <button class="demo-btn" onclick="toggleStream()">
+                <i class="fas fa-play me-2"></i>Start/Stop Stream
+            </button>
+            <button class="demo-btn" onclick="toggleRecording()">
+                <i class="fas fa-record-vinyl me-2"></i>Toggle Recording
+            </button>
+            <button class="demo-btn" onclick="toggleMicrophone()">
+                <i class="fas fa-microphone me-2"></i>Toggle Microphone
+            </button>
+            <button class="demo-btn" onclick="toggleCamera()">
+                <i class="fas fa-video me-2"></i>Toggle Camera
+            </button>
+            <button class="demo-btn" onclick="changeLayout()">
+                <i class="fas fa-th me-2"></i>Change Layout
+            </button>
+            <button class="demo-btn" onclick="changeQuality()">
+                <i class="fas fa-cog me-2"></i>Change Quality
+            </button>
+            <button class="demo-btn" onclick="toggleTheme()">
+                <i class="fas fa-palette me-2"></i>Toggle Theme
+            </button>
+            <button class="demo-btn" onclick="simulateViewers()">
+                <i class="fas fa-users me-2"></i>Simulate Viewers
+            </button>
+            <button class="demo-btn" onclick="showStats()">
+                <i class="fas fa-chart-line me-2"></i>Toggle Stats
+            </button>
+            <button class="demo-btn" onclick="toggleFullscreen()">
+                <i class="fas fa-expand me-2"></i>Fullscreen
+            </button>
+            <button class="demo-btn" onclick="addParticipants()">
+                <i class="fas fa-user-plus me-2"></i>Add Participants
+            </button>
+            <button class="demo-btn" onclick="showShortcuts()">
+                <i class="fas fa-keyboard me-2"></i>Show Shortcuts
+            </button>
+        </div>
+        
+        <div class="demo-stats">
+            <h6><i class="fas fa-chart-bar me-1"></i>Stream Stats</h6>
+            <div class="stat-row">
+                <span class="stat-label">Status:</span>
+                <span class="stat-value" id="demo-status">Offline</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Viewers:</span>
+                <span class="stat-value" id="demo-viewers">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Duration:</span>
+                <span class="stat-value" id="demo-duration">00:00:00</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Quality:</span>
+                <span class="stat-value" id="demo-quality">720p</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Layout:</span>
+                <span class="stat-value" id="demo-layout">Spotlight</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Theme:</span>
+                <span class="stat-value" id="demo-theme">Dark</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toggle Demo Button -->
+    <button class="toggle-demo" onclick="toggleDemoOverlay()" title="Toggle Demo Controls">
+        <i class="fas fa-cog"></i>
+    </button>
+    
+    <!-- Keyboard Shortcuts Help -->
+    <div class="shortcuts-help" id="shortcuts-help">
+        <h6><i class="fas fa-keyboard me-1"></i>Keyboard Shortcuts</h6>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Start/Pause Stream</span>
+            <span class="shortcut-key">Space</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Toggle Microphone</span>
+            <span class="shortcut-key">M</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Toggle Camera</span>
+            <span class="shortcut-key">V</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Screen Share</span>
+            <span class="shortcut-key">S</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Toggle Recording</span>
+            <span class="shortcut-key">R</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Toggle Chat</span>
+            <span class="shortcut-key">C</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Fullscreen</span>
+            <span class="shortcut-key">F</span>
+        </div>
+        <div class="shortcut-item">
+            <span class="shortcut-desc">Layouts</span>
+            <span class="shortcut-key">1-4</span>
+        </div>
+    </div>
+    
+    <!-- Main Streaming Container -->
+    <div class="streaming-container" id="streaming-container"></div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chat Components (for integration) -->
+    <script src="../src/components/EmojiInterface.js"></script>
+    <script src="../src/components/ChatModerationInterface.js"></script>
+    <script src="../src/components/ChatCommandInterface.js"></script>
+    <script src="../src/components/PrivateMessageInterface.js"></script>
+    <script src="../src/components/ChatExportInterface.js"></script>
+    <script src="../src/components/MessageThreadingInterface.js"></script>
+    <script src="../src/components/TypingIndicatorInterface.js"></script>
+    <script src="../src/components/UserListInterface.js"></script>
+    <script src="../src/components/ChatNotificationInterface.js"></script>
+    <script src="../src/components/ChatSearchInterface.js"></script>
+    <script src="../src/components/ChatCustomizationInterface.js"></script>
+    <script src="../src/components/MobileResponsiveInterface.js"></script>
+    <script src="../src/components/ModernChatInterface.js"></script>
+    
+    <!-- Modern Streaming Interface -->
+    <script src="../src/components/ModernStreamingInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let streamingInterface = null;
+        let websocket = null;
+        let currentUserRole = 'host';
+        let currentUserName = 'Demo Host';
+        let currentRoomId = 'demo_stream';
+        let demoOverlayVisible = true;
+        let shortcutsVisible = false;
+        
+        // Demo state
+        let demoState = {
+            isStreaming: false,
+            isRecording: false,
+            viewerCount: 0,
+            streamDuration: 0,
+            currentLayout: 'spotlight',
+            currentQuality: '720p',
+            currentTheme: 'dark',
+            participants: []
+        };
+        
+        // Layout options
+        const layouts = ['spotlight', 'grid', 'sidebar', 'presentation'];
+        const qualities = ['360p', '480p', '720p', '1080p'];
+        const themes = ['dark', 'light'];
+        
+        // Mock participant names
+        const participantNames = [
+            'Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson',
+            'Emma Brown', 'Frank Miller', 'Grace Lee', 'Henry Taylor'
+        ];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeStreamingInterface();
+            updateDemoStats();
+            
+            // Auto-hide demo overlay after 5 seconds
+            setTimeout(() => {
+                if (demoOverlayVisible) {
+                    toggleDemoOverlay();
+                }
+            }, 5000);
+        });
+        
+        function initializeStreamingInterface() {
+            const container = document.getElementById('streaming-container');
+            
+            if (typeof ModernStreamingInterface !== 'undefined') {
+                streamingInterface = new ModernStreamingInterface({
+                    container: container,
+                    websocket: websocket,
+                    currentUserId: 'demo_host',
+                    currentUserRole: currentUserRole,
+                    roomId: currentRoomId,
+                    onStreamStateChange: (state, streamId) => handleStreamStateChange(state, streamId),
+                    onViewerCountChange: (count) => handleViewerCountChange(count),
+                    onQualityChange: (quality, option) => handleQualityChange(quality, option),
+                    settings: {
+                        theme: 'dark',
+                        autoStartRecording: false,
+                        showViewerCount: true,
+                        showStreamStats: true,
+                        enableNotifications: true,
+                        enableSoundEffects: true,
+                        autoHideControls: true,
+                        controlsTimeout: 3000,
+                        defaultLayout: 'spotlight',
+                        defaultQuality: '720p',
+                        enableKeyboardShortcuts: true,
+                        enableGestures: true
+                    }
+                });
+                
+                // Set global reference
+                window.streamingInterface = streamingInterface;
+                
+                // Initialize with demo data
+                setTimeout(() => {
+                    initializeDemoData();
+                }, 1000);
+            }
+        }
+        
+        function initializeDemoData() {
+            // Set demo stream title
+            const titleInput = document.getElementById('title-input');
+            if (titleInput) {
+                titleInput.value = 'Professional Interview Stream - Demo';
+                streamingInterface.updateStreamTitle('Professional Interview Stream - Demo');
+            }
+            
+            // Add some demo participants
+            addParticipants();
+        }
+        
+        function handleStreamStateChange(state, streamId) {
+            console.log('Stream state changed:', state, streamId);
+            
+            if (state === 'started') {
+                demoState.isStreaming = true;
+                demoState.streamDuration = 0;
+                startDurationTimer();
+            } else if (state === 'stopped') {
+                demoState.isStreaming = false;
+                stopDurationTimer();
+            }
+            
+            updateDemoStats();
+        }
+        
+        function handleViewerCountChange(count) {
+            demoState.viewerCount = count;
+            updateDemoStats();
+        }
+        
+        function handleQualityChange(quality, option) {
+            demoState.currentQuality = quality;
+            updateDemoStats();
+        }
+        
+        let durationTimer = null;
+        
+        function startDurationTimer() {
+            durationTimer = setInterval(() => {
+                demoState.streamDuration++;
+                updateDemoStats();
+            }, 1000);
+        }
+        
+        function stopDurationTimer() {
+            if (durationTimer) {
+                clearInterval(durationTimer);
+                durationTimer = null;
+            }
+        }
+        
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function updateDemoStats() {
+            document.getElementById('demo-status').textContent = demoState.isStreaming ? 'Live' : 'Offline';
+            document.getElementById('demo-viewers').textContent = demoState.viewerCount;
+            document.getElementById('demo-duration').textContent = formatDuration(demoState.streamDuration);
+            document.getElementById('demo-quality').textContent = demoState.currentQuality;
+            document.getElementById('demo-layout').textContent = demoState.currentLayout.charAt(0).toUpperCase() + demoState.currentLayout.slice(1);
+            document.getElementById('demo-theme').textContent = demoState.currentTheme.charAt(0).toUpperCase() + demoState.currentTheme.slice(1);
+        }
+        
+        // Demo control functions
+        function toggleStream() {
+            if (streamingInterface) {
+                if (demoState.isStreaming) {
+                    streamingInterface.stopStream();
+                } else {
+                    streamingInterface.startStream();
+                }
+            }
+        }
+        
+        function toggleRecording() {
+            if (streamingInterface) {
+                streamingInterface.toggleRecording();
+                demoState.isRecording = !demoState.isRecording;
+            }
+        }
+        
+        function toggleMicrophone() {
+            if (streamingInterface) {
+                streamingInterface.toggleMicrophone();
+            }
+        }
+        
+        function toggleCamera() {
+            if (streamingInterface) {
+                streamingInterface.toggleCamera();
+            }
+        }
+        
+        function changeLayout() {
+            const currentIndex = layouts.indexOf(demoState.currentLayout);
+            const nextIndex = (currentIndex + 1) % layouts.length;
+            const nextLayout = layouts[nextIndex];
+            
+            if (streamingInterface) {
+                streamingInterface.changeLayout(nextLayout);
+                demoState.currentLayout = nextLayout;
+                updateDemoStats();
+            }
+        }
+        
+        function changeQuality() {
+            const currentIndex = qualities.indexOf(demoState.currentQuality);
+            const nextIndex = (currentIndex + 1) % qualities.length;
+            const nextQuality = qualities[nextIndex];
+            
+            if (streamingInterface) {
+                streamingInterface.changeQuality(nextQuality);
+            }
+        }
+        
+        function toggleTheme() {
+            const currentIndex = themes.indexOf(demoState.currentTheme);
+            const nextIndex = (currentIndex + 1) % themes.length;
+            const nextTheme = themes[nextIndex];
+            
+            if (streamingInterface) {
+                streamingInterface.updateSettings({ theme: nextTheme });
+                demoState.currentTheme = nextTheme;
+                updateDemoStats();
+            }
+        }
+        
+        function simulateViewers() {
+            // Simulate viewer join/leave
+            const change = Math.random() > 0.5 ? 1 : -1;
+            const newCount = Math.max(0, demoState.viewerCount + change * Math.floor(Math.random() * 5 + 1));
+            
+            demoState.viewerCount = newCount;
+            
+            if (streamingInterface) {
+                streamingInterface.viewerCount = newCount;
+                streamingInterface.updateViewerCount();
+            }
+        }
+        
+        function showStats() {
+            const statsElement = document.getElementById('stream-stats');
+            if (statsElement) {
+                const isVisible = statsElement.style.display !== 'none';
+                statsElement.style.display = isVisible ? 'none' : 'block';
+            }
+        }
+        
+        function toggleFullscreen() {
+            if (streamingInterface) {
+                streamingInterface.toggleFullscreen();
+            }
+        }
+        
+        function addParticipants() {
+            if (!streamingInterface) return;
+            
+            // Add 3-5 random participants
+            const participantCount = Math.floor(Math.random() * 3) + 3;
+            const participantsList = document.getElementById('participants-list');
+            const participantBadge = document.getElementById('participants-badge');
+            
+            if (participantsList) {
+                participantsList.innerHTML = '';
+                demoState.participants = [];
+                
+                for (let i = 0; i < participantCount; i++) {
+                    const name = participantNames[i % participantNames.length];
+                    const role = i === 0 ? 'host' : i === 1 ? 'moderator' : 'participant';
+                    const status = Math.random() > 0.3 ? 'online' : 'away';
+                    
+                    const participant = {
+                        id: `participant_${i}`,
+                        name: name,
+                        role: role,
+                        status: status,
+                        avatar: name.charAt(0).toUpperCase()
+                    };
+                    
+                    demoState.participants.push(participant);
+                    
+                    const participantElement = document.createElement('div');
+                    participantElement.className = 'participant-item';
+                    participantElement.innerHTML = `
+                        <div class="participant-avatar">${participant.avatar}</div>
+                        <div class="participant-info">
+                            <div class="participant-name">${participant.name}</div>
+                            <div class="participant-status">${participant.role} • ${participant.status}</div>
+                        </div>
+                        <div class="participant-controls">
+                            <button class="btn-icon" title="Mute">
+                                <i class="fas fa-microphone-slash"></i>
+                            </button>
+                            <button class="btn-icon" title="Remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    participantsList.appendChild(participantElement);
+                }
+                
+                if (participantBadge) {
+                    participantBadge.textContent = participantCount;
+                }
+            }
+        }
+        
+        function showShortcuts() {
+            shortcutsVisible = !shortcutsVisible;
+            const shortcutsHelp = document.getElementById('shortcuts-help');
+            
+            if (shortcutsVisible) {
+                shortcutsHelp.classList.add('visible');
+                setTimeout(() => {
+                    shortcutsHelp.classList.remove('visible');
+                    shortcutsVisible = false;
+                }, 5000);
+            } else {
+                shortcutsHelp.classList.remove('visible');
+            }
+        }
+        
+        function toggleDemoOverlay() {
+            demoOverlayVisible = !demoOverlayVisible;
+            const overlay = document.getElementById('demo-overlay');
+            
+            if (demoOverlayVisible) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+        
+        // Auto-update viewer count simulation
+        setInterval(() => {
+            if (demoState.isStreaming && Math.random() > 0.7) {
+                simulateViewers();
+            }
+        }, 5000);
+        
+        // Auto-update stats simulation
+        setInterval(() => {
+            if (demoState.isStreaming && streamingInterface) {
+                // Simulate stream stats updates
+                streamingInterface.streamStats = {
+                    bitrate: Math.floor(Math.random() * 1000) + 2000,
+                    frameRate: Math.floor(Math.random() * 10) + 25,
+                    resolution: demoState.currentQuality === '1080p' ? '1920x1080' : 
+                               demoState.currentQuality === '720p' ? '1280x720' : '640x360',
+                    packetLoss: Math.random() * 2,
+                    latency: Math.floor(Math.random() * 50) + 20,
+                    uploadSpeed: Math.floor(Math.random() * 2000) + 3000,
+                    connectionQuality: ['excellent', 'good', 'fair'][Math.floor(Math.random() * 3)]
+                };
+                
+                streamingInterface.updateStatsDisplay();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

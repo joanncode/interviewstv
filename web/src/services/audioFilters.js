@@ -536,13 +536,232 @@ class AudioFilters {
     }
 
     /**
+     * Advanced audio enhancement algorithms
+     */
+
+    /**
+     * Apply spectral subtraction for noise reduction
+     */
+    applySpectralSubtraction(participantId, alpha = 2.0, beta = 0.01) {
+        const filterChain = this.filterChains.get(participantId);
+        if (!filterChain) return;
+
+        try {
+            // Create analyser for frequency domain processing
+            const analyser = this.audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            analyser.smoothingTimeConstant = 0.8;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Float32Array(bufferLength);
+            const noiseProfile = new Float32Array(bufferLength);
+            let noiseProfileReady = false;
+
+            // Estimate noise profile from first few frames
+            let frameCount = 0;
+            const noiseEstimationFrames = 10;
+
+            const processSpectralSubtraction = () => {
+                analyser.getFloatFrequencyData(dataArray);
+
+                if (frameCount < noiseEstimationFrames) {
+                    // Build noise profile
+                    for (let i = 0; i < bufferLength; i++) {
+                        noiseProfile[i] = (noiseProfile[i] * frameCount + dataArray[i]) / (frameCount + 1);
+                    }
+                    frameCount++;
+                    if (frameCount === noiseEstimationFrames) {
+                        noiseProfileReady = true;
+                        console.log(`Noise profile ready for participant: ${participantId}`);
+                    }
+                } else if (noiseProfileReady) {
+                    // Apply spectral subtraction
+                    for (let i = 0; i < bufferLength; i++) {
+                        const signalPower = Math.pow(10, dataArray[i] / 10);
+                        const noisePower = Math.pow(10, noiseProfile[i] / 10);
+
+                        // Spectral subtraction formula
+                        let enhancedPower = signalPower - alpha * noisePower;
+
+                        // Apply spectral floor to prevent musical noise
+                        enhancedPower = Math.max(enhancedPower, beta * signalPower);
+
+                        // Convert back to dB
+                        dataArray[i] = 10 * Math.log10(enhancedPower);
+                    }
+                }
+
+                requestAnimationFrame(processSpectralSubtraction);
+            };
+
+            // Connect analyser to filter chain
+            filterChain.output.connect(analyser);
+            processSpectralSubtraction();
+
+            console.log(`Spectral subtraction applied to participant: ${participantId}`);
+
+        } catch (error) {
+            console.error(`Failed to apply spectral subtraction for ${participantId}:`, error);
+        }
+    }
+
+    /**
+     * Apply adaptive filtering for dynamic noise reduction
+     */
+    applyAdaptiveFiltering(participantId, adaptationRate = 0.01) {
+        const filterChain = this.filterChains.get(participantId);
+        if (!filterChain) return;
+
+        try {
+            // Create adaptive filter using Web Audio API
+            const scriptProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
+
+            // Adaptive filter parameters
+            const filterLength = 64;
+            const weights = new Float32Array(filterLength);
+            const inputBuffer = new Float32Array(filterLength);
+            let bufferIndex = 0;
+
+            scriptProcessor.onaudioprocess = (event) => {
+                const inputData = event.inputBuffer.getChannelData(0);
+                const outputData = event.outputBuffer.getChannelData(0);
+
+                for (let i = 0; i < inputData.length; i++) {
+                    // Update input buffer
+                    inputBuffer[bufferIndex] = inputData[i];
+
+                    // Apply adaptive filter
+                    let output = 0;
+                    for (let j = 0; j < filterLength; j++) {
+                        const index = (bufferIndex - j + filterLength) % filterLength;
+                        output += weights[j] * inputBuffer[index];
+                    }
+
+                    // Calculate error and update weights (LMS algorithm)
+                    const error = inputData[i] - output;
+                    for (let j = 0; j < filterLength; j++) {
+                        const index = (bufferIndex - j + filterLength) % filterLength;
+                        weights[j] += adaptationRate * error * inputBuffer[index];
+                    }
+
+                    outputData[i] = output;
+                    bufferIndex = (bufferIndex + 1) % filterLength;
+                }
+            };
+
+            // Insert adaptive filter into chain
+            filterChain.output.disconnect();
+            filterChain.output.connect(scriptProcessor);
+            scriptProcessor.connect(this.audioContext.destination);
+
+            console.log(`Adaptive filtering applied to participant: ${participantId}`);
+
+        } catch (error) {
+            console.error(`Failed to apply adaptive filtering for ${participantId}:`, error);
+        }
+    }
+
+    /**
+     * Apply real-time audio enhancement
+     */
+    applyRealTimeEnhancement(participantId, options = {}) {
+        const {
+            enableSpectralSubtraction = true,
+            enableAdaptiveFiltering = true,
+            enableVoiceActivityDetection = true,
+            spectralAlpha = 2.0,
+            spectralBeta = 0.01,
+            adaptationRate = 0.01,
+            vadThreshold = 0.01
+        } = options;
+
+        try {
+            if (enableSpectralSubtraction) {
+                this.applySpectralSubtraction(participantId, spectralAlpha, spectralBeta);
+            }
+
+            if (enableAdaptiveFiltering) {
+                this.applyAdaptiveFiltering(participantId, adaptationRate);
+            }
+
+            if (enableVoiceActivityDetection) {
+                this.enableVoiceActivityDetection(participantId, vadThreshold);
+            }
+
+            console.log(`Real-time enhancement applied to participant: ${participantId}`);
+
+        } catch (error) {
+            console.error(`Failed to apply real-time enhancement for ${participantId}:`, error);
+        }
+    }
+
+    /**
+     * Enable voice activity detection
+     */
+    enableVoiceActivityDetection(participantId, threshold = 0.01) {
+        const filterChain = this.filterChains.get(participantId);
+        if (!filterChain) return;
+
+        try {
+            const analyser = this.audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.3;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            let isVoiceActive = false;
+            let voiceActivityCallback = null;
+
+            const detectVoiceActivity = () => {
+                analyser.getByteFrequencyData(dataArray);
+
+                // Calculate energy in voice frequency range (300-3400 Hz)
+                const voiceStartBin = Math.floor(300 * bufferLength / (this.audioContext.sampleRate / 2));
+                const voiceEndBin = Math.floor(3400 * bufferLength / (this.audioContext.sampleRate / 2));
+
+                let voiceEnergy = 0;
+                for (let i = voiceStartBin; i < voiceEndBin; i++) {
+                    voiceEnergy += dataArray[i];
+                }
+                voiceEnergy /= (voiceEndBin - voiceStartBin);
+                voiceEnergy /= 255; // Normalize
+
+                const wasActive = isVoiceActive;
+                isVoiceActive = voiceEnergy > threshold;
+
+                // Trigger callback on state change
+                if (wasActive !== isVoiceActive && voiceActivityCallback) {
+                    voiceActivityCallback(participantId, isVoiceActive, voiceEnergy);
+                }
+
+                requestAnimationFrame(detectVoiceActivity);
+            };
+
+            // Connect analyser
+            filterChain.output.connect(analyser);
+            detectVoiceActivity();
+
+            // Store callback setter
+            filterChain.setVoiceActivityCallback = (callback) => {
+                voiceActivityCallback = callback;
+            };
+
+            console.log(`Voice activity detection enabled for participant: ${participantId}`);
+
+        } catch (error) {
+            console.error(`Failed to enable voice activity detection for ${participantId}:`, error);
+        }
+    }
+
+    /**
      * Cleanup filters
      */
     cleanup() {
         this.filterChains.forEach((filterChain, participantId) => {
             this.removeFilters(participantId);
         });
-        
+
         if (this.audioContext && this.audioContext.state !== 'closed') {
             this.audioContext.close();
         }

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Messaging System - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #cccccc;
+            --border-color: #444444;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+
+        .main-container {
+            height: calc(100vh - 76px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-header {
+            background: var(--card-dark);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator.connected {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+            border: 1px solid #28a745;
+        }
+
+        .status-indicator.disconnected {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
+        }
+
+        .user-selector {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+        }
+
+        .user-selector:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-secondary {
+            background-color: var(--input-dark);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a4a4a;
+            border-color: #555;
+            color: var(--text-light);
+        }
+
+        .pm-demo-container {
+            flex: 1;
+            padding: 1rem 2rem;
+            overflow: hidden;
+        }
+
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-info h6 {
+            color: #17a2b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-info p {
+            color: var(--text-muted);
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+
+        .pm-interface-container {
+            height: calc(100% - 120px);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--input-dark);
+            border-color: var(--primary-color);
+        }
+
+        .stats-panel {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            width: 250px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .stats-panel.show {
+            display: block;
+        }
+
+        .stats-panel h6 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .demo-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .demo-controls {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .pm-demo-container {
+                padding: 1rem;
+            }
+
+            .quick-actions {
+                justify-content: center;
+            }
+
+            .stats-panel {
+                position: fixed;
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+                left: 20px;
+                width: auto;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="interview-room.html">
+                            <i class="fas fa-comments me-1"></i>Live Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-moderation-demo.html">
+                            <i class="fas fa-shield-alt me-1"></i>Moderation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chat-commands-demo.html">
+                            <i class="fas fa-terminal me-1"></i>Commands
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="private-messaging-demo.html">
+                            <i class="fas fa-envelope me-1"></i>Private Messages
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Demo Header -->
+        <div class="demo-header">
+            <h1><i class="fas fa-envelope me-3"></i>Private Messaging System</h1>
+            <div class="demo-controls">
+                <div class="status-indicator disconnected" id="connection-status">
+                    <i class="fas fa-circle"></i>
+                    <span>Disconnected</span>
+                </div>
+                <select class="user-selector" id="user-selector">
+                    <option value="user1">Alice Johnson</option>
+                    <option value="user2" selected>Bob Smith</option>
+                    <option value="user3">Carol Davis</option>
+                    <option value="admin">Admin User</option>
+                </select>
+                <button class="btn btn-primary" id="connect-btn">
+                    <i class="fas fa-plug me-2"></i>Connect
+                </button>
+                <button class="btn btn-secondary" id="stats-btn">
+                    <i class="fas fa-chart-bar me-2"></i>Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Demo Content -->
+        <div class="pm-demo-container">
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Private Messaging Demo</h6>
+                <p>Secure end-to-end encrypted private messaging between participants with real-time delivery, read receipts, message history, and user blocking capabilities.</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action-btn" id="send-test-message">
+                    <i class="fas fa-paper-plane me-2"></i>Send Test Message
+                </button>
+                <button class="quick-action-btn" id="load-conversations">
+                    <i class="fas fa-comments me-2"></i>Load Conversations
+                </button>
+                <button class="quick-action-btn" id="simulate-message">
+                    <i class="fas fa-robot me-2"></i>Simulate Incoming
+                </button>
+                <button class="quick-action-btn" id="block-user">
+                    <i class="fas fa-ban me-2"></i>Block User
+                </button>
+                <button class="quick-action-btn" id="clear-history">
+                    <i class="fas fa-trash me-2"></i>Clear History
+                </button>
+            </div>
+
+            <!-- Private Message Interface Container -->
+            <div class="pm-interface-container">
+                <div class="private-message-container" id="pm-container">
+                    <!-- PM Header -->
+                    <div class="pm-header">
+                        <h3><i class="fas fa-envelope me-2"></i>Private Messages</h3>
+                        <div class="pm-controls">
+                            <button class="pm-btn secondary" id="refresh-btn">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PM Content -->
+                    <div class="pm-content">
+                        <!-- Sidebar -->
+                        <div class="pm-sidebar" id="pm-sidebar">
+                            <div class="pm-conversation-list" id="conversation-list">
+                                <!-- Conversations will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Chat Area -->
+                        <div class="pm-chat-area" id="chat-area">
+                            <div class="pm-empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>Select a conversation</h3>
+                                <p>Choose a conversation from the sidebar to start messaging</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Panel -->
+    <div class="stats-panel" id="stats-panel">
+        <h6><i class="fas fa-chart-bar me-2"></i>Message Statistics</h6>
+        <div class="stat-item">
+            <span class="stat-label">Total Messages:</span>
+            <span class="stat-value" id="stat-total-messages">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Active Conversations:</span>
+            <span class="stat-value" id="stat-conversations">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Unread Messages:</span>
+            <span class="stat-value" id="stat-unread">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Blocked Users:</span>
+            <span class="stat-value" id="stat-blocked">0</span>
+        </div>
+        <button class="btn btn-secondary btn-sm mt-2" onclick="document.getElementById('stats-panel').classList.remove('show')">
+            Close
+        </button>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Private Message Interface Component -->
+    <script src="../src/components/PrivateMessageInterface.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let websocket = null;
+        let privateMessageInterface = null;
+        let currentUser = {
+            id: 'user2',
+            name: 'Bob Smith',
+            role: 'participant'
+        };
+        
+        // Mock users for demo
+        const mockUsers = {
+            user1: { id: 'user1', name: 'Alice Johnson', role: 'participant' },
+            user2: { id: 'user2', name: 'Bob Smith', role: 'participant' },
+            user3: { id: 'user3', name: 'Carol Davis', role: 'host' },
+            admin: { id: 'admin', name: 'Admin User', role: 'admin' }
+        };
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemo();
+            attachEventListeners();
+        });
+        
+        function initializeDemo() {
+            // Initialize private message interface
+            if (typeof PrivateMessageInterface !== 'undefined') {
+                privateMessageInterface = new PrivateMessageInterface({
+                    websocket: websocket,
+                    currentUserId: currentUser.id,
+                    currentUserName: currentUser.name,
+                    currentUserRole: currentUser.role,
+                    roomId: 'demo_room',
+                    onMessageReceived: handleMessageReceived,
+                    onConversationUpdated: handleConversationUpdated
+                });
+            }
+            
+            updateUserInterface();
+        }
+        
+        function attachEventListeners() {
+            // Connect button
+            document.getElementById('connect-btn')?.addEventListener('click', toggleConnection);
+            
+            // User selector
+            document.getElementById('user-selector')?.addEventListener('change', (e) => {
+                const selectedUser = mockUsers[e.target.value];
+                if (selectedUser) {
+                    currentUser = selectedUser;
+                    if (privateMessageInterface) {
+                        privateMessageInterface.setUserInfo(currentUser.id, currentUser.name, currentUser.role);
+                    }
+                    updateUserInterface();
+                }
+            });
+            
+            // Stats button
+            document.getElementById('stats-btn')?.addEventListener('click', toggleStats);
+            
+            // Quick action buttons
+            document.getElementById('send-test-message')?.addEventListener('click', sendTestMessage);
+            document.getElementById('load-conversations')?.addEventListener('click', loadConversations);
+            document.getElementById('simulate-message')?.addEventListener('click', simulateIncomingMessage);
+            document.getElementById('block-user')?.addEventListener('click', blockRandomUser);
+            document.getElementById('clear-history')?.addEventListener('click', clearHistory);
+            document.getElementById('refresh-btn')?.addEventListener('click', refreshConversations);
+        }
+        
+        function toggleConnection() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                disconnectWebSocket();
+            } else {
+                connectWebSocket();
+            }
+        }
+        
+        function connectWebSocket() {
+            try {
+                // Connect to WebSocket server (adjust URL as needed)
+                websocket = new WebSocket('ws://localhost:8080');
+                
+                websocket.onopen = function(event) {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus(true);
+                    
+                    // Update private message interface
+                    if (privateMessageInterface) {
+                        privateMessageInterface.setWebSocket(websocket);
+                    }
+                    
+                    // Send authentication
+                    websocket.send(JSON.stringify({
+                        type: 'auth',
+                        token: `demo_${currentUser.id}_token`,
+                        room_id: 'demo_room'
+                    }));
+                    
+                    // Load conversations after connection
+                    setTimeout(() => {
+                        loadConversations();
+                    }, 1000);
+                };
+                
+                websocket.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message:', data);
+                };
+                
+                websocket.onclose = function(event) {
+                    console.log('WebSocket disconnected');
+                    updateConnectionStatus(false);
+                    websocket = null;
+                };
+                
+                websocket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus(false);
+                };
+                
+            } catch (error) {
+                console.error('Failed to connect WebSocket:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            
+            if (statusElement) {
+                if (connected) {
+                    statusElement.className = 'status-indicator connected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+                } else {
+                    statusElement.className = 'status-indicator disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+                }
+            }
+            
+            if (connectBtn) {
+                if (connected) {
+                    connectBtn.innerHTML = '<i class="fas fa-unlink me-2"></i>Disconnect';
+                    connectBtn.className = 'btn btn-secondary';
+                } else {
+                    connectBtn.innerHTML = '<i class="fas fa-plug me-2"></i>Connect';
+                    connectBtn.className = 'btn btn-primary';
+                }
+            }
+        }
+        
+        function updateUserInterface() {
+            // Update any user-specific UI elements
+            console.log('Current user:', currentUser);
+        }
+        
+        function handleMessageReceived(message, conversation) {
+            console.log('Message received:', message, conversation);
+            updateStats();
+            
+            // Update conversation list
+            updateConversationList();
+        }
+        
+        function handleConversationUpdated(conversation, data) {
+            console.log('Conversation updated:', conversation, data);
+            updateStats();
+            
+            if (data && data.conversations) {
+                // Handle conversations list update
+                updateConversationList(data.conversations);
+            } else if (conversation) {
+                // Handle single conversation update
+                updateConversationList();
+            }
+        }
+        
+        function sendTestMessage() {
+            if (!privateMessageInterface) {
+                alert('Private message interface not initialized');
+                return;
+            }
+            
+            // Get a random recipient (not current user)
+            const otherUsers = Object.values(mockUsers).filter(user => user.id !== currentUser.id);
+            const recipient = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+            
+            const testMessages = [
+                'Hello! How are you doing?',
+                'Are you ready for the interview?',
+                'Let me know if you need any help.',
+                'Great job on the presentation!',
+                'Can we schedule a follow-up meeting?'
+            ];
+            
+            const message = testMessages[Math.floor(Math.random() * testMessages.length)];
+            
+            try {
+                privateMessageInterface.sendPrivateMessage(recipient.id, message, {
+                    recipientName: recipient.name
+                });
+                
+                showNotification('Test message sent', `Message sent to ${recipient.name}`, 'success');
+            } catch (error) {
+                showNotification('Error', error.message, 'error');
+            }
+        }
+        
+        function loadConversations() {
+            if (privateMessageInterface) {
+                privateMessageInterface.loadConversations();
+                showNotification('Loading conversations', 'Fetching your conversations...', 'info');
+            }
+        }
+        
+        function simulateIncomingMessage() {
+            if (!privateMessageInterface) return;
+            
+            // Simulate an incoming message
+            const senders = Object.values(mockUsers).filter(user => user.id !== currentUser.id);
+            const sender = senders[Math.floor(Math.random() * senders.length)];
+            
+            const messages = [
+                'Hey, are you available for a quick chat?',
+                'I have some questions about the project.',
+                'Thanks for your help earlier!',
+                'Can you review this document when you have time?',
+                'Looking forward to our meeting tomorrow.'
+            ];
+            
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Create mock message
+            const mockMessage = {
+                message_id: 'msg_' + Date.now(),
+                sender_id: sender.id,
+                recipient_id: currentUser.id,
+                message: message,
+                timestamp: Math.floor(Date.now() / 1000),
+                read: false,
+                metadata: {
+                    sender_name: sender.name,
+                    recipient_name: currentUser.name
+                }
+            };
+            
+            const conversationId = 'conv_' + [sender.id, currentUser.id].sort().join('_');
+            
+            privateMessageInterface.handleMessageReceived(mockMessage, conversationId);
+        }
+        
+        function blockRandomUser() {
+            const otherUsers = Object.values(mockUsers).filter(user => user.id !== currentUser.id);
+            const userToBlock = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+            
+            if (privateMessageInterface) {
+                privateMessageInterface.blockUser(userToBlock.id, true);
+                showNotification('User blocked', `${userToBlock.name} has been blocked`, 'warning');
+            }
+        }
+        
+        function clearHistory() {
+            if (privateMessageInterface) {
+                privateMessageInterface.conversations.clear();
+                privateMessageInterface.unreadCounts.clear();
+                updateConversationList();
+                updateStats();
+                showNotification('History cleared', 'All conversation history has been cleared', 'info');
+            }
+        }
+        
+        function refreshConversations() {
+            loadConversations();
+        }
+        
+        function toggleStats() {
+            const statsPanel = document.getElementById('stats-panel');
+            if (statsPanel.classList.contains('show')) {
+                statsPanel.classList.remove('show');
+            } else {
+                updateStats();
+                statsPanel.classList.add('show');
+            }
+        }
+        
+        function updateStats() {
+            if (!privateMessageInterface) return;
+            
+            const totalMessages = Array.from(privateMessageInterface.conversations.values())
+                .reduce((total, conv) => total + (conv.messages ? conv.messages.length : 0), 0);
+            
+            const totalConversations = privateMessageInterface.conversations.size;
+            const totalUnread = privateMessageInterface.getTotalUnreadCount();
+            const blockedUsers = privateMessageInterface.blockedUsers.size;
+            
+            document.getElementById('stat-total-messages').textContent = totalMessages;
+            document.getElementById('stat-conversations').textContent = totalConversations;
+            document.getElementById('stat-unread').textContent = totalUnread;
+            document.getElementById('stat-blocked').textContent = blockedUsers;
+        }
+        
+        function updateConversationList(conversations = null) {
+            const conversationList = document.getElementById('conversation-list');
+            if (!conversationList || !privateMessageInterface) return;
+            
+            const convs = conversations || privateMessageInterface.getAllConversations();
+            
+            if (convs.length === 0) {
+                conversationList.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-comments fa-2x mb-2"></i>
+                        <p>No conversations yet</p>
+                        <small>Send a test message to get started</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            convs.forEach(conv => {
+                const unreadCount = privateMessageInterface.getUnreadCount(conv.conversation_id || conv.id);
+                const lastMessage = conv.last_message || (conv.messages && conv.messages[conv.messages.length - 1]);
+                const preview = lastMessage ? 
+                    (lastMessage.deleted ? '[Message deleted]' : lastMessage.message.substring(0, 50) + '...') : 
+                    'No messages yet';
+                
+                html += `
+                    <div class="pm-conversation-item" data-conversation-id="${conv.conversation_id || conv.id}">
+                        <div class="conversation-name">${conv.participant_name}</div>
+                        <div class="conversation-preview">${preview}</div>
+                        <div class="conversation-time">${formatTime(conv.last_activity)}</div>
+                        ${unreadCount > 0 ? `<div class="conversation-unread">${unreadCount}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            conversationList.innerHTML = html;
+            
+            // Add click handlers
+            conversationList.querySelectorAll('.pm-conversation-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const conversationId = item.dataset.conversationId;
+                    selectConversation(conversationId);
+                });
+            });
+        }
+        
+        function selectConversation(conversationId) {
+            // Update active state
+            document.querySelectorAll('.pm-conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const selectedItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('active');
+            }
+            
+            // Set active conversation
+            if (privateMessageInterface) {
+                privateMessageInterface.setActiveConversation(conversationId);
+            }
+            
+            // Load conversation history
+            const conversation = privateMessageInterface.getConversation(conversationId);
+            if (conversation) {
+                displayConversation(conversation);
+            }
+        }
+        
+        function displayConversation(conversation) {
+            const chatArea = document.getElementById('chat-area');
+            if (!chatArea) return;
+            
+            chatArea.innerHTML = `
+                <div class="pm-chat-header">
+                    <h4 class="pm-chat-title">${conversation.participant_name}</h4>
+                    <div class="pm-chat-actions">
+                        <button class="pm-btn secondary" onclick="blockUser('${conversation.participant_id}')">
+                            <i class="fas fa-ban me-1"></i>Block
+                        </button>
+                    </div>
+                </div>
+                <div class="pm-messages" id="pm-messages">
+                    <!-- Messages will be populated here -->
+                </div>
+                <div class="pm-input-area">
+                    <div class="pm-input-container">
+                        <textarea class="pm-input" id="message-input" placeholder="Type your message..." rows="1"></textarea>
+                        <button class="pm-send-btn" id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Populate messages
+            const messagesContainer = document.getElementById('pm-messages');
+            if (conversation.messages && conversation.messages.length > 0) {
+                let messagesHtml = '';
+                conversation.messages.forEach(msg => {
+                    const isSent = msg.sender_id === currentUser.id;
+                    const messageClass = isSent ? 'sent' : 'received';
+                    const deletedClass = msg.deleted ? 'deleted' : '';
+                    
+                    messagesHtml += `
+                        <div class="pm-message ${messageClass} ${deletedClass}">
+                            <div class="pm-message-bubble">
+                                <div class="pm-message-content">${msg.message}</div>
+                                <div class="pm-message-time">${formatTime(msg.timestamp)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                messagesContainer.innerHTML = messagesHtml;
+            } else {
+                messagesContainer.innerHTML = `
+                    <div class="text-center text-muted p-3">
+                        <p>No messages in this conversation yet</p>
+                    </div>
+                `;
+            }
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Add send message handler
+            const sendBtn = document.getElementById('send-btn');
+            const messageInput = document.getElementById('message-input');
+            
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message && privateMessageInterface) {
+                    try {
+                        privateMessageInterface.sendPrivateMessage(conversation.participant_id, message, {
+                            recipientName: conversation.participant_name
+                        });
+                        messageInput.value = '';
+                    } catch (error) {
+                        showNotification('Error', error.message, 'error');
+                    }
+                }
+            }
+            
+            sendBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) { // Less than 1 minute
+                return 'Just now';
+            } else if (diff < 3600000) { // Less than 1 hour
+                return Math.floor(diff / 60000) + 'm ago';
+            } else if (diff < 86400000) { // Less than 1 day
+                return Math.floor(diff / 3600000) + 'h ago';
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+        
+        function showNotification(title, message, type) {
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = `pm-notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <strong>${title}</strong>
+                    <button class="notification-close">&times;</button>
+                </div>
+                <div class="notification-body">${message}</div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Add close handler
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.remove();
+            });
+            
+            // Show and auto-hide
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Auto-connect on page load
+        setTimeout(() => {
+            connectWebSocket();
+        }, 1000);
+    </script>
+</body>
+</html>
