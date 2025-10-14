@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Backgrounds System - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- TensorFlow.js for AI background removal -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.1/dist/body-pix.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .video-preview {
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .video-preview video,
+        .video-preview canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .control-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .control-btn:hover {
+            background: #cc0000;
+        }
+        
+        .control-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-indicator.active {
+            background: var(--success-color);
+            box-shadow: 0 0 6px var(--success-color);
+        }
+        
+        .status-indicator.inactive {
+            background: var(--text-muted);
+        }
+        
+        .status-indicator.loading {
+            background: var(--warning-color);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .performance-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .performance-stats h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .performance-stats {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-magic" aria-hidden="true"></i>
+            Virtual Backgrounds System
+        </h1>
+        <p class="demo-subtitle">AI-powered background removal, custom backgrounds, and blur effects</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Virtual backgrounds controls">
+            <!-- Camera Controls -->
+            <section class="demo-section" id="camera-controls">
+                <h3><i class="fas fa-video" aria-hidden="true"></i>Camera Controls</h3>
+                <button class="demo-btn" onclick="startCamera()" id="start-camera-btn">
+                    <span>
+                        <div><i class="fas fa-play"></i> Start Camera</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Enable camera for preview</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="stopCamera()" id="stop-camera-btn" style="display: none;">
+                    <span>
+                        <div><i class="fas fa-stop"></i> Stop Camera</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Disable camera preview</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Background Effects -->
+            <section class="demo-section" id="background-effects">
+                <h3><i class="fas fa-palette" aria-hidden="true"></i>Background Effects</h3>
+                <button class="demo-btn active" onclick="setBackgroundEffect('none')">
+                    <span>
+                        <div><i class="fas fa-ban"></i> No Effect</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Original background</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackgroundEffect('blur')">
+                    <span>
+                        <div><i class="fas fa-circle"></i> Blur Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">AI-powered background blur</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackgroundEffect('sepia')">
+                    <span>
+                        <div><i class="fas fa-palette"></i> Sepia Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Vintage sepia effect</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackgroundEffect('grayscale')">
+                    <span>
+                        <div><i class="fas fa-adjust"></i> Grayscale Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Black and white effect</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackgroundEffect('darken')">
+                    <span>
+                        <div><i class="fas fa-moon"></i> Darken Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Darken for better focus</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Background Colors -->
+            <section class="demo-section" id="background-colors">
+                <h3><i class="fas fa-fill-drip" aria-hidden="true"></i>Background Colors</h3>
+                <button class="demo-btn" onclick="setBackground('solid-blue')">
+                    <span>
+                        <div><i class="fas fa-square" style="color: #0066cc;"></i> Blue Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Professional blue</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackground('solid-green')">
+                    <span>
+                        <div><i class="fas fa-square" style="color: #00cc66;"></i> Green Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Nature green</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackground('solid-red')">
+                    <span>
+                        <div><i class="fas fa-square" style="color: #cc0000;"></i> Red Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Bold red</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setBackground('solid-black')">
+                    <span>
+                        <div><i class="fas fa-square" style="color: #000000; border: 1px solid #444;"></i> Black Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Classic black</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Custom Upload -->
+            <section class="demo-section" id="custom-upload">
+                <h3><i class="fas fa-upload" aria-hidden="true"></i>Custom Backgrounds</h3>
+                <input type="file" id="background-upload" accept="image/*,video/*" style="display: none;">
+                <button class="demo-btn" onclick="uploadCustomBackground()">
+                    <span>
+                        <div><i class="fas fa-plus"></i> Upload Background</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Add your own image/video</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="showBackgroundsPanel()">
+                    <span>
+                        <div><i class="fas fa-cog"></i> Manage Backgrounds</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Open backgrounds panel</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Settings -->
+            <section class="demo-section" id="settings">
+                <h3><i class="fas fa-sliders-h" aria-hidden="true"></i>Settings</h3>
+                <div style="margin-bottom: 15px;">
+                    <label for="blur-strength" style="display: block; margin-bottom: 5px; color: var(--text-light);">
+                        Blur Strength: <span id="blur-value">5</span>
+                    </label>
+                    <input type="range" id="blur-strength" min="1" max="20" value="5" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="edge-smoothing" checked style="margin-right: 8px;">
+                        Edge Smoothing
+                    </label>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="ai-processing" checked style="margin-right: 8px;">
+                        AI Background Removal
+                    </label>
+                </div>
+            </section>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Video preview area">
+            <div class="video-container">
+                <div class="video-preview" id="video-preview">
+                    <video id="camera-video" autoplay muted playsinline style="display: none;"></video>
+                    <canvas id="processed-canvas" style="display: none;"></canvas>
+                    
+                    <div class="loading-overlay" id="loading-overlay">
+                        <div class="loading-spinner"></div>
+                        <div>Loading AI model...</div>
+                    </div>
+                    
+                    <div class="video-controls">
+                        <button class="control-btn" onclick="toggleProcessing()" id="toggle-processing-btn" disabled>
+                            <i class="fas fa-play"></i>
+                            <span>Start Processing</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Performance Statistics Panel -->
+    <aside class="performance-stats" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-line" aria-hidden="true"></i>Performance Stats
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">AI Model:</span>
+            <span class="stat-value">
+                <span class="status-indicator loading" id="model-status"></span>
+                <span id="model-status-text">Loading...</span>
+            </span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Processing:</span>
+            <span class="stat-value">
+                <span class="status-indicator inactive" id="processing-status"></span>
+                <span id="processing-status-text">Stopped</span>
+            </span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Frame Rate:</span>
+            <span class="stat-value" id="frame-rate">-- FPS</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Processing Time:</span>
+            <span class="stat-value" id="processing-time">-- ms</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">WebGL Support:</span>
+            <span class="stat-value" id="webgl-support">Checking...</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Current Effect:</span>
+            <span class="stat-value" id="current-effect">None</span>
+        </div>
+    </aside>
+    
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/VirtualBackgroundsSystem.js"></script>
+
+    <script>
+        // Global variables
+        let virtualBackgrounds = null;
+        let accessibilitySystem = null;
+        let themeSystem = null;
+        let responsiveSystem = null;
+        let cameraStream = null;
+        let isProcessing = false;
+        let performanceInterval = null;
+
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await initializeSystems();
+                await initializeDemo();
+                updateUI();
+                startPerformanceMonitoring();
+            } catch (error) {
+                console.error('Demo initialization failed:', error);
+                showError('Failed to initialize demo: ' + error.message);
+            }
+        });
+
+        /**
+         * Initialize all required systems
+         */
+        async function initializeSystems() {
+            // Initialize accessibility system
+            accessibilitySystem = new AccessibilitySystem({
+                container: document.body,
+                settings: {
+                    enabled: true,
+                    announcePageChanges: true,
+                    enableKeyboardNavigation: true,
+                    enableScreenReaderSupport: true
+                }
+            });
+
+            // Initialize theme system
+            themeSystem = new ThemeSystem({
+                container: document.body,
+                settings: {
+                    defaultTheme: 'dark',
+                    enableAutoTheme: false,
+                    enableCustomThemes: false
+                }
+            });
+
+            // Initialize responsive system
+            responsiveSystem = new ResponsiveDesignSystem({
+                container: document.body,
+                settings: {
+                    enableTouchOptimization: true,
+                    enableGestureSupport: true,
+                    enableResponsiveImages: true
+                }
+            });
+
+            // Initialize virtual backgrounds system
+            virtualBackgrounds = new VirtualBackgroundsSystem({
+                container: document.body,
+                accessibilitySystem: accessibilitySystem,
+                themeSystem: themeSystem,
+                responsiveSystem: responsiveSystem,
+                settings: {
+                    enabled: true,
+                    enableAIBackgroundRemoval: true,
+                    enableCustomBackgrounds: true,
+                    enableBlurEffects: true,
+                    defaultBlurStrength: 5,
+                    backgroundQuality: 'high',
+                    enablePerformanceOptimization: true,
+                    enableEdgeSmoothing: true,
+                    enableLightingAdjustment: true
+                }
+            });
+        }
+
+        /**
+         * Initialize demo-specific functionality
+         */
+        async function initializeDemo() {
+            // Setup event listeners
+            setupEventListeners();
+
+            // Check WebGL support
+            updateWebGLStatus();
+
+            // Wait for AI model to load
+            await waitForModelLoad();
+
+            // Hide loading overlay
+            hideLoadingOverlay();
+        }
+
+        /**
+         * Setup event listeners
+         */
+        function setupEventListeners() {
+            // Blur strength slider
+            const blurSlider = document.getElementById('blur-strength');
+            blurSlider.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('blur-value').textContent = value;
+                if (virtualBackgrounds) {
+                    virtualBackgrounds.updateSettings({ defaultBlurStrength: value });
+                }
+            });
+
+            // Edge smoothing checkbox
+            const edgeSmoothingCheckbox = document.getElementById('edge-smoothing');
+            edgeSmoothingCheckbox.addEventListener('change', function() {
+                if (virtualBackgrounds) {
+                    virtualBackgrounds.updateSettings({ enableEdgeSmoothing: this.checked });
+                }
+            });
+
+            // AI processing checkbox
+            const aiProcessingCheckbox = document.getElementById('ai-processing');
+            aiProcessingCheckbox.addEventListener('change', function() {
+                if (virtualBackgrounds) {
+                    virtualBackgrounds.updateSettings({ enableAIBackgroundRemoval: this.checked });
+                }
+            });
+
+            // Background upload input
+            const uploadInput = document.getElementById('background-upload');
+            uploadInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file && virtualBackgrounds) {
+                    handleBackgroundUpload(file);
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case '1':
+                            e.preventDefault();
+                            setBackgroundEffect('none');
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            setBackgroundEffect('blur');
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            setBackground('solid-blue');
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            startCamera();
+                            break;
+                        case 'p':
+                            e.preventDefault();
+                            toggleProcessing();
+                            break;
+                    }
+                }
+            });
+        }
+
+        /**
+         * Wait for AI model to load
+         */
+        async function waitForModelLoad() {
+            return new Promise((resolve) => {
+                const checkModel = () => {
+                    if (virtualBackgrounds && virtualBackgrounds.isAIBackgroundRemovalAvailable()) {
+                        updateModelStatus('active', 'Ready');
+                        resolve();
+                    } else {
+                        setTimeout(checkModel, 500);
+                    }
+                };
+                checkModel();
+            });
+        }
+
+        /**
+         * Update WebGL status
+         */
+        function updateWebGLStatus() {
+            const webglSupport = document.getElementById('webgl-support');
+            if (virtualBackgrounds && virtualBackgrounds.isWebGLAccelerationAvailable()) {
+                webglSupport.textContent = 'Available';
+                webglSupport.style.color = 'var(--success-color)';
+            } else {
+                webglSupport.textContent = 'Not Available';
+                webglSupport.style.color = 'var(--warning-color)';
+            }
+        }
+
+        /**
+         * Update model status indicator
+         */
+        function updateModelStatus(status, text) {
+            const indicator = document.getElementById('model-status');
+            const statusText = document.getElementById('model-status-text');
+
+            indicator.className = `status-indicator ${status}`;
+            statusText.textContent = text;
+        }
+
+        /**
+         * Update processing status indicator
+         */
+        function updateProcessingStatus(status, text) {
+            const indicator = document.getElementById('processing-status');
+            const statusText = document.getElementById('processing-status-text');
+
+            indicator.className = `status-indicator ${status}`;
+            statusText.textContent = text;
+        }
+
+        /**
+         * Hide loading overlay
+         */
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'none';
+        }
+
+        /**
+         * Start camera
+         */
+        async function startCamera() {
+            try {
+                const video = document.getElementById('camera-video');
+
+                // Get user media
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 },
+                    audio: false
+                });
+
+                video.srcObject = cameraStream;
+                video.style.display = 'block';
+
+                // Update UI
+                document.getElementById('start-camera-btn').style.display = 'none';
+                document.getElementById('stop-camera-btn').style.display = 'block';
+                document.getElementById('toggle-processing-btn').disabled = false;
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce('Camera started successfully', 'polite');
+                }
+
+            } catch (error) {
+                console.error('Failed to start camera:', error);
+                showError('Failed to access camera: ' + error.message);
+            }
+        }
+
+        /**
+         * Stop camera
+         */
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+
+            // Stop processing
+            if (isProcessing) {
+                stopProcessing();
+            }
+
+            const video = document.getElementById('camera-video');
+            video.style.display = 'none';
+            video.srcObject = null;
+
+            // Update UI
+            document.getElementById('start-camera-btn').style.display = 'block';
+            document.getElementById('stop-camera-btn').style.display = 'none';
+            document.getElementById('toggle-processing-btn').disabled = true;
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                accessibilitySystem.announce('Camera stopped', 'polite');
+            }
+        }
+
+        /**
+         * Toggle processing
+         */
+        function toggleProcessing() {
+            if (isProcessing) {
+                stopProcessing();
+            } else {
+                startProcessing();
+            }
+        }
+
+        /**
+         * Start processing
+         */
+        async function startProcessing() {
+            if (!cameraStream || !virtualBackgrounds) return;
+
+            try {
+                const video = document.getElementById('camera-video');
+                const canvas = document.getElementById('processed-canvas');
+
+                // Start virtual background processing
+                await virtualBackgrounds.startProcessing(video);
+
+                // Show processed canvas
+                canvas.style.display = 'block';
+                video.style.display = 'none';
+
+                isProcessing = true;
+
+                // Update UI
+                const btn = document.getElementById('toggle-processing-btn');
+                btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop Processing</span>';
+
+                updateProcessingStatus('active', 'Running');
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce('Virtual background processing started', 'polite');
+                }
+
+            } catch (error) {
+                console.error('Failed to start processing:', error);
+                showError('Failed to start processing: ' + error.message);
+            }
+        }
+
+        /**
+         * Stop processing
+         */
+        function stopProcessing() {
+            if (!virtualBackgrounds) return;
+
+            virtualBackgrounds.stopProcessing();
+
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('processed-canvas');
+
+            // Show original video
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+
+            isProcessing = false;
+
+            // Update UI
+            const btn = document.getElementById('toggle-processing-btn');
+            btn.innerHTML = '<i class="fas fa-play"></i><span>Start Processing</span>';
+
+            updateProcessingStatus('inactive', 'Stopped');
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                accessibilitySystem.announce('Virtual background processing stopped', 'polite');
+            }
+        }
+
+        /**
+         * Set background effect
+         */
+        function setBackgroundEffect(effectType) {
+            if (!virtualBackgrounds) return;
+
+            // Update active button
+            updateActiveButton('#background-effects .demo-btn', effectType);
+
+            switch (effectType) {
+                case 'none':
+                    virtualBackgrounds.disableBackground();
+                    updateCurrentEffect('None');
+                    break;
+                case 'blur':
+                    virtualBackgrounds.setBackgroundEffect('blur');
+                    updateCurrentEffect('Blur');
+                    break;
+                case 'sepia':
+                    virtualBackgrounds.setBackgroundEffect('sepia');
+                    updateCurrentEffect('Sepia');
+                    break;
+                case 'grayscale':
+                    virtualBackgrounds.setBackgroundEffect('grayscale');
+                    updateCurrentEffect('Grayscale');
+                    break;
+                case 'darken':
+                    virtualBackgrounds.setBackgroundEffect('darken');
+                    updateCurrentEffect('Darken');
+                    break;
+            }
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(`Background effect changed to ${effectType}`, 'polite');
+            }
+        }
+
+        /**
+         * Set background
+         */
+        function setBackground(backgroundId) {
+            if (!virtualBackgrounds) return;
+
+            // Update active button
+            updateActiveButton('#background-colors .demo-btn', backgroundId);
+
+            virtualBackgrounds.setBackground(backgroundId);
+
+            const background = virtualBackgrounds.getAllBackgrounds().get(backgroundId);
+            if (background) {
+                updateCurrentEffect(background.name);
+            }
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(`Background changed to ${background ? background.name : backgroundId}`, 'polite');
+            }
+        }
+
+        /**
+         * Upload custom background
+         */
+        function uploadCustomBackground() {
+            document.getElementById('background-upload').click();
+        }
+
+        /**
+         * Handle background upload
+         */
+        async function handleBackgroundUpload(file) {
+            try {
+                const backgroundId = await virtualBackgrounds.addCustomBackground(file);
+
+                // Set as active background
+                virtualBackgrounds.setBackground(backgroundId);
+                updateCurrentEffect(file.name);
+
+                showSuccess(`Background "${file.name}" uploaded successfully`);
+
+            } catch (error) {
+                console.error('Background upload failed:', error);
+                showError('Upload failed: ' + error.message);
+            }
+        }
+
+        /**
+         * Show backgrounds panel
+         */
+        function showBackgroundsPanel() {
+            if (virtualBackgrounds) {
+                virtualBackgrounds.showBackgroundUI();
+            }
+        }
+
+        /**
+         * Update active button
+         */
+        function updateActiveButton(selector, activeValue) {
+            const buttons = document.querySelectorAll(selector);
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.onclick && btn.onclick.toString().includes(activeValue)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        /**
+         * Update current effect display
+         */
+        function updateCurrentEffect(effectName) {
+            document.getElementById('current-effect').textContent = effectName;
+        }
+
+        /**
+         * Start performance monitoring
+         */
+        function startPerformanceMonitoring() {
+            performanceInterval = setInterval(() => {
+                if (virtualBackgrounds && isProcessing) {
+                    const stats = virtualBackgrounds.getPerformanceStats();
+
+                    document.getElementById('frame-rate').textContent = `${stats.frameRate} FPS`;
+                    document.getElementById('processing-time').textContent = `${Math.round(stats.averageProcessingTime)} ms`;
+                }
+            }, 1000);
+        }
+
+        /**
+         * Update UI state
+         */
+        function updateUI() {
+            // Update initial states
+            updateModelStatus('loading', 'Loading...');
+            updateProcessingStatus('inactive', 'Stopped');
+            updateCurrentEffect('None');
+        }
+
+        /**
+         * Show success message
+         */
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        /**
+         * Show error message
+         */
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        /**
+         * Show notification
+         */
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success-color)' : 'var(--danger-color)'};
+                color: white;
+                padding: 12px 16px;
+                border-radius: 6px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10001;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(message, type === 'error' ? 'assertive' : 'polite');
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (performanceInterval) {
+                clearInterval(performanceInterval);
+            }
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+
+            if (virtualBackgrounds) {
+                virtualBackgrounds.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
