@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Recording Indicators - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-preview-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .no-video-message {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .no-video-message i {
+            font-size: 4rem;
+            color: var(--text-muted);
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+        
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .demo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .demo-btn.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .demo-btn.primary:hover {
+            background: #cc0000;
+        }
+        
+        .demo-btn.success {
+            background: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .demo-btn.warning {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            color: #000;
+        }
+        
+        .demo-btn.danger {
+            background: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .indicator-controls {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .indicator-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+        
+        .keyboard-shortcuts {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .keyboard-shortcuts h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .shortcut-key {
+            background: var(--input-dark);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--primary-color);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+            
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-record-vinyl" aria-hidden="true"></i>
+            Video Recording Indicators
+        </h1>
+        <p class="demo-subtitle">Comprehensive visual feedback system for recording status and statistics</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Recording indicators controls">
+            <!-- Features Overview -->
+            <section class="demo-section" id="features-overview">
+                <h3><i class="fas fa-star" aria-hidden="true"></i>Key Features</h3>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-circle"></i>Floating recording indicator</li>
+                    <li><i class="fas fa-dot-circle"></i>Corner status dot</li>
+                    <li><i class="fas fa-clock"></i>Real-time timer display</li>
+                    <li><i class="fas fa-video"></i>Quality indicator</li>
+                    <li><i class="fas fa-hdd"></i>Storage usage monitor</li>
+                    <li><i class="fas fa-wifi"></i>Bandwidth indicator</li>
+                    <li><i class="fas fa-exclamation-triangle"></i>Error notifications</li>
+                    <li><i class="fas fa-mobile-alt"></i>Mobile optimized</li>
+                </ul>
+                
+                <div class="control-buttons">
+                    <button class="demo-btn success" id="start-recording-btn">
+                        <i class="fas fa-play"></i>
+                        Start Recording
+                    </button>
+                    <button class="demo-btn warning" id="pause-recording-btn" disabled>
+                        <i class="fas fa-pause"></i>
+                        Pause Recording
+                    </button>
+                    <button class="demo-btn primary" id="resume-recording-btn" disabled>
+                        <i class="fas fa-play"></i>
+                        Resume Recording
+                    </button>
+                    <button class="demo-btn danger" id="stop-recording-btn" disabled>
+                        <i class="fas fa-stop"></i>
+                        Stop Recording
+                    </button>
+                </div>
+            </section>
+
+            <!-- Indicator Controls -->
+            <section class="demo-section" id="indicator-controls">
+                <h3><i class="fas fa-sliders-h" aria-hidden="true"></i>Indicator Controls</h3>
+
+                <div class="indicator-controls">
+                    <div class="indicator-toggle">
+                        <span>Floating Indicator</span>
+                        <div class="toggle-switch active" data-indicator="floating"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Corner Indicator</span>
+                        <div class="toggle-switch active" data-indicator="corner"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Status Bar</span>
+                        <div class="toggle-switch active" data-indicator="statusBar"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Timer Display</span>
+                        <div class="toggle-switch" data-indicator="timer"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Quality Indicator</span>
+                        <div class="toggle-switch active" data-indicator="quality"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Storage Indicator</span>
+                        <div class="toggle-switch active" data-indicator="storage"></div>
+                    </div>
+                    <div class="indicator-toggle">
+                        <span>Bandwidth Indicator</span>
+                        <div class="toggle-switch active" data-indicator="bandwidth"></div>
+                    </div>
+                </div>
+
+                <div class="control-buttons" style="margin-top: 20px;">
+                    <button class="demo-btn" id="toggle-visibility-btn">
+                        <i class="fas fa-eye"></i>
+                        Toggle Visibility
+                    </button>
+                    <button class="demo-btn" id="simulate-error-btn">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Simulate Error
+                    </button>
+                    <button class="demo-btn" id="update-stats-btn">
+                        <i class="fas fa-chart-bar"></i>
+                        Update Stats
+                    </button>
+                    <button class="demo-btn" id="change-position-btn">
+                        <i class="fas fa-arrows-alt"></i>
+                        Change Position
+                    </button>
+                </div>
+            </section>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="keyboard-shortcuts">
+                <h4><i class="fas fa-keyboard" aria-hidden="true"></i>Keyboard Shortcuts</h4>
+
+                <div class="shortcut-item">
+                    <span>Toggle Indicators</span>
+                    <span class="shortcut-key">Ctrl+Shift+I</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Toggle Timer Format</span>
+                    <span class="shortcut-key">Ctrl+Shift+T</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Start Recording</span>
+                    <span class="shortcut-key">Space</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Stop Recording</span>
+                    <span class="shortcut-key">Esc</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Recording indicators preview area">
+            <div class="video-preview-area" id="video-preview-area">
+                <div class="no-video-message" id="no-video-message">
+                    <i class="fas fa-video"></i>
+                    <div>Recording Indicators Demo</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Click "Start Recording" to see indicators in action</div>
+                </div>
+                <canvas class="demo-video" id="demo-video" style="display: none;"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Recording Statistics
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Status:</span>
+            <span class="stat-value" id="recording-status-stat">Ready</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Duration:</span>
+            <span class="stat-value" id="recording-duration-stat">00:00:00</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Quality:</span>
+            <span class="stat-value" id="recording-quality-stat">High</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Size:</span>
+            <span class="stat-value" id="recording-size-stat">0 MB</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Storage:</span>
+            <span class="stat-value" id="storage-usage-stat">0%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Bandwidth:</span>
+            <span class="stat-value" id="bandwidth-usage-stat">0 Mbps</span>
+        </div>
+    </aside>
+
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/VideoRecordingIndicators.js"></script>
+
+    <script>
+        // Demo Application
+        class RecordingIndicatorsDemo {
+            constructor() {
+                this.recordingIndicators = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                this.demoCanvas = null;
+                this.animationId = null;
+                this.statsUpdateInterval = null;
+                this.simulatedStats = {
+                    size: 0,
+                    availableStorage: 10 * 1024 * 1024 * 1024, // 10GB
+                    bandwidthUsage: 5.2
+                };
+                this.positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+                this.currentPositionIndex = 1; // Start with top-right
+
+                this.init();
+            }
+
+            init() {
+                console.log('🎬 Initializing Recording Indicators Demo...');
+
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+
+                    // Setup demo canvas
+                    this.setupDemoCanvas();
+
+                    // Initialize recording indicators
+                    this.initializeRecordingIndicators();
+
+                    // Setup demo functionality
+                    this.setupDemoFeatures();
+                    this.setupEventListeners();
+                    this.startStatsUpdates();
+
+                    console.log('✅ Recording Indicators Demo initialized successfully');
+
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize recording indicators demo');
+                }
+            }
+
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+
+                    console.log('✅ Theme system initialized');
+                }
+            }
+
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+
+            setupDemoCanvas() {
+                this.demoCanvas = document.getElementById('demo-video');
+                const ctx = this.demoCanvas.getContext('2d');
+
+                // Set canvas size
+                this.demoCanvas.width = 800;
+                this.demoCanvas.height = 450;
+
+                // Create animated demo content
+                this.animateDemoContent();
+            }
+
+            animateDemoContent() {
+                const ctx = this.demoCanvas.getContext('2d');
+                let frame = 0;
+
+                const animate = () => {
+                    // Clear canvas
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+
+                    // Draw animated background
+                    const gradient = ctx.createLinearGradient(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+                    gradient.addColorStop(0, `hsl(${frame % 360}, 50%, 20%)`);
+                    gradient.addColorStop(1, `hsl(${(frame + 180) % 360}, 50%, 10%)`);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+
+                    // Draw moving elements
+                    for (let i = 0; i < 5; i++) {
+                        const x = (Math.sin(frame * 0.01 + i) * 200) + this.demoCanvas.width / 2;
+                        const y = (Math.cos(frame * 0.015 + i) * 100) + this.demoCanvas.height / 2;
+                        const radius = 20 + Math.sin(frame * 0.02 + i) * 10;
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsla(${(frame + i * 60) % 360}, 70%, 60%, 0.7)`;
+                        ctx.fill();
+                    }
+
+                    // Draw demo text
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Recording Indicators Demo', this.demoCanvas.width / 2, this.demoCanvas.height / 2 - 50);
+
+                    ctx.font = '16px Arial';
+                    ctx.fillText('Animated demo content for testing indicators', this.demoCanvas.width / 2, this.demoCanvas.height / 2 + 50);
+
+                    frame++;
+                    this.animationId = requestAnimationFrame(animate);
+                };
+
+                animate();
+            }
+
+            initializeRecordingIndicators() {
+                const container = document.getElementById('video-preview-area');
+
+                if (!container) {
+                    throw new Error('Video preview area container not found');
+                }
+
+                this.recordingIndicators = new VideoRecordingIndicators(container, {
+                    enableFloatingIndicator: true,
+                    enableCornerIndicator: true,
+                    enableStatusBar: true,
+                    enableTimerDisplay: false,
+                    enableQualityIndicator: true,
+                    enableStorageIndicator: true,
+                    enableBandwidthIndicator: true,
+                    enableErrorIndicator: true,
+                    enablePulseAnimation: true,
+                    indicatorPosition: 'top-right',
+                    timerFormat: 'hh:mm:ss',
+                    updateInterval: 1000,
+                    autoHideDelay: 0, // Don't auto-hide in demo
+                    enableAccessibility: true,
+                    enableMobileOptimization: true,
+                    accessibilitySystem: this.accessibilitySystem,
+                    themeSystem: this.themeSystem,
+                    responsiveSystem: this.responsiveSystem
+                });
+
+                console.log('✅ Recording indicators initialized');
+            }
+
+            setupDemoFeatures() {
+                // Setup initial stats
+                this.updateStatsDisplay();
+            }
+
+            setupEventListeners() {
+                // Recording control buttons
+                document.getElementById('start-recording-btn')?.addEventListener('click', () => {
+                    this.startRecording();
+                });
+
+                document.getElementById('pause-recording-btn')?.addEventListener('click', () => {
+                    this.pauseRecording();
+                });
+
+                document.getElementById('resume-recording-btn')?.addEventListener('click', () => {
+                    this.resumeRecording();
+                });
+
+                document.getElementById('stop-recording-btn')?.addEventListener('click', () => {
+                    this.stopRecording();
+                });
+
+                // Indicator control buttons
+                document.getElementById('toggle-visibility-btn')?.addEventListener('click', () => {
+                    this.recordingIndicators.toggleIndicatorsVisibility();
+                });
+
+                document.getElementById('simulate-error-btn')?.addEventListener('click', () => {
+                    this.simulateError();
+                });
+
+                document.getElementById('update-stats-btn')?.addEventListener('click', () => {
+                    this.updateSimulatedStats();
+                });
+
+                document.getElementById('change-position-btn')?.addEventListener('click', () => {
+                    this.changeIndicatorPosition();
+                });
+
+                // Toggle switches
+                document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                    toggle.addEventListener('click', (e) => {
+                        this.handleToggleSwitch(e.target);
+                    });
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    this.handleKeyboardShortcuts(e);
+                });
+
+                // Recording indicators events
+                document.getElementById('video-preview-area').addEventListener('indicators-initialized', (e) => {
+                    console.log('Indicators initialized:', e.detail);
+                });
+
+                document.getElementById('video-preview-area').addEventListener('recording-started', (e) => {
+                    console.log('Recording started:', e.detail);
+                    this.updateButtonStates('recording');
+                });
+
+                document.getElementById('video-preview-area').addEventListener('recording-paused', (e) => {
+                    console.log('Recording paused:', e.detail);
+                    this.updateButtonStates('paused');
+                });
+
+                document.getElementById('video-preview-area').addEventListener('recording-resumed', (e) => {
+                    console.log('Recording resumed:', e.detail);
+                    this.updateButtonStates('recording');
+                });
+
+                document.getElementById('video-preview-area').addEventListener('recording-stopped', (e) => {
+                    console.log('Recording stopped:', e.detail);
+                    this.updateButtonStates('stopped');
+                });
+
+                // Window events
+                window.addEventListener('beforeunload', () => {
+                    this.destroy();
+                });
+            }
+
+            startRecording() {
+                this.demoCanvas.style.display = 'block';
+                document.getElementById('no-video-message').style.display = 'none';
+
+                this.recordingIndicators.startRecording({
+                    quality: 'high',
+                    format: 'webm'
+                });
+
+                // Start simulating stats updates
+                this.startSimulatedStatsUpdates();
+            }
+
+            pauseRecording() {
+                this.recordingIndicators.pauseRecording();
+            }
+
+            resumeRecording() {
+                this.recordingIndicators.resumeRecording();
+            }
+
+            stopRecording() {
+                this.recordingIndicators.stopRecording();
+
+                // Stop simulated stats updates
+                this.stopSimulatedStatsUpdates();
+
+                // Reset demo
+                setTimeout(() => {
+                    this.demoCanvas.style.display = 'none';
+                    document.getElementById('no-video-message').style.display = 'flex';
+                    this.simulatedStats.size = 0;
+                }, 2000);
+            }
+
+            simulateError() {
+                const errors = [
+                    { message: 'Storage space running low' },
+                    { message: 'Network connection unstable' },
+                    { message: 'Camera device disconnected' },
+                    { message: 'Microphone access denied' },
+                    { message: 'Recording format not supported' }
+                ];
+
+                const randomError = errors[Math.floor(Math.random() * errors.length)];
+                this.recordingIndicators.setErrorState(randomError);
+
+                // Auto-clear error after 5 seconds
+                setTimeout(() => {
+                    this.recordingIndicators.clearErrorState();
+                }, 5000);
+            }
+
+            updateSimulatedStats() {
+                this.simulatedStats.bandwidthUsage = Math.random() * 10;
+                this.recordingIndicators.updateRecordingStats(this.simulatedStats);
+            }
+
+            changeIndicatorPosition() {
+                this.currentPositionIndex = (this.currentPositionIndex + 1) % this.positions.length;
+                const newPosition = this.positions[this.currentPositionIndex];
+
+                this.recordingIndicators.options.indicatorPosition = newPosition;
+
+                // Update floating indicator position
+                if (this.recordingIndicators.floatingIndicator) {
+                    this.recordingIndicators.floatingIndicator.className =
+                        `recording-floating-indicator ${newPosition}`;
+                }
+
+                console.log(`Changed indicator position to: ${newPosition}`);
+            }
+
+            handleToggleSwitch(toggle) {
+                const indicator = toggle.dataset.indicator;
+                const isActive = toggle.classList.contains('active');
+
+                if (isActive) {
+                    toggle.classList.remove('active');
+                    this.recordingIndicators.options[`enable${indicator.charAt(0).toUpperCase() + indicator.slice(1)}Indicator`] = false;
+                } else {
+                    toggle.classList.add('active');
+                    this.recordingIndicators.options[`enable${indicator.charAt(0).toUpperCase() + indicator.slice(1)}Indicator`] = false;
+                }
+
+                // Update indicator visibility
+                const indicatorElement = this.recordingIndicators[`${indicator}Indicator`];
+                if (indicatorElement) {
+                    indicatorElement.style.display = isActive ? 'none' : 'block';
+                }
+            }
+
+            handleKeyboardShortcuts(event) {
+                switch (event.code) {
+                    case 'Space':
+                        if (!event.ctrlKey && !event.altKey) {
+                            event.preventDefault();
+                            const status = this.recordingIndicators.getRecordingStatus();
+                            if (!status.isRecording) {
+                                this.startRecording();
+                            }
+                        }
+                        break;
+                    case 'Escape':
+                        event.preventDefault();
+                        const status = this.recordingIndicators.getRecordingStatus();
+                        if (status.isRecording) {
+                            this.stopRecording();
+                        }
+                        break;
+                }
+            }
+
+            updateButtonStates(state) {
+                const startBtn = document.getElementById('start-recording-btn');
+                const pauseBtn = document.getElementById('pause-recording-btn');
+                const resumeBtn = document.getElementById('resume-recording-btn');
+                const stopBtn = document.getElementById('stop-recording-btn');
+
+                // Reset all buttons
+                [startBtn, pauseBtn, resumeBtn, stopBtn].forEach(btn => {
+                    if (btn) btn.disabled = false;
+                });
+
+                switch (state) {
+                    case 'recording':
+                        startBtn.disabled = true;
+                        resumeBtn.disabled = true;
+                        break;
+                    case 'paused':
+                        startBtn.disabled = true;
+                        pauseBtn.disabled = true;
+                        break;
+                    case 'stopped':
+                        pauseBtn.disabled = true;
+                        resumeBtn.disabled = true;
+                        stopBtn.disabled = true;
+                        break;
+                }
+            }
+
+            startSimulatedStatsUpdates() {
+                this.simulatedStatsInterval = setInterval(() => {
+                    // Simulate growing file size
+                    this.simulatedStats.size += Math.random() * 1024 * 1024; // Random MB growth
+
+                    // Simulate bandwidth fluctuation
+                    this.simulatedStats.bandwidthUsage += (Math.random() - 0.5) * 2;
+                    this.simulatedStats.bandwidthUsage = Math.max(0, Math.min(15, this.simulatedStats.bandwidthUsage));
+
+                    this.recordingIndicators.updateRecordingStats(this.simulatedStats);
+                }, 2000);
+            }
+
+            stopSimulatedStatsUpdates() {
+                if (this.simulatedStatsInterval) {
+                    clearInterval(this.simulatedStatsInterval);
+                    this.simulatedStatsInterval = null;
+                }
+            }
+
+            startStatsUpdates() {
+                this.statsUpdateInterval = setInterval(() => {
+                    this.updateStatsDisplay();
+                }, 1000);
+            }
+
+            updateStatsDisplay() {
+                if (!this.recordingIndicators) return;
+
+                const status = this.recordingIndicators.getRecordingStatus();
+
+                // Update status indicators
+                document.getElementById('recording-status-stat').textContent =
+                    status.isRecording ? (status.isPaused ? 'Paused' : 'Recording') : 'Ready';
+
+                document.getElementById('recording-duration-stat').textContent =
+                    this.recordingIndicators.formatDuration(status.duration);
+
+                document.getElementById('recording-quality-stat').textContent =
+                    status.quality || 'High';
+
+                document.getElementById('recording-size-stat').textContent =
+                    this.recordingIndicators.formatFileSize(status.size);
+
+                const storagePercent = status.availableStorage > 0 ?
+                    ((status.size / status.availableStorage) * 100).toFixed(1) : 0;
+                document.getElementById('storage-usage-stat').textContent = `${storagePercent}%`;
+
+                document.getElementById('bandwidth-usage-stat').textContent =
+                    `${status.bandwidthUsage.toFixed(1)} Mbps`;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--danger-color);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(errorDiv);
+
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+
+            destroy() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+
+                if (this.statsUpdateInterval) {
+                    clearInterval(this.statsUpdateInterval);
+                }
+
+                this.stopSimulatedStatsUpdates();
+
+                if (this.recordingIndicators) {
+                    this.recordingIndicators.destroy();
+                }
+
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+            }
+        }
+
+        // Initialize demo when page loads
+        let demoApp;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                demoApp = new RecordingIndicatorsDemo();
+            });
+        } else {
+            demoApp = new RecordingIndicatorsDemo();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (demoApp) {
+                demoApp.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
