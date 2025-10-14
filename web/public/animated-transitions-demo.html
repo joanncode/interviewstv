@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Transitions & Micro-Interactions - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .demo-sidebar {
+            width: 320px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .demo-main {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .demo-header {
+            margin-bottom: 20px;
+        }
+        
+        .demo-header h2 {
+            color: #FF0000;
+            margin-bottom: 8px;
+            font-size: 1.4rem;
+        }
+        
+        .demo-description {
+            color: #cccccc;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .demo-section {
+            margin-bottom: 24px;
+        }
+        
+        .demo-section h4 {
+            color: #FF0000;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        
+        .demo-btn:hover {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-btn.active {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-info {
+            background: rgba(23, 162, 184, 0.1);
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+        }
+        
+        .demo-info h5 {
+            color: #17a2b8;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .feature-list li {
+            padding: 3px 0;
+            color: #cccccc;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .feature-list li i {
+            color: #28a745;
+            width: 10px;
+        }
+        
+        /* Demo Area Styles */
+        .demo-area {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .showcase-card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .showcase-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(255, 0, 0, 0.2);
+        }
+        
+        .showcase-card h5 {
+            color: #FF0000;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .showcase-card p {
+            color: #cccccc;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+        
+        .showcase-card .btn {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        
+        /* Animation Demo Elements */
+        .demo-element {
+            background: #3a3a3a;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .demo-element:hover {
+            border-color: #FF0000;
+        }
+        
+        .participant-demo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border: 2px solid transparent;
+        }
+        
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #FF0000, #cc0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .participant-status {
+            font-size: 0.8rem;
+            color: #cccccc;
+        }
+        
+        .volume-indicator {
+            width: 4px;
+            height: 30px;
+            background: #444;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .volume-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #28a745;
+            height: 2px;
+            transition: height 0.1s ease;
+        }
+        
+        .quality-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-left: 8px;
+        }
+        
+        .chat-message {
+            background: #2a2a2a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 3px solid #FF0000;
+        }
+        
+        .message-author {
+            font-weight: 600;
+            color: #FF0000;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        
+        .message-content {
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+        
+        .notification-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 300px;
+            z-index: 1000;
+            transform: translateX(100%);
+        }
+        
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #FF0000;
+        }
+        
+        .notification-message {
+            color: #cccccc;
+            font-size: 0.85rem;
+        }
+        
+        .modal-demo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .modal-content-demo {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-content-demo h3 {
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content-demo p {
+            color: #cccccc;
+            margin-bottom: 20px;
+        }
+        
+        .progress-demo {
+            background: #444;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-bar-demo {
+            background: linear-gradient(90deg, #FF0000, #cc0000);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .toast-demo {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            transform: translateY(100%);
+            z-index: 1000;
+        }
+        
+        .control-panel-demo {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-icon {
+            color: #FF0000;
+            font-size: 1.2rem;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+        
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: #444;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #FF0000;
+        }
+        
+        .toggle-handle {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active .toggle-handle {
+            transform: translateX(20px);
+        }
+        
+        .demo-stats {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(26, 26, 26, 0.9);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #cccccc;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+            
+            .demo-showcase {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Demo Sidebar -->
+        <div class="demo-sidebar">
+            <div class="demo-header">
+                <h2><i class="fas fa-magic me-2"></i>Animation Demo</h2>
+                <div class="demo-description">
+                    Professional animated transitions and micro-interactions for enhanced user experience in streaming interfaces.
+                </div>
+            </div>
+            
+            <div class="demo-info">
+                <h5><i class="fas fa-sparkles me-1"></i>Animation Features</h5>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>60+ Animation Presets</li>
+                    <li><i class="fas fa-check"></i>Performance Optimization</li>
+                    <li><i class="fas fa-check"></i>Micro-Interactions</li>
+                    <li><i class="fas fa-check"></i>Layout Transitions</li>
+                    <li><i class="fas fa-check"></i>Streaming-Specific Animations</li>
+                    <li><i class="fas fa-check"></i>Accessibility Support</li>
+                    <li><i class="fas fa-check"></i>Mobile Responsive</li>
+                    <li><i class="fas fa-check"></i>Web Animations API</li>
+                </ul>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-play"></i>Basic Animations</h4>
+                <button class="demo-btn" onclick="demoFadeIn()">
+                    <i class="fas fa-eye"></i>Fade In
+                </button>
+                <button class="demo-btn" onclick="demoSlideIn()">
+                    <i class="fas fa-arrow-right"></i>Slide In
+                </button>
+                <button class="demo-btn" onclick="demoScaleIn()">
+                    <i class="fas fa-expand"></i>Scale In
+                </button>
+                <button class="demo-btn" onclick="demoBounceIn()">
+                    <i class="fas fa-basketball-ball"></i>Bounce In
+                </button>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-mouse-pointer"></i>Micro-Interactions</h4>
+                <button class="demo-btn" onclick="demoButtonPress()">
+                    <i class="fas fa-hand-pointer"></i>Button Press
+                </button>
+                <button class="demo-btn" onclick="demoHoverEffect()">
+                    <i class="fas fa-mouse"></i>Hover Effects
+                </button>
+                <button class="demo-btn" onclick="demoPulse()">
+                    <i class="fas fa-heartbeat"></i>Pulse Effect
+                </button>
+                <button class="demo-btn" onclick="demoShake()">
+                    <i class="fas fa-exclamation-triangle"></i>Shake Alert
+                </button>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-video"></i>Streaming Animations</h4>
+                <button class="demo-btn" onclick="demoParticipantJoin()">
+                    <i class="fas fa-user-plus"></i>Participant Join
+                </button>
+                <button class="demo-btn" onclick="demoChatMessage()">
+                    <i class="fas fa-comment"></i>Chat Message
+                </button>
+                <button class="demo-btn" onclick="demoVolumeLevel()">
+                    <i class="fas fa-volume-up"></i>Volume Indicator
+                </button>
+                <button class="demo-btn" onclick="demoQualityChange()">
+                    <i class="fas fa-signal"></i>Quality Change
+                </button>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-cogs"></i>Interface Elements</h4>
+                <button class="demo-btn" onclick="demoNotification()">
+                    <i class="fas fa-bell"></i>Notification
+                </button>
+                <button class="demo-btn" onclick="demoModal()">
+                    <i class="fas fa-window-maximize"></i>Modal Dialog
+                </button>
+                <button class="demo-btn" onclick="demoProgress()">
+                    <i class="fas fa-tasks"></i>Progress Bar
+                </button>
+                <button class="demo-btn" onclick="demoToast()">
+                    <i class="fas fa-info-circle"></i>Toast Message
+                </button>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-sliders-h"></i>Control Panels</h4>
+                <button class="demo-btn" onclick="demoPanelTransition()">
+                    <i class="fas fa-exchange-alt"></i>Panel Transition
+                </button>
+                <button class="demo-btn" onclick="demoSettingsSave()">
+                    <i class="fas fa-save"></i>Settings Save
+                </button>
+                <button class="demo-btn" onclick="demoToggleSwitch()">
+                    <i class="fas fa-toggle-on"></i>Toggle Switch
+                </button>
+            </div>
+            
+            <div class="demo-section">
+                <h4><i class="fas fa-tools"></i>Demo Controls</h4>
+                <button class="demo-btn" onclick="resetDemo()">
+                    <i class="fas fa-undo"></i>Reset Demo
+                </button>
+                <button class="demo-btn" onclick="togglePerformanceMode()">
+                    <i class="fas fa-tachometer-alt"></i>Performance Mode
+                </button>
+                <button class="demo-btn" onclick="showAnimationStats()">
+                    <i class="fas fa-chart-bar"></i>Animation Stats
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Demo Area -->
+        <div class="demo-main">
+            <div class="demo-area" id="demo-area">
+                <h3 style="color: #FF0000; margin-bottom: 20px;">
+                    <i class="fas fa-magic me-2"></i>Animated Transitions & Micro-Interactions Showcase
+                </h3>
+                
+                <div class="demo-showcase">
+                    <div class="showcase-card" data-animate-in="fadeIn">
+                        <h5>Entrance Animations</h5>
+                        <p>Smooth entrance effects for UI elements</p>
+                        <button class="btn" onclick="demoEntranceAnimations()">Demo</button>
+                    </div>
+                    
+                    <div class="showcase-card" data-animate-in="slideInUp" data-animate-delay="100">
+                        <h5>Micro-Interactions</h5>
+                        <p>Subtle feedback for user interactions</p>
+                        <button class="btn" onclick="demoMicroInteractions()">Demo</button>
+                    </div>
+                    
+                    <div class="showcase-card" data-animate-in="slideInUp" data-animate-delay="200">
+                        <h5>Layout Transitions</h5>
+                        <p>Smooth transitions between layouts</p>
+                        <button class="btn" onclick="demoLayoutTransitions()">Demo</button>
+                    </div>
+                    
+                    <div class="showcase-card" data-animate-in="slideInUp" data-animate-delay="300">
+                        <h5>Performance Optimized</h5>
+                        <p>60fps animations with smart optimization</p>
+                        <button class="btn" onclick="demoPerformanceFeatures()">Demo</button>
+                    </div>
+                </div>
+                
+                <!-- Demo Elements Container -->
+                <div id="demo-elements-container">
+                    <!-- Dynamic demo elements will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Demo Elements (Hidden by default) -->
+    <div class="notification-demo" id="notification-demo">
+        <div class="notification-header">
+            <i class="fas fa-info-circle" style="color: #17a2b8;"></i>
+            <span class="notification-title">Stream Notification</span>
+        </div>
+        <div class="notification-message">
+            Your stream quality has been automatically optimized for better performance.
+        </div>
+    </div>
+    
+    <div class="modal-demo" id="modal-demo">
+        <div class="modal-content-demo">
+            <h3><i class="fas fa-cog me-2"></i>Settings</h3>
+            <p>This is a demo modal with smooth entrance and exit animations.</p>
+            <button class="btn btn-primary me-2" onclick="closeModal()">Close</button>
+            <button class="btn btn-outline-light" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+    
+    <div class="toast-demo" id="toast-demo">
+        <i class="fas fa-check-circle me-2"></i>
+        Settings saved successfully!
+    </div>
+    
+    <div class="demo-stats" id="demo-stats">
+        <div style="color: #FF0000; font-weight: 600; margin-bottom: 8px;">
+            <i class="fas fa-chart-line me-1"></i>Animation Stats
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Active Animations:</span>
+            <span class="stat-value" id="active-animations">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Frame Rate:</span>
+            <span class="stat-value" id="frame-rate">60 fps</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Performance Mode:</span>
+            <span class="stat-value" id="performance-mode">Auto</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Total Animations:</span>
+            <span class="stat-value" id="total-animations">0</span>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Animated Transitions -->
+    <script src="../src/components/AnimatedTransitions.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let animationSystem = null;
+        let demoStats = {
+            activeAnimations: 0,
+            totalAnimations: 0,
+            frameRate: 60,
+            performanceMode: 'auto'
+        };
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAnimationSystem();
+            updateDemoStats();
+            
+            // Auto-animate showcase cards on load
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.showcase-card[data-animate-in]');
+                cards.forEach(card => {
+                    animationSystem.observeElement(card);
+                });
+            }, 500);
+        });
+        
+        function initializeAnimationSystem() {
+            const container = document.getElementById('demo-area');
+            
+            if (typeof AnimatedTransitions !== 'undefined') {
+                animationSystem = new AnimatedTransitions({
+                    container: container,
+                    enableAnimations: true,
+                    performanceMode: 'auto',
+                    onAnimationStart: () => {
+                        demoStats.activeAnimations++;
+                        demoStats.totalAnimations++;
+                        updateDemoStats();
+                    },
+                    onAnimationEnd: () => {
+                        demoStats.activeAnimations = Math.max(0, demoStats.activeAnimations - 1);
+                        updateDemoStats();
+                    }
+                });
+                
+                // Monitor performance
+                setInterval(() => {
+                    const metrics = animationSystem.getPerformanceMetrics();
+                    demoStats.frameRate = metrics.frameRate;
+                    updateDemoStats();
+                }, 1000);
+            }
+        }
+        
+        function updateDemoStats() {
+            document.getElementById('active-animations').textContent = demoStats.activeAnimations;
+            document.getElementById('frame-rate').textContent = demoStats.frameRate + ' fps';
+            document.getElementById('performance-mode').textContent = demoStats.performanceMode;
+            document.getElementById('total-animations').textContent = demoStats.totalAnimations;
+        }
+        
+        // Basic Animation Demos
+        function demoFadeIn() {
+            const element = createDemoElement('Fade In Demo', 'fas fa-eye');
+            animationSystem.animate(element, 'fadeIn');
+        }
+
+        function demoSlideIn() {
+            const element = createDemoElement('Slide In Demo', 'fas fa-arrow-right');
+            animationSystem.animate(element, 'slideInRight');
+        }
+
+        function demoScaleIn() {
+            const element = createDemoElement('Scale In Demo', 'fas fa-expand');
+            animationSystem.animate(element, 'scaleIn');
+        }
+
+        function demoBounceIn() {
+            const element = createDemoElement('Bounce In Demo', 'fas fa-basketball-ball');
+            animationSystem.animate(element, 'bounceIn');
+        }
+
+        // Micro-Interaction Demos
+        function demoButtonPress() {
+            const button = document.createElement('button');
+            button.className = 'btn btn-primary demo-element';
+            button.innerHTML = '<i class="fas fa-hand-pointer me-2"></i>Press Me!';
+            button.onclick = () => animationSystem.animateButtonPress(button);
+
+            addDemoElement(button);
+
+            // Auto-trigger after a moment
+            setTimeout(() => {
+                animationSystem.animateButtonPress(button);
+            }, 500);
+        }
+
+        function demoHoverEffect() {
+            const card = document.createElement('div');
+            card.className = 'showcase-card demo-element';
+            card.innerHTML = `
+                <h5>Hover Me!</h5>
+                <p>Move your mouse over this card</p>
+            `;
+
+            card.addEventListener('mouseenter', () => {
+                animationSystem.animateHover(card, 'enter');
+            });
+
+            card.addEventListener('mouseleave', () => {
+                animationSystem.animateHover(card, 'leave');
+            });
+
+            addDemoElement(card);
+        }
+
+        function demoPulse() {
+            const element = createDemoElement('Pulse Demo', 'fas fa-heartbeat');
+            animationSystem.animate(element, 'pulse', { iterations: 3 });
+        }
+
+        function demoShake() {
+            const element = createDemoElement('Shake Alert!', 'fas fa-exclamation-triangle');
+            element.style.background = '#dc3545';
+            animationSystem.animate(element, 'shake', { iterations: 3 });
+        }
+
+        // Streaming Animation Demos
+        function demoParticipantJoin() {
+            const participant = document.createElement('div');
+            participant.className = 'participant-demo';
+            participant.innerHTML = `
+                <div class="participant-avatar">JD</div>
+                <div class="participant-info">
+                    <div class="participant-name">John Doe</div>
+                    <div class="participant-status">Just joined</div>
+                </div>
+                <div class="volume-indicator">
+                    <div class="volume-level"></div>
+                </div>
+                <div class="quality-indicator"></div>
+            `;
+
+            addDemoElement(participant);
+            animationSystem.animateParticipantChange(participant, 'join');
+        }
+
+        function demoChatMessage() {
+            const message = document.createElement('div');
+            message.className = 'chat-message';
+            message.innerHTML = `
+                <div class="message-author">Demo User</div>
+                <div class="message-content">This is a demo chat message with smooth entrance animation!</div>
+            `;
+
+            addDemoElement(message);
+            animationSystem.animateChatMessage(message, 'normal');
+        }
+
+        function demoVolumeLevel() {
+            const container = document.createElement('div');
+            container.className = 'demo-element';
+            container.innerHTML = `
+                <h6 style="color: #FF0000; margin-bottom: 10px;">Volume Level Demo</h6>
+                <div style="display: flex; gap: 4px; align-items: end; height: 40px;">
+                    ${Array.from({length: 10}, (_, i) => `
+                        <div class="volume-indicator" style="height: 40px;">
+                            <div class="volume-level" id="volume-bar-${i}"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            addDemoElement(container);
+
+            // Animate volume levels
+            let level = 0;
+            const interval = setInterval(() => {
+                for (let i = 0; i < 10; i++) {
+                    const bar = document.getElementById(`volume-bar-${i}`);
+                    if (bar) {
+                        const barLevel = Math.max(0, Math.min(1, (Math.sin(Date.now() * 0.01 + i) + 1) / 2));
+                        animationSystem.animateVolumeLevel(bar, barLevel);
+                    }
+                }
+                level++;
+                if (level > 20) clearInterval(interval);
+            }, 200);
+        }
+
+        function demoQualityChange() {
+            const indicator = document.createElement('div');
+            indicator.className = 'demo-element';
+            indicator.innerHTML = `
+                <h6 style="color: #FF0000; margin-bottom: 10px;">Connection Quality</h6>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>Quality:</span>
+                    <div class="quality-indicator" id="quality-demo" style="width: 20px; height: 20px;"></div>
+                    <span id="quality-text">Excellent</span>
+                </div>
+            `;
+
+            addDemoElement(indicator);
+
+            const qualities = ['excellent', 'good', 'fair', 'poor', 'very-poor'];
+            const qualityElement = document.getElementById('quality-demo');
+            const qualityText = document.getElementById('quality-text');
+
+            let currentQuality = 0;
+            const interval = setInterval(() => {
+                const quality = qualities[currentQuality];
+                const previousQuality = qualities[currentQuality - 1] || 'excellent';
+
+                animationSystem.animateConnectionQuality(qualityElement, quality, previousQuality);
+                qualityText.textContent = quality.charAt(0).toUpperCase() + quality.slice(1);
+
+                currentQuality = (currentQuality + 1) % qualities.length;
+                if (currentQuality === 0) clearInterval(interval);
+            }, 1000);
+        }
+
+        // Interface Element Demos
+        function demoNotification() {
+            const notification = document.getElementById('notification-demo');
+            animationSystem.animateNotification(notification, 'info');
+
+            setTimeout(() => {
+                animationSystem.animate(notification, 'slideOutRight');
+            }, 3000);
+        }
+
+        function demoModal() {
+            const modal = document.getElementById('modal-demo');
+            animationSystem.animateModal(modal, 'open');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-demo');
+            animationSystem.animateModal(modal, 'close');
+        }
+
+        function demoProgress() {
+            const container = document.createElement('div');
+            container.className = 'demo-element';
+            container.innerHTML = `
+                <h6 style="color: #FF0000; margin-bottom: 10px;">Progress Demo</h6>
+                <div class="progress-demo">
+                    <div class="progress-bar-demo" id="progress-bar-demo"></div>
+                </div>
+                <div style="text-align: center; margin-top: 10px; color: #cccccc;">
+                    <span id="progress-text">0%</span>
+                </div>
+            `;
+
+            addDemoElement(container);
+
+            const progressBar = document.getElementById('progress-bar-demo');
+            const progressText = document.getElementById('progress-text');
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                const newProgress = Math.min(100, progress + 10);
+                animationSystem.animateProgress(progressBar, progress, newProgress, 300);
+                progressText.textContent = newProgress + '%';
+                progress = newProgress;
+
+                if (progress >= 100) clearInterval(interval);
+            }, 400);
+        }
+
+        function demoToast() {
+            const toast = document.getElementById('toast-demo');
+            animationSystem.animateToast(toast, 'show');
+
+            setTimeout(() => {
+                animationSystem.animateToast(toast, 'hide');
+            }, 3000);
+        }
+
+        // Control Panel Demos
+        function demoPanelTransition() {
+            const panel1 = document.createElement('div');
+            panel1.className = 'control-panel-demo';
+            panel1.innerHTML = `
+                <div class="panel-header">
+                    <i class="panel-icon fas fa-cog"></i>
+                    <span class="panel-title">Settings Panel</span>
+                </div>
+                <div class="settings-row">
+                    <span>Enable notifications</span>
+                    <div class="toggle-switch active">
+                        <div class="toggle-handle"></div>
+                    </div>
+                </div>
+            `;
+
+            const panel2 = document.createElement('div');
+            panel2.className = 'control-panel-demo';
+            panel2.style.display = 'none';
+            panel2.innerHTML = `
+                <div class="panel-header">
+                    <i class="panel-icon fas fa-video"></i>
+                    <span class="panel-title">Video Panel</span>
+                </div>
+                <div class="settings-row">
+                    <span>Video quality</span>
+                    <select style="background: #444; border: 1px solid #666; color: white; padding: 4px;">
+                        <option>720p HD</option>
+                        <option>1080p FHD</option>
+                    </select>
+                </div>
+            `;
+
+            addDemoElement(panel1);
+            addDemoElement(panel2);
+
+            setTimeout(() => {
+                panel2.style.display = 'block';
+                animationSystem.animatePanelTransition(panel1, panel2, 'forward');
+            }, 1000);
+        }
+
+        function demoSettingsSave() {
+            const element = createDemoElement('Settings Panel', 'fas fa-cog');
+
+            setTimeout(() => {
+                animationSystem.animateSettingsSave(element, true);
+            }, 500);
+        }
+
+        function demoToggleSwitch() {
+            const container = document.createElement('div');
+            container.className = 'demo-element';
+            container.innerHTML = `
+                <h6 style="color: #FF0000; margin-bottom: 15px;">Toggle Switch Demo</h6>
+                <div class="settings-row">
+                    <span>Enable feature</span>
+                    <div class="toggle-switch" id="demo-toggle" onclick="toggleDemoSwitch()">
+                        <div class="toggle-handle"></div>
+                    </div>
+                </div>
+            `;
+
+            addDemoElement(container);
+        }
+
+        function toggleDemoSwitch() {
+            const toggle = document.getElementById('demo-toggle');
+            const isActive = toggle.classList.contains('active');
+
+            if (isActive) {
+                toggle.classList.remove('active');
+            } else {
+                toggle.classList.add('active');
+            }
+
+            animationSystem.animate(toggle, 'pulse', { duration: 200 });
+        }
+
+        // Showcase Demos
+        function demoEntranceAnimations() {
+            clearDemoArea();
+
+            const animations = ['fadeIn', 'slideInUp', 'slideInDown', 'slideInLeft', 'slideInRight', 'scaleIn', 'bounceIn'];
+
+            animations.forEach((animation, index) => {
+                setTimeout(() => {
+                    const element = createDemoElement(`${animation} Demo`, 'fas fa-star');
+                    animationSystem.animate(element, animation);
+                }, index * 200);
+            });
+        }
+
+        function demoMicroInteractions() {
+            clearDemoArea();
+
+            // Create interactive elements
+            const button = document.createElement('button');
+            button.className = 'btn btn-primary demo-element';
+            button.innerHTML = '<i class="fas fa-hand-pointer me-2"></i>Click Me!';
+            button.onclick = () => animationSystem.animateButtonPress(button);
+
+            const card = document.createElement('div');
+            card.className = 'showcase-card demo-element';
+            card.innerHTML = '<h5>Hover Me!</h5><p>Interactive hover effects</p>';
+            card.addEventListener('mouseenter', () => animationSystem.animateHover(card, 'enter'));
+            card.addEventListener('mouseleave', () => animationSystem.animateHover(card, 'leave'));
+
+            addDemoElement(button);
+            addDemoElement(card);
+        }
+
+        function demoLayoutTransitions() {
+            clearDemoArea();
+
+            const container = document.createElement('div');
+            container.className = 'demo-element';
+            container.style.cssText = 'display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; gap: 10px; height: 200px; width: 300px;';
+            container.innerHTML = `
+                <div style="background: #FF0000; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                    Layout Demo
+                </div>
+            `;
+
+            addDemoElement(container);
+
+            const layouts = [
+                { columns: '1fr', rows: '1fr' },
+                { columns: 'repeat(2, 1fr)', rows: '1fr' },
+                { columns: 'repeat(2, 1fr)', rows: 'repeat(2, 1fr)' },
+                { columns: '1fr', rows: '1fr' }
+            ];
+
+            let currentLayout = 0;
+            const interval = setInterval(() => {
+                currentLayout = (currentLayout + 1) % layouts.length;
+                const layout = layouts[currentLayout];
+
+                animationSystem.animate(container, {
+                    gridTemplateColumns: [container.style.gridTemplateColumns, layout.columns],
+                    gridTemplateRows: [container.style.gridTemplateRows, layout.rows]
+                }, {
+                    duration: 500,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                });
+
+                if (currentLayout === 0) clearInterval(interval);
+            }, 1000);
+        }
+
+        function demoPerformanceFeatures() {
+            clearDemoArea();
+
+            // Create many elements to test performance
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const element = createDemoElement(`Element ${i + 1}`, 'fas fa-rocket');
+                    element.style.display = 'inline-block';
+                    element.style.margin = '5px';
+                    element.style.width = '80px';
+                    element.style.height = '80px';
+                    element.style.fontSize = '0.8rem';
+
+                    animationSystem.animate(element, 'bounceIn', {
+                        delay: i * 50
+                    });
+                }, i * 100);
+            }
+        }
+
+        // Utility functions
+        function createDemoElement(text, icon) {
+            const element = document.createElement('div');
+            element.className = 'demo-element';
+            element.innerHTML = `<i class="${icon} me-2"></i>${text}`;
+
+            addDemoElement(element);
+            return element;
+        }
+
+        function addDemoElement(element) {
+            const container = document.getElementById('demo-elements-container');
+            container.appendChild(element);
+
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (element.parentNode) {
+                    animationSystem.animate(element, 'fadeOut').then(() => {
+                        element.remove();
+                    });
+                }
+            }, 10000);
+        }
+
+        function clearDemoArea() {
+            const container = document.getElementById('demo-elements-container');
+            const elements = container.children;
+
+            Array.from(elements).forEach((element, index) => {
+                setTimeout(() => {
+                    animationSystem.animate(element, 'fadeOut').then(() => {
+                        element.remove();
+                    });
+                }, index * 50);
+            });
+        }
+
+        function resetDemo() {
+            clearDemoArea();
+            animationSystem.cancelAllAnimations();
+            demoStats.activeAnimations = 0;
+            updateDemoStats();
+        }
+
+        function togglePerformanceMode() {
+            const modes = ['auto', 'high', 'low'];
+            const currentIndex = modes.indexOf(demoStats.performanceMode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+
+            demoStats.performanceMode = modes[nextIndex];
+
+            if (demoStats.performanceMode === 'high') {
+                animationSystem.enableHighPerformanceMode();
+            } else if (demoStats.performanceMode === 'low') {
+                animationSystem.enableLowPerformanceMode();
+            }
+
+            updateDemoStats();
+        }
+
+        function showAnimationStats() {
+            const stats = animationSystem.getPerformanceMetrics();
+
+            const statsModal = document.createElement('div');
+            statsModal.className = 'modal-demo';
+            statsModal.style.display = 'flex';
+            statsModal.innerHTML = `
+                <div class="modal-content-demo">
+                    <h3><i class="fas fa-chart-bar me-2"></i>Animation Statistics</h3>
+                    <div style="text-align: left; margin: 20px 0;">
+                        <p><strong>Frame Rate:</strong> ${stats.frameRate} fps</p>
+                        <p><strong>Active Animations:</strong> ${demoStats.activeAnimations}</p>
+                        <p><strong>Total Animations:</strong> ${demoStats.totalAnimations}</p>
+                        <p><strong>Performance Mode:</strong> ${demoStats.performanceMode}</p>
+                        <p><strong>Animation Count:</strong> ${stats.animationCount}</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="this.closest('.modal-demo').remove()">Close</button>
+                </div>
+            `;
+
+            document.body.appendChild(statsModal);
+            animationSystem.animateModal(statsModal, 'open');
+        }
+    </script>
+</body>
+</html>
