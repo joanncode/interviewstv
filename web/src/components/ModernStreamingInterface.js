@@ -66,6 +66,8 @@ class ModernStreamingInterface {
         this.screenSharingSystem = null;
         this.recordingControlsSystem = null;
         this.videoEffectsSystem = null;
+        this.cameraSwitchingSystem = null;
+        this.videoRecordingIndicators = null;
 
         // Virtual backgrounds system
         this.virtualBackgrounds = null;
@@ -196,6 +198,8 @@ class ModernStreamingInterface {
             this.initializeScreenSharingSystem();
             this.initializeRecordingControlsSystem();
             this.initializeVideoEffectsSystem();
+            this.initializeCameraSwitchingSystem();
+            this.initializeVideoRecordingIndicators();
             this.initializeVirtualBackgrounds();
         }
 
@@ -849,6 +853,168 @@ class ModernStreamingInterface {
             console.log('✅ Video effects system initialized');
         } else {
             console.warn('VideoEffectsSystem not available');
+        }
+    }
+
+    /**
+     * Initialize camera switching system
+     */
+    initializeCameraSwitchingSystem() {
+        if (typeof CameraSwitchingSystem !== 'undefined') {
+            const switchingContainer = document.createElement('div');
+            switchingContainer.className = 'camera-switching-container';
+            this.container.appendChild(switchingContainer);
+
+            this.cameraSwitchingSystem = new CameraSwitchingSystem(switchingContainer, {
+                enableAutoDetection: true,
+                enableHotSwapping: true,
+                enableDeviceLabeling: true,
+                enableQualityPresets: true,
+                enableDevicePreview: true,
+                enableDeviceStatus: true,
+                maxCameras: 8,
+                defaultQuality: 'high',
+                autoSwitchOnDisconnect: true,
+                enableDeviceMemory: true,
+                enablePermissionHandling: true,
+                enableErrorRecovery: true,
+                accessibilitySystem: this.accessibilitySystem,
+                themeSystem: this.themeSystem,
+                responsiveSystem: this.responsiveSystem
+            });
+
+            // Setup camera switching events
+            switchingContainer.addEventListener('camera-switched', (e) => {
+                console.log('Camera switched in streaming interface:', e.detail);
+
+                // Update local stream with new camera
+                if (e.detail.camera && e.detail.camera.stream) {
+                    this.localStream = e.detail.camera.stream;
+                    this.updateVideoDisplay();
+                }
+
+                // Log camera switch event
+                this.logCameraSwitchingEvent('camera-switched', {
+                    deviceId: e.detail.deviceId,
+                    cameraLabel: e.detail.camera.label,
+                    quality: e.detail.quality,
+                    switchTime: e.detail.switchTime
+                });
+
+                // Emit streaming interface event
+                this.emitStreamingEvent('camera-switched', e.detail);
+            });
+
+            switchingContainer.addEventListener('devices-enumerated', (e) => {
+                console.log('Camera devices enumerated:', e.detail);
+
+                this.logCameraSwitchingEvent('devices-enumerated', {
+                    deviceCount: e.detail.deviceCount
+                });
+            });
+
+            switchingContainer.addEventListener('camera-error', (e) => {
+                console.error('Camera switching error:', e.detail);
+
+                this.logCameraSwitchingEvent('camera-error', {
+                    deviceId: e.detail.deviceId,
+                    error: e.detail.error,
+                    errorType: e.detail.errorType
+                });
+
+                // Show error notification
+                this.showNotification('Camera Error', e.detail.error, 'error');
+            });
+
+            console.log('✅ Camera switching system initialized');
+        } else {
+            console.warn('CameraSwitchingSystem not available');
+        }
+    }
+
+    /**
+     * Initialize video recording indicators
+     */
+    initializeVideoRecordingIndicators() {
+        if (typeof VideoRecordingIndicators !== 'undefined') {
+            const indicatorsContainer = document.createElement('div');
+            indicatorsContainer.className = 'video-recording-indicators-container';
+            this.container.appendChild(indicatorsContainer);
+
+            this.videoRecordingIndicators = new VideoRecordingIndicators(indicatorsContainer, {
+                enableFloatingIndicator: true,
+                enableCornerIndicator: true,
+                enableStatusBar: true,
+                enableTimerDisplay: false,
+                enableQualityIndicator: true,
+                enableStorageIndicator: true,
+                enableBandwidthIndicator: true,
+                enableErrorIndicator: true,
+                enablePulseAnimation: true,
+                enableSoundIndicator: false,
+                indicatorPosition: 'top-right',
+                timerFormat: 'hh:mm:ss',
+                updateInterval: 1000,
+                autoHideDelay: 5000,
+                enableAccessibility: true,
+                enableMobileOptimization: true,
+                accessibilitySystem: this.accessibilitySystem,
+                themeSystem: this.themeSystem,
+                responsiveSystem: this.responsiveSystem
+            });
+
+            // Setup recording indicators events
+            indicatorsContainer.addEventListener('recording-started', (e) => {
+                console.log('Recording indicators started:', e.detail);
+
+                this.logRecordingIndicatorEvent('recording-started', {
+                    startTime: e.detail.startTime,
+                    quality: e.detail.quality,
+                    format: e.detail.format
+                });
+
+                // Emit streaming interface event
+                this.emitStreamingEvent('recording-indicators-started', e.detail);
+            });
+
+            indicatorsContainer.addEventListener('recording-stopped', (e) => {
+                console.log('Recording indicators stopped:', e.detail);
+
+                this.logRecordingIndicatorEvent('recording-stopped', {
+                    duration: e.detail.duration,
+                    size: e.detail.size,
+                    quality: e.detail.quality,
+                    format: e.detail.format
+                });
+
+                // Emit streaming interface event
+                this.emitStreamingEvent('recording-indicators-stopped', e.detail);
+            });
+
+            indicatorsContainer.addEventListener('recording-error', (e) => {
+                console.error('Recording indicators error:', e.detail);
+
+                this.logRecordingIndicatorEvent('recording-error', {
+                    error: e.detail.error,
+                    timestamp: e.detail.timestamp
+                });
+
+                // Show error notification
+                this.showNotification('Recording Error', e.detail.error, 'error');
+            });
+
+            indicatorsContainer.addEventListener('indicator-clicked', (e) => {
+                console.log('Recording indicator clicked:', e.detail);
+
+                this.logRecordingIndicatorEvent('indicator-clicked', {
+                    indicator: e.detail.indicator,
+                    timestamp: e.detail.timestamp
+                });
+            });
+
+            console.log('✅ Video recording indicators initialized');
+        } else {
+            console.warn('VideoRecordingIndicators not available');
         }
     }
 
@@ -4791,6 +4957,565 @@ class ModernStreamingInterface {
         const events = JSON.parse(sessionStorage.getItem('video_effects_events') || '[]');
         events.push(event);
         sessionStorage.setItem('video_effects_events', JSON.stringify(events.slice(-100))); // Keep last 100 events
+    }
+
+    // ==========================================
+    // Camera Switching API Methods
+    // ==========================================
+
+    /**
+     * Enumerate available cameras
+     */
+    async enumerateCameras() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return [];
+        }
+
+        try {
+            await this.cameraSwitchingSystem.enumerateCameras();
+            return this.cameraSwitchingSystem.getAvailableCameras();
+        } catch (error) {
+            console.error('Failed to enumerate cameras:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Switch to specific camera
+     */
+    async switchToCamera(deviceId, quality = null) {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return null;
+        }
+
+        try {
+            const stream = await this.cameraSwitchingSystem.switchToCamera(deviceId, quality);
+
+            this.logCameraSwitchingEvent('switch-camera', {
+                deviceId,
+                quality: quality || this.cameraSwitchingSystem.currentQuality
+            });
+
+            return stream;
+        } catch (error) {
+            console.error('Failed to switch camera:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Switch to next available camera
+     */
+    async switchToNextCamera() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        try {
+            await this.cameraSwitchingSystem.switchToNextCamera();
+
+            this.logCameraSwitchingEvent('switch-next-camera', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to switch to next camera:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Switch to previous available camera
+     */
+    async switchToPreviousCamera() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        try {
+            await this.cameraSwitchingSystem.switchToPreviousCamera();
+
+            this.logCameraSwitchingEvent('switch-previous-camera', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to switch to previous camera:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Change camera quality
+     */
+    async changeCameraQuality(quality) {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        try {
+            await this.cameraSwitchingSystem.changeCameraQuality(quality);
+
+            this.logCameraSwitchingEvent('change-quality', {
+                quality,
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to change camera quality:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get current camera
+     */
+    getCurrentCamera() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return null;
+        }
+
+        return this.cameraSwitchingSystem.getCurrentCamera();
+    }
+
+    /**
+     * Get current camera stream
+     */
+    getCurrentCameraStream() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return null;
+        }
+
+        return this.cameraSwitchingSystem.getCurrentStream();
+    }
+
+    /**
+     * Get available cameras
+     */
+    getAvailableCameras() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return [];
+        }
+
+        return this.cameraSwitchingSystem.getAvailableCameras();
+    }
+
+    /**
+     * Get all cameras (including unavailable)
+     */
+    getAllCameras() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return [];
+        }
+
+        return this.cameraSwitchingSystem.getAllCameras();
+    }
+
+    /**
+     * Set camera label
+     */
+    setCameraLabel(deviceId, label) {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        this.cameraSwitchingSystem.setCameraLabel(deviceId, label);
+
+        this.logCameraSwitchingEvent('set-camera-label', {
+            deviceId,
+            label
+        });
+    }
+
+    /**
+     * Get camera switching statistics
+     */
+    getCameraSwitchingStats() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return null;
+        }
+
+        return this.cameraSwitchingSystem.getPerformanceStats();
+    }
+
+    /**
+     * Get camera system status
+     */
+    getCameraSystemStatus() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return null;
+        }
+
+        return this.cameraSwitchingSystem.getSystemStatus();
+    }
+
+    /**
+     * Toggle camera switching panel
+     */
+    toggleCameraSwitchingPanel() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        this.cameraSwitchingSystem.toggleCameraPanel();
+
+        this.logCameraSwitchingEvent('toggle-panel', {
+            timestamp: Date.now()
+        });
+    }
+
+    /**
+     * Show camera switching panel
+     */
+    showCameraSwitchingPanel() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        this.cameraSwitchingSystem.showCameraPanel();
+
+        this.logCameraSwitchingEvent('show-panel', {
+            timestamp: Date.now()
+        });
+    }
+
+    /**
+     * Hide camera switching panel
+     */
+    hideCameraSwitchingPanel() {
+        if (!this.cameraSwitchingSystem) {
+            console.warn('Camera switching system not initialized');
+            return;
+        }
+
+        this.cameraSwitchingSystem.hideCameraPanel();
+
+        this.logCameraSwitchingEvent('hide-panel', {
+            timestamp: Date.now()
+        });
+    }
+
+    /**
+     * Log camera switching event
+     */
+    logCameraSwitchingEvent(action, data = {}) {
+        const event = {
+            timestamp: Date.now(),
+            action,
+            component: 'camera-switching',
+            sessionId: this.sessionId,
+            userId: this.userId,
+            ...data
+        };
+
+        // Add to event log
+        this.eventLog.push(event);
+
+        // Emit event for external listeners
+        this.emitStreamingEvent('camera-switching-event', event);
+
+        // Send to analytics if available
+        if (this.analyticsSystem) {
+            this.analyticsSystem.trackEvent('camera_switching', action, data);
+        }
+
+        console.log('Camera switching event:', event);
+    }
+
+    // ==========================================
+    // Video Recording Indicators API Methods
+    // ==========================================
+
+    /**
+     * Start recording indicators
+     */
+    startRecordingIndicators(recordingData = {}) {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.startRecording(recordingData);
+
+            this.logRecordingIndicatorEvent('start-indicators', {
+                quality: recordingData.quality,
+                format: recordingData.format
+            });
+        } catch (error) {
+            console.error('Failed to start recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Pause recording indicators
+     */
+    pauseRecordingIndicators() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.pauseRecording();
+
+            this.logRecordingIndicatorEvent('pause-indicators', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to pause recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resume recording indicators
+     */
+    resumeRecordingIndicators() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.resumeRecording();
+
+            this.logRecordingIndicatorEvent('resume-indicators', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to resume recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Stop recording indicators
+     */
+    stopRecordingIndicators() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.stopRecording();
+
+            this.logRecordingIndicatorEvent('stop-indicators', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to stop recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Update recording statistics
+     */
+    updateRecordingStats(stats = {}) {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.updateRecordingStats(stats);
+
+            this.logRecordingIndicatorEvent('update-stats', {
+                size: stats.size,
+                availableStorage: stats.availableStorage,
+                bandwidthUsage: stats.bandwidthUsage
+            });
+        } catch (error) {
+            console.error('Failed to update recording stats:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Set recording error state
+     */
+    setRecordingError(error) {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.setErrorState(error);
+
+            this.logRecordingIndicatorEvent('set-error', {
+                error: error.message,
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to set recording error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Clear recording error state
+     */
+    clearRecordingError() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.clearErrorState();
+
+            this.logRecordingIndicatorEvent('clear-error', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to clear recording error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Toggle recording indicators visibility
+     */
+    toggleRecordingIndicatorsVisibility() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.toggleIndicatorsVisibility();
+
+            this.logRecordingIndicatorEvent('toggle-visibility', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to toggle indicators visibility:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show recording indicators
+     */
+    showRecordingIndicators() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.showIndicators();
+
+            this.logRecordingIndicatorEvent('show-indicators', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to show recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Hide recording indicators
+     */
+    hideRecordingIndicators() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.hideIndicators();
+
+            this.logRecordingIndicatorEvent('hide-indicators', {
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to hide recording indicators:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get recording status
+     */
+    getRecordingStatus() {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return null;
+        }
+
+        return this.videoRecordingIndicators.getRecordingStatus();
+    }
+
+    /**
+     * Change indicator position
+     */
+    changeIndicatorPosition(position) {
+        if (!this.videoRecordingIndicators) {
+            console.warn('Video recording indicators not initialized');
+            return;
+        }
+
+        try {
+            this.videoRecordingIndicators.options.indicatorPosition = position;
+
+            // Update floating indicator position
+            if (this.videoRecordingIndicators.floatingIndicator) {
+                this.videoRecordingIndicators.floatingIndicator.className =
+                    `recording-floating-indicator ${position}`;
+            }
+
+            this.logRecordingIndicatorEvent('change-position', {
+                position,
+                timestamp: Date.now()
+            });
+        } catch (error) {
+            console.error('Failed to change indicator position:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Log recording indicator event
+     */
+    logRecordingIndicatorEvent(action, data = {}) {
+        const event = {
+            timestamp: Date.now(),
+            action,
+            component: 'recording-indicators',
+            sessionId: this.sessionId,
+            userId: this.userId,
+            ...data
+        };
+
+        // Add to event log
+        this.eventLog.push(event);
+
+        // Emit event for external listeners
+        this.emitStreamingEvent('recording-indicator-event', event);
+
+        // Send to analytics if available
+        if (this.analyticsSystem) {
+            this.analyticsSystem.trackEvent('recording_indicators', action, data);
+        }
+
+        console.log('Recording indicator event:', event);
     }
 }
 
