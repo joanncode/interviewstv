@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Scheduling System Demo - Interviews.tv</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #FF0000 0%, #cc0000 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(255, 0, 0, 0.3);
+        }
+        
+        .demo-header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .demo-header p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .demo-controls {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .controls-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .role-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .role-btn {
+            background: #3a3a3a;
+            border: 2px solid #555;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .role-btn:hover {
+            border-color: #FF0000;
+            background: #4a4a4a;
+        }
+        
+        .role-btn.active {
+            background: #FF0000;
+            border-color: #FF0000;
+        }
+        
+        .demo-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .feature-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            border-color: #FF0000;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(255, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #FF0000, #cc0000);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .feature-icon i {
+            font-size: 24px;
+            color: #ffffff;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 14px;
+            color: #cccccc;
+            line-height: 1.5;
+        }
+        
+        .scheduling-container {
+            background: #1a1a1a;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+            margin-bottom: 32px;
+        }
+        
+        .demo-stats {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+        
+        .stats-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .stats-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: #3a3a3a;
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #FF0000;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #cccccc;
+        }
+        
+        .demo-footer {
+            text-align: center;
+            padding: 32px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            margin-top: 32px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #FF0000;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        
+        .footer-text {
+            color: #cccccc;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .demo-header h1 {
+                font-size: 36px;
+            }
+            
+            .demo-header p {
+                font-size: 18px;
+            }
+            
+            .controls-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .role-selector {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .demo-features {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .demo-header {
+                padding: 24px 16px;
+            }
+            
+            .demo-header h1 {
+                font-size: 28px;
+            }
+            
+            .demo-header p {
+                font-size: 16px;
+            }
+            
+            .demo-controls {
+                padding: 16px;
+            }
+            
+            .role-selector {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .role-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Demo Header -->
+        <div class="demo-header">
+            <h1><i class="fas fa-calendar-alt"></i> Interview Scheduling System</h1>
+            <p>Professional scheduling with calendar integration, automated workflows, and comprehensive booking management for enterprise interview platforms</p>
+        </div>
+        
+        <!-- Demo Controls -->
+        <div class="demo-controls">
+            <div class="controls-header">
+                <h3 class="controls-title">
+                    <i class="fas fa-cogs"></i>
+                    Demo Controls
+                </h3>
+                <div class="role-selector">
+                    <button class="role-btn active" id="host-btn" onclick="switchRole('host')">
+                        <i class="fas fa-user-tie"></i>
+                        Host Interface
+                    </button>
+                    <button class="role-btn" id="guest-btn" onclick="switchRole('guest')">
+                        <i class="fas fa-user"></i>
+                        Guest Interface
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature Showcase -->
+        <div class="demo-features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="feature-title">Smart Calendar Integration</div>
+                <div class="feature-description">
+                    Seamless integration with Google Calendar, Outlook, and Apple Calendar with automatic sync and conflict detection.
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="feature-title">Intelligent Time Management</div>
+                <div class="feature-description">
+                    Automated time slot generation, buffer time management, and timezone-aware scheduling for global teams.
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-repeat"></i>
+                </div>
+                <div class="feature-title">Recurring Schedules</div>
+                <div class="feature-description">
+                    Set up weekly, bi-weekly, or monthly recurring availability with flexible customization options.
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="feature-title">Automated Reminders</div>
+                <div class="feature-description">
+                    Smart reminder system with email notifications, calendar invites, and customizable timing preferences.
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="feature-title">Mobile Responsive</div>
+                <div class="feature-description">
+                    Fully responsive design optimized for desktop, tablet, and mobile devices with touch-friendly controls.
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-title">Enterprise Security</div>
+                <div class="feature-description">
+                    Advanced security features with data encryption, access controls, and compliance with industry standards.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scheduling System Container -->
+        <div class="scheduling-container" id="scheduling-container">
+            <!-- Scheduling system will be rendered here -->
+        </div>
+        
+        <!-- Demo Statistics -->
+        <div class="demo-stats">
+            <div class="stats-header">
+                <h3>Live Demo Statistics</h3>
+                <p>Real-time metrics from the scheduling system</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="events-triggered">0</div>
+                    <div class="stat-label">Events Triggered</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="api-calls">0</div>
+                    <div class="stat-label">API Calls</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="user-interactions">0</div>
+                    <div class="stat-label">User Interactions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="current-role">Host</div>
+                    <div class="stat-label">Current Role</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Demo Footer -->
+        <div class="demo-footer">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Documentation</a>
+                <a href="#" class="footer-link">API Reference</a>
+                <a href="#" class="footer-link">Integration Guide</a>
+                <a href="#" class="footer-link">Support</a>
+            </div>
+            <div class="footer-text">
+                © 2024 Interviews.tv - Professional Interview Scheduling System
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the scheduling system -->
+    <script src="../src/components/InterviewSchedulingSystem.js"></script>
+    
+    <script>
+        // Demo implementation
+        class SchedulingDemo {
+            constructor() {
+                this.schedulingSystem = null;
+                this.currentRole = 'host';
+                this.stats = {
+                    eventsTriggered: 0,
+                    apiCalls: 0,
+                    userInteractions: 0
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('🚀 Initializing Interview Scheduling Demo...');
+                
+                // Initialize scheduling system
+                this.initializeSchedulingSystem();
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Start demo
+                this.startDemo();
+                
+                console.log('✅ Interview Scheduling Demo initialized');
+            }
+            
+            initializeSchedulingSystem() {
+                const container = document.getElementById('scheduling-container');
+                
+                this.schedulingSystem = new InterviewSchedulingSystem(container, {
+                    enableCalendarIntegration: true,
+                    enableRecurringSchedules: true,
+                    enableTimeZoneSupport: true,
+                    enableAutomatedReminders: true,
+                    enableAvailabilityManagement: true,
+                    enableBookingConfirmation: true,
+                    enableRescheduling: true,
+                    enableCancellation: true,
+                    enableWaitingList: true,
+                    enableCustomFields: true,
+                    defaultDuration: 60,
+                    bufferTime: 15,
+                    maxAdvanceBooking: 90,
+                    minAdvanceBooking: 1,
+                    workingHours: {
+                        start: '09:00',
+                        end: '17:00'
+                    },
+                    workingDays: [1, 2, 3, 4, 5],
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    reminderTimes: [24, 2, 0.5],
+                    enableGoogleCalendar: true,
+                    enableOutlookCalendar: true,
+                    enableAppleCalendar: true
+                });
+                
+                // Set initial role
+                this.schedulingSystem.setUserRole(this.currentRole, {
+                    id: 1,
+                    name: 'Demo User',
+                    email: 'demo@interviews.tv',
+                    role: this.currentRole
+                });
+            }
+            
+            setupEventListeners() {
+                // Listen to scheduling events
+                const container = document.getElementById('scheduling-container');
+                
+                container.addEventListener('scheduling-initialized', (e) => {
+                    this.handleEvent('Scheduling Initialized', e.detail);
+                });
+                
+                container.addEventListener('date-selected', (e) => {
+                    this.handleEvent('Date Selected', e.detail);
+                });
+                
+                container.addEventListener('time-selected', (e) => {
+                    this.handleEvent('Time Selected', e.detail);
+                });
+                
+                container.addEventListener('booking-confirmed', (e) => {
+                    this.handleEvent('Booking Confirmed', e.detail);
+                });
+                
+                container.addEventListener('availability-updated', (e) => {
+                    this.handleEvent('Availability Updated', e.detail);
+                });
+                
+                container.addEventListener('recurring-schedule-added', (e) => {
+                    this.handleEvent('Recurring Schedule Added', e.detail);
+                });
+                
+                container.addEventListener('timezone-changed', (e) => {
+                    this.handleEvent('Timezone Changed', e.detail);
+                });
+                
+                container.addEventListener('view-changed', (e) => {
+                    this.handleEvent('View Changed', e.detail);
+                });
+                
+                // Track user interactions
+                container.addEventListener('click', () => {
+                    this.incrementStat('userInteractions');
+                });
+            }
+            
+            handleEvent(eventName, data) {
+                console.log(`📅 Scheduling Event: ${eventName}`, data);
+                this.incrementStat('eventsTriggered');
+                
+                // Simulate API call for certain events
+                if (['booking-confirmed', 'availability-updated', 'recurring-schedule-added'].includes(eventName.toLowerCase().replace(' ', '-'))) {
+                    this.incrementStat('apiCalls');
+                }
+            }
+            
+            incrementStat(statName) {
+                this.stats[statName]++;
+                this.updateStatsDisplay();
+            }
+            
+            updateStatsDisplay() {
+                document.getElementById('events-triggered').textContent = this.stats.eventsTriggered;
+                document.getElementById('api-calls').textContent = this.stats.apiCalls;
+                document.getElementById('user-interactions').textContent = this.stats.userInteractions;
+                document.getElementById('current-role').textContent = this.currentRole.charAt(0).toUpperCase() + this.currentRole.slice(1);
+            }
+            
+            startDemo() {
+                // Demo is ready
+                console.log('🎬 Demo started successfully');
+            }
+        }
+        
+        // Global functions for demo controls
+        function switchRole(role) {
+            // Update button states
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(role + '-btn').classList.add('active');
+            
+            // Update scheduling system
+            if (window.schedulingDemo && window.schedulingDemo.schedulingSystem) {
+                window.schedulingDemo.currentRole = role;
+                window.schedulingDemo.schedulingSystem.setUserRole(role, {
+                    id: 1,
+                    name: 'Demo User',
+                    email: 'demo@interviews.tv',
+                    role: role
+                });
+                
+                window.schedulingDemo.incrementStat('userInteractions');
+            }
+        }
+        
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.schedulingDemo = new SchedulingDemo();
+        });
+    </script>
+</body>
+</html>
