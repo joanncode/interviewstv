@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility System Demo - WCAG 2.1 AA Compliance - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--theme-fontFamily, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+            background: var(--theme-background, #0a0a0a);
+            color: var(--theme-text, #ffffff);
+            transition: var(--theme-transition, all 0.3s ease);
+            font-size: calc(var(--accessibility-font-scale, 1) * 1rem);
+        }
+        
+        .demo-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--theme-surface, #1a1a1a);
+            border-right: 1px solid var(--theme-border, #444);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: var(--theme-transition, all 0.3s ease);
+        }
+        
+        .demo-main {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+            background: var(--theme-backgroundSecondary, #1a1a1a);
+        }
+        
+        .demo-header {
+            margin-bottom: 20px;
+        }
+        
+        .demo-header h1 {
+            color: var(--theme-primary, #FF0000);
+            margin-bottom: 8px;
+            font-size: 1.5rem;
+        }
+        
+        .demo-description {
+            color: var(--theme-textSecondary, #cccccc);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .demo-section {
+            margin-bottom: 24px;
+        }
+        
+        .demo-section h3 {
+            color: var(--theme-primary, #FF0000);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .accessibility-btn {
+            background: var(--theme-card, #2a2a2a);
+            border: 1px solid var(--theme-border, #444);
+            color: var(--theme-text, #ffffff);
+            padding: 12px 16px;
+            border-radius: var(--theme-borderRadius, 8px);
+            cursor: pointer;
+            transition: var(--theme-transition, all 0.2s ease);
+            font-size: 0.9rem;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 8px;
+            box-shadow: var(--theme-shadow, 0 2px 8px rgba(0,0,0,0.1));
+            min-height: 44px;
+        }
+        
+        .accessibility-btn:hover {
+            background: var(--theme-cardHover, #3a3a3a);
+            transform: translateY(-2px);
+            box-shadow: var(--theme-boxShadow, 0 4px 16px rgba(0,0,0,0.2));
+        }
+        
+        .accessibility-btn:focus {
+            outline: 3px solid var(--theme-primary, #FF0000);
+            outline-offset: 2px;
+        }
+        
+        .accessibility-btn.active {
+            background: var(--theme-primary, #FF0000);
+            border-color: var(--theme-primary, #FF0000);
+            color: var(--theme-textOnPrimary, #ffffff);
+        }
+        
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--theme-primaryLight, rgba(255, 0, 0, 0.2));
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .feature-info {
+            flex: 1;
+        }
+        
+        .feature-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .feature-description {
+            font-size: 0.75rem;
+            color: var(--theme-textMuted, #999);
+            line-height: 1.3;
+        }
+        
+        .demo-info {
+            background: var(--theme-info, #17a2b8);
+            background: linear-gradient(135deg, var(--theme-info, #17a2b8), var(--theme-infoLight, #20c9e0));
+            border: 1px solid var(--theme-info, #17a2b8);
+            border-radius: var(--theme-borderRadius, 8px);
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: var(--theme-textOnPrimary, #ffffff);
+        }
+        
+        .demo-info h4 {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .feature-list li {
+            padding: 3px 0;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-list li i {
+            color: var(--theme-textOnPrimary, #ffffff);
+            width: 12px;
+        }
+        
+        .demo-area {
+            background: var(--theme-surface, #1a1a1a);
+            border-radius: var(--theme-borderRadiusLarge, 12px);
+            padding: 30px;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--theme-boxShadowLarge, 0 8px 32px rgba(0,0,0,0.3));
+        }
+        
+        .accessibility-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .showcase-card {
+            background: var(--theme-card, #2a2a2a);
+            border: 1px solid var(--theme-border, #444);
+            border-radius: var(--theme-borderRadius, 8px);
+            padding: 20px;
+            transition: var(--theme-transition, all 0.3s ease);
+            box-shadow: var(--theme-shadow, 0 2px 8px rgba(0,0,0,0.1));
+        }
+        
+        .showcase-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--theme-boxShadow, 0 8px 24px rgba(0,0,0,0.2));
+        }
+        
+        .showcase-card h4 {
+            color: var(--theme-primary, #FF0000);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .showcase-card p {
+            color: var(--theme-textSecondary, #cccccc);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        
+        .showcase-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .showcase-btn {
+            background: var(--theme-input, #3a3a3a);
+            border: 1px solid var(--theme-border, #444);
+            color: var(--theme-text, #ffffff);
+            padding: 8px 16px;
+            border-radius: var(--theme-borderRadiusSmall, 4px);
+            cursor: pointer;
+            transition: var(--theme-transition, all 0.2s ease);
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 36px;
+        }
+        
+        .showcase-btn:hover {
+            background: var(--theme-hover, rgba(255,255,255,0.1));
+            transform: translateY(-1px);
+        }
+        
+        .showcase-btn:focus {
+            outline: 3px solid var(--theme-primary, #FF0000);
+            outline-offset: 2px;
+        }
+        
+        .showcase-btn.primary {
+            background: var(--theme-primary, #FF0000);
+            border-color: var(--theme-primary, #FF0000);
+            color: var(--theme-textOnPrimary, #ffffff);
+        }
+        
+        .showcase-btn.success {
+            background: var(--theme-success, #28a745);
+            border-color: var(--theme-success, #28a745);
+            color: var(--theme-textOnPrimary, #ffffff);
+        }
+        
+        .showcase-btn.warning {
+            background: var(--theme-warning, #ffc107);
+            border-color: var(--theme-warning, #ffc107);
+            color: var(--theme-text, #000000);
+        }
+        
+        .showcase-btn.danger {
+            background: var(--theme-danger, #dc3545);
+            border-color: var(--theme-danger, #dc3545);
+            color: var(--theme-textOnPrimary, #ffffff);
+        }
+        
+        .control-group {
+            margin-bottom: 16px;
+        }
+        
+        .control-label {
+            display: block;
+            color: var(--theme-text, #ffffff);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .control-input {
+            width: 100%;
+            background: var(--theme-input, #3a3a3a);
+            border: 1px solid var(--theme-inputBorder, #555);
+            color: var(--theme-text, #ffffff);
+            padding: 8px 12px;
+            border-radius: var(--theme-borderRadiusSmall, 4px);
+            transition: var(--theme-transition, all 0.2s ease);
+            min-height: 40px;
+        }
+        
+        .control-input:focus {
+            outline: 3px solid var(--theme-primary, #FF0000);
+            outline-offset: 2px;
+            border-color: var(--theme-inputBorderFocus, #FF0000);
+            background: var(--theme-inputFocus, #4a4a4a);
+        }
+        
+        .control-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--theme-borderRadiusSmall, 4px);
+            transition: var(--theme-transition, all 0.2s ease);
+        }
+        
+        .control-checkbox:hover {
+            background: var(--theme-hover, rgba(255,255,255,0.05));
+        }
+        
+        .control-checkbox input {
+            accent-color: var(--theme-primary, #FF0000);
+            width: 18px;
+            height: 18px;
+        }
+        
+        .control-checkbox:focus-within {
+            outline: 3px solid var(--theme-primary, #FF0000);
+            outline-offset: 2px;
+        }
+        
+        .accessibility-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--theme-surface, #1a1a1a);
+            border: 1px solid var(--theme-border, #444);
+            border-radius: var(--theme-borderRadius, 8px);
+            padding: 16px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            min-width: 250px;
+            backdrop-filter: var(--theme-backdropFilter, blur(10px));
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: var(--theme-textSecondary, #cccccc);
+        }
+        
+        .stat-value {
+            color: var(--theme-text, #ffffff);
+            font-weight: 600;
+        }
+        
+        .compliance-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        
+        .compliance-indicator.pass {
+            background: var(--theme-success, #28a745);
+        }
+        
+        .compliance-indicator.warning {
+            background: var(--theme-warning, #ffc107);
+        }
+        
+        .compliance-indicator.fail {
+            background: var(--theme-danger, #dc3545);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+            
+            .demo-main {
+                padding: 15px;
+            }
+            
+            .accessibility-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .accessibility-stats {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px 0;
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--theme-backgroundSecondary, #1a1a1a);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--theme-border, #444);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--theme-borderLight, #555);
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip Links -->
+    <div class="skip-links" role="navigation" aria-label="Skip links">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <a href="#navigation" class="skip-link">Skip to navigation</a>
+        <a href="#accessibility-controls" class="skip-link">Skip to accessibility controls</a>
+    </div>
+    
+    <div class="demo-container">
+        <!-- Demo Sidebar -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Accessibility controls">
+            <div class="demo-header">
+                <h1><i class="fas fa-universal-access me-2" aria-hidden="true"></i>Accessibility System</h1>
+                <div class="demo-description">
+                    Comprehensive WCAG 2.1 AA compliant accessibility features for the streaming interface with advanced assistive technology support.
+                </div>
+            </div>
+            
+            <div class="demo-info">
+                <h4><i class="fas fa-award me-1" aria-hidden="true"></i>WCAG 2.1 AA Compliance</h4>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Perceivable Content</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Operable Interface</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Understandable Information</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Robust Implementation</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Screen Reader Support</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Keyboard Navigation</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Color Accessibility</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i>Motor Accessibility</li>
+                </ul>
+            </div>
+            
+            <section class="demo-section" id="accessibility-controls">
+                <h3><i class="fas fa-eye" aria-hidden="true"></i>Visual Accessibility</h3>
+                <button class="accessibility-btn" onclick="toggleFeature('highContrast')" aria-describedby="high-contrast-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-adjust" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">High Contrast Mode</div>
+                        <div class="feature-description" id="high-contrast-desc">Enhanced contrast for better visibility</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="high-contrast-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('reducedMotion')" aria-describedby="reduced-motion-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-pause" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Reduced Motion</div>
+                        <div class="feature-description" id="reduced-motion-desc">Minimize animations and transitions</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="reduced-motion-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('largeText')" aria-describedby="large-text-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-text-height" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Large Text Mode</div>
+                        <div class="feature-description" id="large-text-desc">Increase text size for better readability</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="large-text-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('focusIndicators')" aria-describedby="focus-indicators-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Enhanced Focus</div>
+                        <div class="feature-description" id="focus-indicators-desc">Improved focus indicators for keyboard navigation</div>
+                    </div>
+                    <i class="fas fa-toggle-on" id="focus-indicators-toggle" aria-hidden="true"></i>
+                </button>
+            </section>
+            
+            <section class="demo-section">
+                <h3><i class="fas fa-hand-pointer" aria-hidden="true"></i>Motor Accessibility</h3>
+                <button class="accessibility-btn" onclick="toggleFeature('largerClickTargets')" aria-describedby="large-targets-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-expand-arrows-alt" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Larger Click Targets</div>
+                        <div class="feature-description" id="large-targets-desc">Increase button and link sizes for easier clicking</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="large-targets-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('stickyKeys')" aria-describedby="sticky-keys-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-keyboard" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Sticky Keys</div>
+                        <div class="feature-description" id="sticky-keys-desc">Press modifier keys one at a time</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="sticky-keys-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('extendedTimeouts')" aria-describedby="extended-timeouts-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Extended Timeouts</div>
+                        <div class="feature-description" id="extended-timeouts-desc">More time for interactions and responses</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="extended-timeouts-toggle" aria-hidden="true"></i>
+                </button>
+            </section>
+            
+            <section class="demo-section">
+                <h3><i class="fas fa-brain" aria-hidden="true"></i>Cognitive Accessibility</h3>
+                <button class="accessibility-btn" onclick="toggleFeature('simplifiedInterface')" aria-describedby="simplified-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Simplified Interface</div>
+                        <div class="feature-description" id="simplified-desc">Hide non-essential elements for clarity</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="simplified-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('readingGuide')" aria-describedby="reading-guide-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-ruler-horizontal" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Reading Guide</div>
+                        <div class="feature-description" id="reading-guide-desc">Visual guide to help with reading focus</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="reading-guide-toggle" aria-hidden="true"></i>
+                </button>
+            </section>
+            
+            <section class="demo-section">
+                <h3><i class="fas fa-volume-up" aria-hidden="true"></i>Auditory Accessibility</h3>
+                <button class="accessibility-btn" onclick="toggleFeature('visualIndicators')" aria-describedby="visual-indicators-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Visual Audio Indicators</div>
+                        <div class="feature-description" id="visual-indicators-desc">Visual cues for audio events</div>
+                    </div>
+                    <i class="fas fa-toggle-on" id="visual-indicators-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('captionsEnabled')" aria-describedby="captions-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-closed-captioning" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Closed Captions</div>
+                        <div class="feature-description" id="captions-desc">Text display of audio content</div>
+                    </div>
+                    <i class="fas fa-toggle-on" id="captions-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('audioDescriptions')" aria-describedby="audio-desc-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-audio-description" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Audio Descriptions</div>
+                        <div class="feature-description" id="audio-desc-desc">Narration of visual content</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="audio-descriptions-toggle" aria-hidden="true"></i>
+                </button>
+            </section>
+            
+            <section class="demo-section">
+                <h3><i class="fas fa-assistive-listening-systems" aria-hidden="true"></i>Screen Reader</h3>
+                <button class="accessibility-btn" onclick="toggleFeature('announcements')" aria-describedby="announcements-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Live Announcements</div>
+                        <div class="feature-description" id="announcements-desc">Screen reader announcements for updates</div>
+                    </div>
+                    <i class="fas fa-toggle-on" id="announcements-toggle" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="toggleFeature('verboseDescriptions')" aria-describedby="verbose-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Verbose Descriptions</div>
+                        <div class="feature-description" id="verbose-desc">Detailed element descriptions</div>
+                    </div>
+                    <i class="fas fa-toggle-off" id="verbose-toggle" aria-hidden="true"></i>
+                </button>
+            </section>
+            
+            <section class="demo-section">
+                <h3><i class="fas fa-tools" aria-hidden="true"></i>Accessibility Tools</h3>
+                <button class="accessibility-btn" onclick="runComplianceCheck()" aria-describedby="compliance-check-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Run Compliance Check</div>
+                        <div class="feature-description" id="compliance-check-desc">Validate WCAG 2.1 AA compliance</div>
+                    </div>
+                    <i class="fas fa-play" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="showKeyboardShortcuts()" aria-describedby="shortcuts-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-keyboard" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Keyboard Shortcuts</div>
+                        <div class="feature-description" id="shortcuts-desc">View available keyboard shortcuts</div>
+                    </div>
+                    <i class="fas fa-list" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="testColorBlindness()" aria-describedby="colorblind-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Color Blindness Test</div>
+                        <div class="feature-description" id="colorblind-desc">Simulate color vision deficiencies</div>
+                    </div>
+                    <i class="fas fa-eye-dropper" aria-hidden="true"></i>
+                </button>
+                
+                <button class="accessibility-btn" onclick="resetAccessibilitySettings()" aria-describedby="reset-desc">
+                    <div class="feature-icon">
+                        <i class="fas fa-undo" aria-hidden="true"></i>
+                    </div>
+                    <div class="feature-info">
+                        <div class="feature-name">Reset Settings</div>
+                        <div class="feature-description" id="reset-desc">Restore default accessibility settings</div>
+                    </div>
+                    <i class="fas fa-refresh" aria-hidden="true"></i>
+                </button>
+            </section>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main">
+            <div class="demo-area">
+                <header>
+                    <h2 style="color: var(--theme-primary, #FF0000); margin-bottom: 20px; text-align: center;">
+                        <i class="fas fa-universal-access me-2" aria-hidden="true"></i>WCAG 2.1 AA Accessibility Showcase
+                    </h2>
+                </header>
+                
+                <!-- Accessibility Showcase -->
+                <div class="accessibility-showcase">
+                    <article class="showcase-card">
+                        <h4>Keyboard Navigation</h4>
+                        <p>Full keyboard accessibility with logical tab order, skip links, and keyboard shortcuts for all interactive elements.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn primary" onclick="testKeyboardNavigation()">
+                                <i class="fas fa-keyboard" aria-hidden="true"></i>Test Navigation
+                            </button>
+                            <button class="showcase-btn" onclick="showTabOrder()">
+                                <i class="fas fa-route" aria-hidden="true"></i>Show Tab Order
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Screen Reader Support</h4>
+                        <p>Comprehensive ARIA labels, live regions, and semantic markup for optimal screen reader experience.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn success" onclick="testScreenReader()">
+                                <i class="fas fa-assistive-listening-systems" aria-hidden="true"></i>Test Announcements
+                            </button>
+                            <button class="showcase-btn" onclick="showAriaStructure()">
+                                <i class="fas fa-sitemap" aria-hidden="true"></i>Show ARIA Structure
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Color & Contrast</h4>
+                        <p>WCAG AA compliant color contrast ratios and color-blind friendly design with alternative indicators.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn warning" onclick="validateContrast()">
+                                <i class="fas fa-adjust" aria-hidden="true"></i>Check Contrast
+                            </button>
+                            <button class="showcase-btn" onclick="simulateColorBlindness()">
+                                <i class="fas fa-eye" aria-hidden="true"></i>Simulate Color Blindness
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Form Accessibility</h4>
+                        <p>Properly labeled form elements with error handling, validation messages, and clear instructions.</p>
+                        <div class="control-group">
+                            <label for="demo-input" class="control-label">Accessible Input Field</label>
+                            <input type="text" id="demo-input" class="control-input" placeholder="Type here to test accessibility" aria-describedby="input-help">
+                            <small id="input-help" style="color: var(--theme-textMuted, #999);">This input demonstrates proper labeling and description</small>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-checkbox">
+                                <input type="checkbox" id="demo-checkbox" aria-describedby="checkbox-help">
+                                <span>Accessible checkbox with proper labeling</span>
+                            </label>
+                            <small id="checkbox-help" style="color: var(--theme-textMuted, #999);">Checkbox with clear label and description</small>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Media Accessibility</h4>
+                        <p>Video and audio content with captions, audio descriptions, and accessible media controls.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn danger" onclick="testMediaAccessibility()">
+                                <i class="fas fa-play" aria-hidden="true"></i>Test Media Controls
+                            </button>
+                            <button class="showcase-btn" onclick="toggleCaptions()">
+                                <i class="fas fa-closed-captioning" aria-hidden="true"></i>Toggle Captions
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Responsive Accessibility</h4>
+                        <p>Accessibility features that adapt to different devices and screen sizes while maintaining usability.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="testResponsiveAccessibility()">
+                                <i class="fas fa-mobile-alt" aria-hidden="true"></i>Test Mobile
+                            </button>
+                            <button class="showcase-btn" onclick="testTouchAccessibility()">
+                                <i class="fas fa-hand-pointer" aria-hidden="true"></i>Test Touch
+                            </button>
+                        </div>
+                    </article>
+                </div>
+                
+                <!-- Live Demo Area -->
+                <section aria-labelledby="live-demo-heading">
+                    <h3 id="live-demo-heading" style="color: var(--theme-primary, #FF0000); margin-bottom: 16px;">
+                        <i class="fas fa-play-circle me-2" aria-hidden="true"></i>Live Accessibility Demo
+                    </h3>
+                    
+                    <div style="background: var(--theme-backgroundTertiary, #2a2a2a); border-radius: var(--theme-borderRadius, 8px); padding: 20px;">
+                        <p style="color: var(--theme-textSecondary, #cccccc); margin-bottom: 16px;">
+                            This area demonstrates real-time accessibility features. Use the controls in the sidebar to test different accessibility modes and observe how the interface adapts.
+                        </p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div>
+                                <h5 style="color: var(--theme-primary, #FF0000); margin-bottom: 8px;">Focus Management</h5>
+                                <button class="showcase-btn" onclick="demonstrateFocusManagement()" id="focus-demo-btn">
+                                    <i class="fas fa-crosshairs" aria-hidden="true"></i>Test Focus Trap
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <h5 style="color: var(--theme-primary, #FF0000); margin-bottom: 8px;">Live Announcements</h5>
+                                <button class="showcase-btn" onclick="testLiveAnnouncements()">
+                                    <i class="fas fa-bullhorn" aria-hidden="true"></i>Test Announcements
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <h5 style="color: var(--theme-primary, #FF0000); margin-bottom: 8px;">Heading Navigation</h5>
+                                <button class="showcase-btn" onclick="demonstrateHeadingNavigation()">
+                                    <i class="fas fa-list-ol" aria-hidden="true"></i>Navigate Headings
+                                </button>
+                            </div>
+                            
+                            <div>
+                                <h5 style="color: var(--theme-primary, #FF0000); margin-bottom: 8px;">Landmark Navigation</h5>
+                                <button class="showcase-btn" onclick="demonstrateLandmarkNavigation()">
+                                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>Navigate Landmarks
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Accessibility Stats -->
+    <aside class="accessibility-stats" role="complementary" aria-labelledby="stats-heading">
+        <div style="color: var(--theme-primary, #FF0000); font-weight: 600; margin-bottom: 8px;" id="stats-heading">
+            <i class="fas fa-chart-bar me-1" aria-hidden="true"></i>Accessibility Status
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">WCAG Level:</span>
+            <span class="stat-value" id="wcag-level">AA</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Compliance Score:</span>
+            <span class="stat-value" id="compliance-score">98%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Active Features:</span>
+            <span class="stat-value" id="active-features">3</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Keyboard User:</span>
+            <span class="stat-value" id="keyboard-user">No</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Screen Reader:</span>
+            <span class="stat-value" id="screen-reader-active">Detected</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Contrast Ratio:</span>
+            <span class="stat-value" id="contrast-ratio">7.2:1 <span class="compliance-indicator pass" aria-label="Passes WCAG AA"></span></span>
+        </div>
+    </aside>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Accessibility System -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let accessibilitySystem = null;
+        let currentSettings = {};
+        let complianceReport = null;
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAccessibilitySystem();
+            updateAccessibilityStats();
+            setupDemoEventListeners();
+
+            // Announce page load
+            setTimeout(() => {
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce('Accessibility demo page loaded. Use the sidebar controls to test accessibility features.', 'polite');
+                }
+            }, 1000);
+        });
+
+        function initializeAccessibilitySystem() {
+            const container = document.body;
+
+            if (typeof AccessibilitySystem !== 'undefined') {
+                accessibilitySystem = new AccessibilitySystem({
+                    container: container,
+                    settings: {
+                        wcagLevel: 'AA',
+                        highContrast: false,
+                        reducedMotion: false,
+                        largeText: false,
+                        fontSize: 'normal',
+                        largerClickTargets: false,
+                        stickyKeys: false,
+                        extendedTimeouts: false,
+                        simplifiedInterface: false,
+                        readingGuide: false,
+                        visualIndicators: true,
+                        captionsEnabled: true,
+                        audioDescriptions: false,
+                        announcements: true,
+                        verboseDescriptions: false,
+                        focusIndicators: true,
+                        keyboardNavigation: true
+                    }
+                });
+
+                currentSettings = accessibilitySystem.getSettings();
+                updateToggleStates();
+
+                // Run initial compliance check
+                setTimeout(() => {
+                    complianceReport = accessibilitySystem.runComplianceCheck();
+                    updateComplianceStats();
+                }, 500);
+            } else {
+                console.error('AccessibilitySystem not loaded');
+            }
+        }
+
+        function toggleFeature(feature) {
+            if (!accessibilitySystem) return;
+
+            const newValue = accessibilitySystem.toggleFeature(feature);
+            currentSettings[feature] = newValue;
+
+            // Update toggle state
+            updateToggleState(feature, newValue);
+
+            // Update stats
+            updateAccessibilityStats();
+
+            // Show notification
+            showNotification(`${feature} ${newValue ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        function updateToggleState(feature, enabled) {
+            const toggle = document.getElementById(`${feature.replace(/([A-Z])/g, '-$1').toLowerCase()}-toggle`);
+            if (toggle) {
+                toggle.className = enabled ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+            }
+
+            const button = toggle?.closest('.accessibility-btn');
+            if (button) {
+                if (enabled) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            }
+        }
+
+        function updateToggleStates() {
+            Object.entries(currentSettings).forEach(([feature, enabled]) => {
+                updateToggleState(feature, enabled);
+            });
+        }
+
+        function updateAccessibilityStats() {
+            if (!accessibilitySystem) return;
+
+            const settings = accessibilitySystem.getSettings();
+            const activeFeatures = Object.values(settings).filter(Boolean).length;
+
+            document.getElementById('wcag-level').textContent = settings.wcagLevel;
+            document.getElementById('active-features').textContent = activeFeatures;
+            document.getElementById('keyboard-user').textContent = accessibilitySystem.isKeyboardUser() ? 'Yes' : 'No';
+
+            // Update compliance score based on active features
+            const maxFeatures = Object.keys(settings).length;
+            const score = Math.round((activeFeatures / maxFeatures) * 100);
+            document.getElementById('compliance-score').textContent = `${score}%`;
+        }
+
+        function updateComplianceStats() {
+            if (!complianceReport) return;
+
+            const { summary } = complianceReport;
+            const score = Math.round((summary.passed / summary.total) * 100);
+            document.getElementById('compliance-score').textContent = `${score}%`;
+
+            // Update contrast ratio (example)
+            const contrastElement = document.getElementById('contrast-ratio');
+            if (contrastElement) {
+                const indicator = contrastElement.querySelector('.compliance-indicator');
+                if (score >= 90) {
+                    indicator.className = 'compliance-indicator pass';
+                    indicator.setAttribute('aria-label', 'Passes WCAG AA');
+                } else if (score >= 70) {
+                    indicator.className = 'compliance-indicator warning';
+                    indicator.setAttribute('aria-label', 'Warning - Some issues found');
+                } else {
+                    indicator.className = 'compliance-indicator fail';
+                    indicator.setAttribute('aria-label', 'Fails WCAG AA');
+                }
+            }
+        }
+
+        function setupDemoEventListeners() {
+            // Detect keyboard usage
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    document.getElementById('keyboard-user').textContent = 'Yes';
+                }
+            });
+
+            // Detect mouse usage
+            document.addEventListener('mousedown', () => {
+                document.getElementById('keyboard-user').textContent = 'No';
+            });
+
+            // Listen for accessibility system events
+            document.addEventListener('accessibility-feature-changed', (e) => {
+                updateAccessibilityStats();
+            });
+        }
+
+        // Demo functions
+        function runComplianceCheck() {
+            if (!accessibilitySystem) return;
+
+            accessibilitySystem.announce('Running WCAG compliance check...', 'assertive');
+
+            setTimeout(() => {
+                complianceReport = accessibilitySystem.runComplianceCheck();
+                updateComplianceStats();
+
+                const { summary } = complianceReport;
+                const message = `Compliance check complete. ${summary.passed} passed, ${summary.failed} failed, ${summary.warnings} warnings.`;
+                accessibilitySystem.announce(message, 'polite');
+
+                showNotification('Compliance check completed', 'success');
+
+                // Show detailed report
+                console.log('WCAG Compliance Report:', complianceReport);
+            }, 2000);
+        }
+
+        function showKeyboardShortcuts() {
+            if (!accessibilitySystem) return;
+
+            const shortcuts = accessibilitySystem.getKeyboardShortcuts('global');
+            let shortcutList = 'Available keyboard shortcuts:\n';
+
+            shortcuts.forEach((shortcut, key) => {
+                shortcutList += `${key}: ${shortcut.description}\n`;
+            });
+
+            alert(shortcutList);
+            accessibilitySystem.announce('Keyboard shortcuts displayed', 'polite');
+        }
+
+        function testColorBlindness() {
+            if (!accessibilitySystem) return;
+
+            const types = ['protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'];
+            let currentType = 0;
+
+            function cycleColorBlindness() {
+                if (currentType < types.length) {
+                    accessibilitySystem.simulateColorBlindness(types[currentType]);
+                    accessibilitySystem.announce(`Simulating ${types[currentType]}`, 'polite');
+                    currentType++;
+                    setTimeout(cycleColorBlindness, 3000);
+                } else {
+                    accessibilitySystem.removeColorBlindnessSimulation();
+                    accessibilitySystem.announce('Color blindness simulation disabled', 'polite');
+                }
+            }
+
+            cycleColorBlindness();
+        }
+
+        function resetAccessibilitySettings() {
+            if (!accessibilitySystem) return;
+
+            // Reset to default settings
+            accessibilitySystem.updateSettings({
+                highContrast: false,
+                reducedMotion: false,
+                largeText: false,
+                fontSize: 'normal',
+                largerClickTargets: false,
+                stickyKeys: false,
+                extendedTimeouts: false,
+                simplifiedInterface: false,
+                readingGuide: false,
+                visualIndicators: true,
+                captionsEnabled: true,
+                audioDescriptions: false,
+                announcements: true,
+                verboseDescriptions: false,
+                focusIndicators: true
+            });
+
+            currentSettings = accessibilitySystem.getSettings();
+            updateToggleStates();
+            updateAccessibilityStats();
+
+            accessibilitySystem.announce('Accessibility settings reset to defaults', 'polite');
+            showNotification('Settings reset to defaults', 'success');
+        }
+
+        function testKeyboardNavigation() {
+            if (!accessibilitySystem) return;
+
+            accessibilitySystem.announce('Testing keyboard navigation. Use Tab to navigate, Enter to activate.', 'assertive');
+
+            // Focus first interactive element
+            const firstButton = document.querySelector('.showcase-btn');
+            if (firstButton) {
+                accessibilitySystem.focusElement(firstButton, {
+                    announce: 'Keyboard navigation test started',
+                    scroll: true
+                });
+            }
+        }
+
+        function showTabOrder() {
+            const focusableElements = document.querySelectorAll('button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+            focusableElements.forEach((element, index) => {
+                const indicator = document.createElement('div');
+                indicator.textContent = index + 1;
+                indicator.style.cssText = `
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    background: var(--theme-primary, #FF0000);
+                    color: white;
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    z-index: 1000;
+                `;
+
+                element.style.position = 'relative';
+                element.appendChild(indicator);
+
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                }, 5000);
+            });
+
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(`Tab order displayed for ${focusableElements.length} elements`, 'polite');
+            }
+        }
+
+        function testScreenReader() {
+            if (!accessibilitySystem) return;
+
+            const messages = [
+                'Testing screen reader announcements',
+                'This is a polite announcement',
+                'This is an assertive announcement',
+                'Screen reader test complete'
+            ];
+
+            messages.forEach((message, index) => {
+                setTimeout(() => {
+                    const priority = index === 2 ? 'assertive' : 'polite';
+                    accessibilitySystem.announce(message, priority);
+                }, index * 2000);
+            });
+        }
+
+        function showAriaStructure() {
+            const ariaElements = document.querySelectorAll('[role], [aria-label], [aria-labelledby], [aria-describedby]');
+
+            console.group('ARIA Structure');
+            ariaElements.forEach(element => {
+                const info = {
+                    element: element.tagName,
+                    role: element.getAttribute('role'),
+                    label: element.getAttribute('aria-label'),
+                    labelledBy: element.getAttribute('aria-labelledby'),
+                    describedBy: element.getAttribute('aria-describedby')
+                };
+                console.log(info);
+            });
+            console.groupEnd();
+
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(`ARIA structure logged to console. ${ariaElements.length} elements with ARIA attributes found.`, 'polite');
+            }
+        }
+
+        function validateContrast() {
+            if (!accessibilitySystem) return;
+
+            const violations = accessibilitySystem.validateAllContrast();
+
+            if (violations.length === 0) {
+                accessibilitySystem.announce('All text meets WCAG contrast requirements', 'polite');
+                showNotification('All contrast ratios pass WCAG AA', 'success');
+            } else {
+                accessibilitySystem.announce(`${violations.length} contrast violations found`, 'assertive');
+                showNotification(`${violations.length} contrast issues found`, 'warning');
+                console.log('Contrast violations:', violations);
+            }
+        }
+
+        function simulateColorBlindness() {
+            testColorBlindness();
+        }
+
+        function testMediaAccessibility() {
+            if (!accessibilitySystem) return;
+
+            accessibilitySystem.announce('Testing media accessibility features', 'polite');
+            showNotification('Media accessibility test started', 'info');
+
+            // Simulate media controls test
+            setTimeout(() => {
+                accessibilitySystem.announce('Media controls are keyboard accessible with proper ARIA labels', 'polite');
+            }, 2000);
+        }
+
+        function toggleCaptions() {
+            toggleFeature('captionsEnabled');
+        }
+
+        function testResponsiveAccessibility() {
+            if (!accessibilitySystem) return;
+
+            // Simulate mobile viewport
+            document.body.style.width = '375px';
+            document.querySelector('.demo-container').style.flexDirection = 'column';
+
+            accessibilitySystem.announce('Testing mobile accessibility. Interface adapted for smaller screens.', 'polite');
+
+            setTimeout(() => {
+                document.body.style.width = '';
+                document.querySelector('.demo-container').style.flexDirection = '';
+                accessibilitySystem.announce('Returned to desktop view', 'polite');
+            }, 5000);
+        }
+
+        function testTouchAccessibility() {
+            if (!accessibilitySystem) return;
+
+            toggleFeature('largerClickTargets');
+            accessibilitySystem.announce('Touch accessibility enhanced with larger click targets', 'polite');
+        }
+
+        function demonstrateFocusManagement() {
+            if (!accessibilitySystem) return;
+
+            // Create a modal-like focus trap demonstration
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--theme-surface, #1a1a1a);
+                border: 2px solid var(--theme-primary, #FF0000);
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 10000;
+                min-width: 300px;
+            `;
+            modal.innerHTML = `
+                <h3 style="color: var(--theme-primary, #FF0000); margin-bottom: 16px;">Focus Trap Demo</h3>
+                <p style="margin-bottom: 16px;">Focus is trapped within this modal. Use Tab to navigate.</p>
+                <button class="showcase-btn" style="margin-right: 8px;">First Button</button>
+                <button class="showcase-btn" onclick="closeFocusDemo()">Close Modal</button>
+            `;
+
+            document.body.appendChild(modal);
+            accessibilitySystem.trapFocus(modal);
+            accessibilitySystem.announce('Focus trap demonstration opened. Focus is now trapped within the modal.', 'assertive');
+
+            window.closeFocusDemo = function() {
+                document.body.removeChild(modal);
+                accessibilitySystem.restoreFocus();
+                accessibilitySystem.announce('Focus trap demonstration closed. Focus restored.', 'polite');
+                delete window.closeFocusDemo;
+            };
+        }
+
+        function testLiveAnnouncements() {
+            if (!accessibilitySystem) return;
+
+            const announcements = [
+                { message: 'This is a polite announcement', priority: 'polite' },
+                { message: 'This is an assertive announcement', priority: 'assertive' },
+                { message: 'This is a status update', priority: 'status' }
+            ];
+
+            announcements.forEach((announcement, index) => {
+                setTimeout(() => {
+                    accessibilitySystem.announce(announcement.message, announcement.priority);
+                }, index * 2000);
+            });
+        }
+
+        function demonstrateHeadingNavigation() {
+            if (!accessibilitySystem) return;
+
+            const headings = accessibilitySystem.getHeadingStructure();
+            if (headings.length > 0) {
+                accessibilitySystem.announce(`Found ${headings.length} headings. Use H and Shift+H to navigate.`, 'polite');
+
+                // Focus first heading
+                accessibilitySystem.focusElement(headings[0].element, {
+                    announce: `Heading level ${headings[0].level}: ${headings[0].text}`,
+                    scroll: true
+                });
+            }
+        }
+
+        function demonstrateLandmarkNavigation() {
+            if (!accessibilitySystem) return;
+
+            const landmarks = accessibilitySystem.getLandmarks();
+            if (landmarks.length > 0) {
+                accessibilitySystem.announce(`Found ${landmarks.length} landmarks. Use L and Shift+L to navigate.`, 'polite');
+
+                // Focus first landmark
+                accessibilitySystem.focusElement(landmarks[0].element, {
+                    announce: `${landmarks[0].role}: ${landmarks[0].label}`,
+                    scroll: true
+                });
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'info' ? 'info' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 300px;
+                background: var(--theme-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'danger' ? 'danger' : 'info'});
+                border: 1px solid var(--theme-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : type === 'danger' ? 'danger' : 'info'});
+                color: var(--theme-textOnPrimary);
+                border-radius: var(--theme-borderRadius);
+                box-shadow: var(--theme-boxShadow);
+            `;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()" style="filter: invert(1);" aria-label="Close notification"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Handle system preference changes
+        if (window.matchMedia) {
+            const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            reducedMotionQuery.addEventListener('change', (e) => {
+                if (accessibilitySystem) {
+                    accessibilitySystem.updateSettings({ reducedMotion: e.matches });
+                    updateAccessibilityStats();
+                }
+            });
+
+            const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
+            highContrastQuery.addEventListener('change', (e) => {
+                if (accessibilitySystem) {
+                    accessibilitySystem.updateSettings({ highContrast: e.matches });
+                    updateAccessibilityStats();
+                }
+            });
+        }
+
+        // Initialize responsive behavior
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.demo-container').style.flexDirection = 'column';
+            } else {
+                document.querySelector('.demo-container').style.flexDirection = 'row';
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.demo-container').style.flexDirection = 'column';
+            }
+        });
+    </script>
+</body>
+</html>
