@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Layout System - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .main-video-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+        }
+        
+        .main-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .control-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 5px;
+        }
+        
+        .control-btn:hover {
+            background: #cc0000;
+        }
+        
+        .participant-simulator {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .participant-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .participant-card:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .participant-card.active {
+            border-color: var(--primary-color);
+            background: rgba(255, 0, 0, 0.1);
+        }
+        
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .participant-name {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        
+        .participant-controls {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .participant-control {
+            background: var(--input-dark);
+            border: none;
+            color: var(--text-light);
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .participant-control:hover {
+            background: var(--primary-color);
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-th-large" aria-hidden="true"></i>
+            Video Layout System
+        </h1>
+        <p class="demo-subtitle">Advanced video layout management with grid, spotlight, and custom arrangements</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Video layout controls">
+            <!-- Layout Selection -->
+            <section class="demo-section" id="layout-selection">
+                <h3><i class="fas fa-th-large" aria-hidden="true"></i>Layout Options</h3>
+                
+                <h4 style="color: var(--text-light); font-size: 1rem; margin: 15px 0 10px 0;">Spotlight Layouts</h4>
+                <button class="demo-btn active" onclick="setLayout('spotlight')">
+                    <span>
+                        <div><i class="fas fa-user-circle"></i> Spotlight</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Focus on main speaker</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('spotlight-sidebar')">
+                    <span>
+                        <div><i class="fas fa-columns"></i> Spotlight Sidebar</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Main speaker with sidebar</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('spotlight-filmstrip')">
+                    <span>
+                        <div><i class="fas fa-film"></i> Spotlight Filmstrip</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Main speaker with filmstrip</div>
+                    </span>
+                </button>
+                
+                <h4 style="color: var(--text-light); font-size: 1rem; margin: 15px 0 10px 0;">Grid Layouts</h4>
+                <button class="demo-btn" onclick="setLayout('grid-2x2')">
+                    <span>
+                        <div><i class="fas fa-th"></i> 2x2 Grid</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Equal 2x2 video grid</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('grid-3x3')">
+                    <span>
+                        <div><i class="fas fa-th"></i> 3x3 Grid</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Equal 3x3 video grid</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('grid-auto')">
+                    <span>
+                        <div><i class="fas fa-th-large"></i> Auto Grid</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Automatically sized grid</div>
+                    </span>
+                </button>
+                
+                <h4 style="color: var(--text-light); font-size: 1rem; margin: 15px 0 10px 0;">Other Layouts</h4>
+                <button class="demo-btn" onclick="setLayout('presentation')">
+                    <span>
+                        <div><i class="fas fa-desktop"></i> Presentation</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Content sharing mode</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('pip-corner')">
+                    <span>
+                        <div><i class="fas fa-external-link-alt"></i> Picture-in-Picture</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Floating video window</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Participant Simulator -->
+            <section class="demo-section" id="participant-simulator">
+                <h3><i class="fas fa-users" aria-hidden="true"></i>Participants</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="control-btn" onclick="addParticipant()">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                    <button class="control-btn" onclick="removeParticipant()">
+                        <i class="fas fa-minus"></i> Remove
+                    </button>
+                    <button class="control-btn" onclick="clearParticipants()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="participant-simulator" id="participants-list">
+                    <!-- Participants will be added here dynamically -->
+                </div>
+            </section>
+            
+            <!-- Layout Settings -->
+            <section class="demo-section" id="layout-settings">
+                <h3><i class="fas fa-cog" aria-hidden="true"></i>Settings</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="auto-layout-switching" style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="auto-layout-switching" checked style="margin-right: 8px;">
+                        Auto Layout Switching
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="enable-animations" style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="enable-animations" checked style="margin-right: 8px;">
+                        Enable Animations
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="thumbnail-size" style="display: block; margin-bottom: 5px; color: var(--text-light);">
+                        Thumbnail Size:
+                    </label>
+                    <select id="thumbnail-size" style="width: 100%; background: var(--input-dark); border: 1px solid var(--border-color); color: var(--text-light); padding: 8px; border-radius: 4px;">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                
+                <button class="control-btn" onclick="showLayoutSelector()" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-th-large"></i> Open Layout Selector
+                </button>
+            </section>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Video layout preview area">
+            <div class="video-area" id="video-area">
+                <div class="main-video-container">
+                    <video class="main-video" autoplay muted playsinline>
+                        <!-- Placeholder video content -->
+                    </video>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-line" aria-hidden="true"></i>Layout Stats
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Current Layout:</span>
+            <span class="stat-value" id="current-layout">Spotlight</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Participants:</span>
+            <span class="stat-value" id="participant-count">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Layout Changes:</span>
+            <span class="stat-value" id="layout-changes">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Spotlight:</span>
+            <span class="stat-value" id="spotlight-participant">None</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Pinned:</span>
+            <span class="stat-value" id="pinned-participant">None</span>
+        </div>
+    </aside>
+    
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/VideoLayoutSystem.js"></script>
+
+    <script>
+        // Demo Application
+        class VideoLayoutDemo {
+            constructor() {
+                this.videoLayoutSystem = null;
+                this.participants = new Map();
+                this.participantCounter = 0;
+                this.currentLayout = 'spotlight';
+                this.layoutChangeCount = 0;
+
+                this.init();
+            }
+
+            init() {
+                // Initialize video layout system
+                const container = document.getElementById('video-area');
+                this.videoLayoutSystem = new VideoLayoutSystem(container);
+
+                // Setup event listeners
+                this.setupEventListeners();
+
+                // Add initial participants
+                this.addInitialParticipants();
+
+                // Update stats
+                this.updateStats();
+
+                console.log('Video Layout Demo initialized successfully!');
+            }
+
+            setupEventListeners() {
+                // Layout change events
+                document.getElementById('video-area').addEventListener('video-layout-changed', (e) => {
+                    this.currentLayout = e.detail.newLayoutId;
+                    this.layoutChangeCount++;
+                    this.updateStats();
+                    this.updateActiveLayoutButton();
+                });
+
+                // Participant events
+                document.getElementById('video-area').addEventListener('participant-added', (e) => {
+                    this.updateStats();
+                });
+
+                document.getElementById('video-area').addEventListener('participant-removed', (e) => {
+                    this.updateStats();
+                });
+
+                // Spotlight events
+                document.getElementById('video-area').addEventListener('spotlight-changed', (e) => {
+                    this.updateStats();
+                });
+
+                // Pin events
+                document.getElementById('video-area').addEventListener('pin-changed', (e) => {
+                    this.updateStats();
+                });
+
+                // Settings events
+                document.getElementById('auto-layout-switching').addEventListener('change', (e) => {
+                    this.videoLayoutSystem.updateSettings({
+                        autoLayoutSwitching: e.target.checked
+                    });
+                });
+
+                document.getElementById('enable-animations').addEventListener('change', (e) => {
+                    this.videoLayoutSystem.updateSettings({
+                        enableLayoutAnimations: e.target.checked
+                    });
+                });
+
+                document.getElementById('thumbnail-size').addEventListener('change', (e) => {
+                    this.videoLayoutSystem.updateSettings({
+                        thumbnailSize: e.target.value
+                    });
+                });
+            }
+
+            addInitialParticipants() {
+                // Add yourself as the first participant
+                this.addParticipant('You', true);
+            }
+
+            addParticipant(name = null, isLocal = false) {
+                this.participantCounter++;
+                const participantId = `participant-${this.participantCounter}`;
+                const participantName = name || `Participant ${this.participantCounter}`;
+
+                // Create mock video element
+                const video = document.createElement('video');
+                video.autoplay = true;
+                video.muted = true;
+                video.playsInline = true;
+
+                // Create participant data
+                const participantData = {
+                    id: participantId,
+                    name: participantName,
+                    videoElement: video,
+                    isLocal: isLocal,
+                    isMuted: false,
+                    isVideoEnabled: true,
+                    quality: 'high'
+                };
+
+                // Add to video layout system
+                this.videoLayoutSystem.addParticipant(participantData);
+
+                // Store locally
+                this.participants.set(participantId, participantData);
+
+                // Update UI
+                this.updateParticipantsList();
+                this.updateStats();
+
+                return participantData;
+            }
+
+            removeParticipant() {
+                if (this.participants.size <= 1) {
+                    alert('Cannot remove the last participant');
+                    return;
+                }
+
+                // Remove the last added participant (except yourself)
+                const participantIds = Array.from(this.participants.keys());
+                const lastParticipantId = participantIds[participantIds.length - 1];
+
+                if (this.participants.get(lastParticipantId).isLocal) {
+                    // If last is local, remove second to last
+                    if (participantIds.length > 1) {
+                        const secondLastId = participantIds[participantIds.length - 2];
+                        this.removeParticipantById(secondLastId);
+                    }
+                } else {
+                    this.removeParticipantById(lastParticipantId);
+                }
+            }
+
+            removeParticipantById(participantId) {
+                // Remove from video layout system
+                this.videoLayoutSystem.removeParticipant(participantId);
+
+                // Remove locally
+                this.participants.delete(participantId);
+
+                // Update UI
+                this.updateParticipantsList();
+                this.updateStats();
+            }
+
+            clearParticipants() {
+                // Keep only the local participant (you)
+                const localParticipant = Array.from(this.participants.values()).find(p => p.isLocal);
+
+                // Remove all others
+                this.participants.forEach((participant, id) => {
+                    if (!participant.isLocal) {
+                        this.videoLayoutSystem.removeParticipant(id);
+                    }
+                });
+
+                // Clear local storage
+                this.participants.clear();
+                if (localParticipant) {
+                    this.participants.set(localParticipant.id, localParticipant);
+                }
+
+                // Update UI
+                this.updateParticipantsList();
+                this.updateStats();
+            }
+
+            updateParticipantsList() {
+                const container = document.getElementById('participants-list');
+                container.innerHTML = '';
+
+                this.participants.forEach((participant, id) => {
+                    const card = document.createElement('div');
+                    card.className = 'participant-card';
+                    card.dataset.participantId = id;
+
+                    const initials = participant.name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+                    card.innerHTML = `
+                        <div class="participant-avatar">${initials}</div>
+                        <div class="participant-name">${participant.name}</div>
+                        <div class="participant-controls">
+                            <button class="participant-control" onclick="demo.setSpotlight('${id}')" title="Spotlight">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button class="participant-control" onclick="demo.pinParticipant('${id}')" title="Pin">
+                                <i class="fas fa-thumbtack"></i>
+                            </button>
+                            <button class="participant-control" onclick="demo.toggleMute('${id}')" title="Mute">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+            }
+
+            setSpotlight(participantId) {
+                this.videoLayoutSystem.setSpotlightParticipant(participantId);
+            }
+
+            pinParticipant(participantId) {
+                this.videoLayoutSystem.pinParticipant(participantId);
+            }
+
+            toggleMute(participantId) {
+                this.videoLayoutSystem.toggleParticipantMute(participantId);
+                this.updateParticipantsList();
+            }
+
+            updateStats() {
+                const stats = this.videoLayoutSystem.getPerformanceStats();
+                const currentLayoutData = this.videoLayoutSystem.getCurrentLayout();
+
+                document.getElementById('current-layout').textContent = this.currentLayout;
+                document.getElementById('participant-count').textContent = this.participants.size;
+                document.getElementById('layout-changes').textContent = this.layoutChangeCount;
+
+                const spotlightName = currentLayoutData.spotlightParticipant?.name || 'None';
+                document.getElementById('spotlight-participant').textContent = spotlightName;
+
+                const pinnedName = currentLayoutData.pinnedParticipant?.name || 'None';
+                document.getElementById('pinned-participant').textContent = pinnedName;
+            }
+
+            updateActiveLayoutButton() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.demo-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Add active class to current layout button
+                const activeBtn = document.querySelector(`[onclick="setLayout('${this.currentLayout}')"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+        }
+
+        // Global functions for demo
+        let demo;
+
+        function setLayout(layoutId) {
+            if (demo && demo.videoLayoutSystem) {
+                demo.videoLayoutSystem.setLayout(layoutId);
+            }
+        }
+
+        function addParticipant() {
+            if (demo) {
+                demo.addParticipant();
+            }
+        }
+
+        function removeParticipant() {
+            if (demo) {
+                demo.removeParticipant();
+            }
+        }
+
+        function clearParticipants() {
+            if (demo) {
+                demo.clearParticipants();
+            }
+        }
+
+        function showLayoutSelector() {
+            if (demo && demo.videoLayoutSystem) {
+                demo.videoLayoutSystem.showLayoutSelector();
+            }
+        }
+
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            demo = new VideoLayoutDemo();
+        });
+
+        // Add some demo participants after a short delay
+        setTimeout(() => {
+            if (demo) {
+                demo.addParticipant('Alice Johnson');
+                demo.addParticipant('Bob Smith');
+                demo.addParticipant('Carol Davis');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
