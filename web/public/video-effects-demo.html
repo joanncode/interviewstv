@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Effects & Filters - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-preview-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-video {
+            width: 80%;
+            height: 80%;
+            background: #333;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            flex-direction: column;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+        
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .effect-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .effect-card:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .effect-card i {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+        
+        .effect-card:hover i {
+            color: white;
+        }
+        
+        .effect-card h6 {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .preset-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .preset-card:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .preset-card i {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+        
+        .preset-card:hover i {
+            color: white;
+        }
+        
+        .preset-card h6 {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .browser-support {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .browser-support h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .browser-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .support-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .support-status.supported {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .support-status.partial {
+            background: var(--warning-color);
+            color: black;
+        }
+        
+        .support-status.not-supported {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .keyboard-shortcuts {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .keyboard-shortcuts h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .shortcut-key {
+            background: var(--input-dark);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--primary-color);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+            
+            .effects-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .presets-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-magic" aria-hidden="true"></i>
+            Video Effects & Filters
+        </h1>
+        <p class="demo-subtitle">Real-time video processing with advanced effects, filters, and artistic transformations</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Information -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Video effects information">
+            <!-- Features Overview -->
+            <section class="demo-section" id="features-overview">
+                <h3><i class="fas fa-star" aria-hidden="true"></i>Key Features</h3>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-magic"></i>Real-time video effects</li>
+                    <li><i class="fas fa-palette"></i>Color correction tools</li>
+                    <li><i class="fas fa-paint-brush"></i>Artistic filters</li>
+                    <li><i class="fas fa-expand"></i>Distortion effects</li>
+                    <li><i class="fas fa-lightbulb"></i>Lighting effects</li>
+                    <li><i class="fas fa-running"></i>Motion effects</li>
+                    <li><i class="fas fa-link"></i>Effect chaining</li>
+                    <li><i class="fas fa-save"></i>Custom presets</li>
+                </ul>
+            </section>
+            
+            <!-- Effect Categories -->
+            <section class="demo-section" id="effect-categories">
+                <h3><i class="fas fa-layer-group" aria-hidden="true"></i>Effect Categories</h3>
+                
+                <div class="effects-grid">
+                    <div class="effect-card" data-category="color">
+                        <i class="fas fa-palette"></i>
+                        <h6>Color</h6>
+                    </div>
+                    <div class="effect-card" data-category="artistic">
+                        <i class="fas fa-paint-brush"></i>
+                        <h6>Artistic</h6>
+                    </div>
+                    <div class="effect-card" data-category="distortion">
+                        <i class="fas fa-expand"></i>
+                        <h6>Distortion</h6>
+                    </div>
+                    <div class="effect-card" data-category="filter">
+                        <i class="fas fa-filter"></i>
+                        <h6>Filter</h6>
+                    </div>
+                    <div class="effect-card" data-category="lighting">
+                        <i class="fas fa-lightbulb"></i>
+                        <h6>Lighting</h6>
+                    </div>
+                    <div class="effect-card" data-category="motion">
+                        <i class="fas fa-running"></i>
+                        <h6>Motion</h6>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Effect Presets -->
+            <section class="demo-section" id="effect-presets">
+                <h3><i class="fas fa-star" aria-hidden="true"></i>Effect Presets</h3>
+                
+                <div class="presets-grid">
+                    <div class="preset-card" data-preset="cinematic">
+                        <i class="fas fa-film"></i>
+                        <h6>Cinematic</h6>
+                    </div>
+                    <div class="preset-card" data-preset="vintage">
+                        <i class="fas fa-camera-retro"></i>
+                        <h6>Vintage</h6>
+                    </div>
+                    <div class="preset-card" data-preset="dramatic">
+                        <i class="fas fa-theater-masks"></i>
+                        <h6>Dramatic</h6>
+                    </div>
+                    <div class="preset-card" data-preset="soft">
+                        <i class="fas fa-cloud"></i>
+                        <h6>Soft</h6>
+                    </div>
+                    <div class="preset-card" data-preset="blackwhite">
+                        <i class="fas fa-adjust"></i>
+                        <h6>B&W</h6>
+                    </div>
+                    <div class="preset-card" data-preset="cyberpunk">
+                        <i class="fas fa-robot"></i>
+                        <h6>Cyberpunk</h6>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Browser Support -->
+            <div class="browser-support">
+                <h4><i class="fas fa-globe" aria-hidden="true"></i>Browser Support</h4>
+
+                <div class="browser-item">
+                    <span><i class="fab fa-chrome"></i> Chrome 49+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-firefox"></i> Firefox 29+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-edge"></i> Edge 79+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-safari"></i> Safari 14.1+</span>
+                    <span class="support-status partial">Partial Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-opera"></i> Opera 36+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="keyboard-shortcuts">
+                <h4><i class="fas fa-keyboard" aria-hidden="true"></i>Keyboard Shortcuts</h4>
+
+                <div class="shortcut-item">
+                    <span>Toggle Effects Panel</span>
+                    <span class="shortcut-key">Ctrl+Shift+E</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Reset All Effects</span>
+                    <span class="shortcut-key">Ctrl+Shift+Alt+R</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Toggle Preview</span>
+                    <span class="shortcut-key">Ctrl+Shift+P</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Cinematic Preset</span>
+                    <span class="shortcut-key">Alt+1</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Vintage Preset</span>
+                    <span class="shortcut-key">Alt+2</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Dramatic Preset</span>
+                    <span class="shortcut-key">Alt+3</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Video effects preview area">
+            <div class="video-preview-area" id="video-preview-area">
+                <div class="demo-video" id="demo-video">
+                    <i class="fas fa-magic" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <div>Video Effects Demo</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Real-time video effects and filters</div>
+                    <div style="font-size: 0.8rem; margin-top: 10px; color: var(--text-muted);">
+                        Click effects panel to start applying effects
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Effects Statistics
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Processing Status:</span>
+            <span class="stat-value" id="processing-status-stat">Ready</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Active Effects:</span>
+            <span class="stat-value" id="active-effects-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Frame Time:</span>
+            <span class="stat-value" id="frame-time-stat">0ms</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">WebGL Support:</span>
+            <span class="stat-value" id="webgl-support-stat">Checking...</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Effects Applied:</span>
+            <span class="stat-value" id="effects-applied-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Memory Usage:</span>
+            <span class="stat-value" id="memory-usage-stat">0 MB</span>
+        </div>
+    </aside>
+
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/VideoEffectsSystem.js"></script>
+
+    <script>
+        // Demo Application
+        class VideoEffectsDemo {
+            constructor() {
+                this.videoEffectsSystem = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                this.statsUpdateInterval = null;
+                this.demoVideo = null;
+                this.demoCanvas = null;
+
+                this.init();
+            }
+
+            init() {
+                console.log('🎨 Initializing Video Effects Demo...');
+
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+
+                    // Create demo video
+                    this.createDemoVideo();
+
+                    // Initialize video effects system
+                    this.initializeVideoEffectsSystem();
+
+                    // Setup demo functionality
+                    this.setupDemoFeatures();
+                    this.setupEventListeners();
+                    this.startStatsUpdates();
+
+                    console.log('✅ Video Effects Demo initialized successfully');
+
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize video effects demo');
+                }
+            }
+
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+
+                    console.log('✅ Theme system initialized');
+                }
+            }
+
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+
+            createDemoVideo() {
+                // Create a demo video element
+                this.demoVideo = document.createElement('video');
+                this.demoVideo.width = 1920;
+                this.demoVideo.height = 1080;
+                this.demoVideo.autoplay = true;
+                this.demoVideo.muted = true;
+                this.demoVideo.loop = true;
+                this.demoVideo.style.display = 'none';
+
+                // Create demo canvas for video content
+                this.demoCanvas = document.createElement('canvas');
+                this.demoCanvas.width = 1920;
+                this.demoCanvas.height = 1080;
+                const ctx = this.demoCanvas.getContext('2d');
+
+                // Create animated demo content
+                let frame = 0;
+                const animate = () => {
+                    // Clear canvas
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+
+                    // Draw animated gradient background
+                    const gradient = ctx.createLinearGradient(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+                    gradient.addColorStop(0, `hsl(${frame % 360}, 70%, 50%)`);
+                    gradient.addColorStop(1, `hsl(${(frame + 180) % 360}, 70%, 30%)`);
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, this.demoCanvas.width, this.demoCanvas.height);
+
+                    // Draw animated shapes
+                    const centerX = this.demoCanvas.width / 2;
+                    const centerY = this.demoCanvas.height / 2;
+
+                    // Main circle
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 150 + Math.sin(frame * 0.05) * 30, 0, 2 * Math.PI);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fill();
+
+                    // Rotating shapes
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (frame * 0.02) + (i * Math.PI / 3);
+                        const x = centerX + Math.cos(angle) * 200;
+                        const y = centerY + Math.sin(angle) * 200;
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, 30, 0, 2 * Math.PI);
+                        ctx.fillStyle = `hsl(${(frame + i * 60) % 360}, 80%, 60%)`;
+                        ctx.fill();
+                    }
+
+                    // Text
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 64px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Video Effects Demo', centerX, centerY - 20);
+
+                    ctx.font = '32px Arial';
+                    ctx.fillText(`Frame: ${frame}`, centerX, centerY + 30);
+
+                    frame++;
+                    requestAnimationFrame(animate);
+                };
+
+                animate();
+
+                // Create stream from canvas
+                const stream = this.demoCanvas.captureStream(30);
+                this.demoVideo.srcObject = stream;
+
+                document.body.appendChild(this.demoVideo);
+                document.body.appendChild(this.demoCanvas);
+                this.demoCanvas.style.display = 'none';
+
+                console.log('✅ Demo video created');
+            }
+
+            initializeVideoEffectsSystem() {
+                const container = document.getElementById('video-preview-area');
+
+                if (!container) {
+                    throw new Error('Video preview area container not found');
+                }
+
+                this.videoEffectsSystem = new VideoEffectsSystem(container, {
+                    enableWebGL: true,
+                    enableRealTimeProcessing: true,
+                    enableEffectChaining: true,
+                    enableCustomShaders: true,
+                    maxEffectsChain: 10,
+                    targetFPS: 30,
+                    processingQuality: 'high',
+                    enablePerformanceMonitoring: true,
+                    enableEffectPresets: true,
+                    accessibilitySystem: this.accessibilitySystem,
+                    themeSystem: this.themeSystem,
+                    responsiveSystem: this.responsiveSystem
+                });
+
+                // Start processing with demo video
+                setTimeout(() => {
+                    if (this.demoVideo && this.demoVideo.readyState >= 2) {
+                        this.videoEffectsSystem.startProcessing(this.demoVideo);
+                    }
+                }, 1000);
+
+                console.log('✅ Video effects system initialized');
+            }
+
+            setupDemoFeatures() {
+                // Add demo content to video area
+                this.createDemoContent();
+
+                // Setup browser support detection
+                this.updateBrowserSupport();
+
+                // Setup initial stats
+                this.updateStats();
+            }
+
+            createDemoContent() {
+                const demoVideo = document.getElementById('demo-video');
+
+                // Add animated demo indicator
+                const animatedIndicator = document.createElement('div');
+                animatedIndicator.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    width: 80px;
+                    height: 80px;
+                    background: linear-gradient(45deg, #FF0000, #FF6666);
+                    border-radius: 50%;
+                    animation: demo-pulse 2s infinite;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                `;
+                animatedIndicator.innerHTML = '<i class="fas fa-magic"></i>';
+
+                // Add CSS animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes demo-pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.8; }
+                        50% { transform: scale(1.1); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                demoVideo.appendChild(animatedIndicator);
+            }
+
+            setupEventListeners() {
+                // Effect category clicks
+                document.querySelectorAll('.effect-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const category = e.currentTarget.dataset.category;
+                        if (this.videoEffectsSystem) {
+                            this.videoEffectsSystem.filterEffectsByCategory(category);
+                            this.videoEffectsSystem.showEffectsPanel();
+                        }
+                    });
+                });
+
+                // Preset clicks
+                document.querySelectorAll('.preset-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const preset = e.currentTarget.dataset.preset;
+                        if (this.videoEffectsSystem) {
+                            this.videoEffectsSystem.applyPreset(preset);
+                            this.videoEffectsSystem.showEffectsPanel();
+                        }
+                    });
+                });
+
+                // Video effects events
+                document.getElementById('video-preview-area').addEventListener('processing-started', (e) => {
+                    console.log('Processing started:', e.detail);
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce('Video effects processing started', 'polite');
+                    }
+                });
+
+                document.getElementById('video-preview-area').addEventListener('effect-toggled', (e) => {
+                    console.log('Effect toggled:', e.detail);
+                    this.updateStats();
+                });
+
+                document.getElementById('video-preview-area').addEventListener('preset-applied', (e) => {
+                    console.log('Preset applied:', e.detail);
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce(`Applied ${e.detail.preset.name} preset`, 'polite');
+                    }
+                });
+
+                document.getElementById('video-preview-area').addEventListener('effects-reset', (e) => {
+                    console.log('Effects reset:', e.detail);
+                    this.updateStats();
+                });
+
+                // Window events
+                window.addEventListener('beforeunload', () => {
+                    if (this.videoEffectsSystem) {
+                        this.videoEffectsSystem.destroy();
+                    }
+                });
+            }
+
+            startStatsUpdates() {
+                this.statsUpdateInterval = setInterval(() => {
+                    this.updateStats();
+                }, 1000);
+            }
+
+            updateStats() {
+                if (!this.videoEffectsSystem) return;
+
+                const stats = this.videoEffectsSystem.getPerformanceStats();
+                const activeEffects = this.videoEffectsSystem.getActiveEffects();
+
+                // Update status indicators
+                document.getElementById('processing-status-stat').textContent =
+                    this.videoEffectsSystem.isProcessing ? 'Processing' : 'Ready';
+
+                document.getElementById('active-effects-stat').textContent = activeEffects.size;
+
+                document.getElementById('frame-time-stat').textContent =
+                    `${stats.averageFrameTime.toFixed(1)}ms`;
+
+                document.getElementById('effects-applied-stat').textContent = stats.effectsApplied;
+
+                document.getElementById('memory-usage-stat').textContent =
+                    `${(stats.memoryUsage / 1024 / 1024).toFixed(1)} MB`;
+            }
+
+            updateBrowserSupport() {
+                // Check WebGL support
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const webglSupported = !!gl;
+
+                document.getElementById('webgl-support-stat').textContent =
+                    webglSupported ? 'Available' : 'Not Available';
+
+                if (!webglSupported) {
+                    this.showWarning('WebGL is not supported in this browser. Some effects may not work properly.');
+                }
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--danger-color);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(errorDiv);
+
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+
+            showWarning(message) {
+                const warningDiv = document.createElement('div');
+                warningDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--warning-color);
+                    color: black;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(warningDiv);
+
+                setTimeout(() => {
+                    warningDiv.remove();
+                }, 5000);
+            }
+
+            destroy() {
+                if (this.statsUpdateInterval) {
+                    clearInterval(this.statsUpdateInterval);
+                }
+
+                if (this.videoEffectsSystem) {
+                    this.videoEffectsSystem.destroy();
+                }
+
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+
+                if (this.demoVideo) {
+                    this.demoVideo.remove();
+                }
+
+                if (this.demoCanvas) {
+                    this.demoCanvas.remove();
+                }
+            }
+        }
+
+        // Initialize demo when page loads
+        let demoApp;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                demoApp = new VideoEffectsDemo();
+            });
+        } else {
+            demoApp = new VideoEffectsDemo();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (demoApp) {
+                demoApp.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
