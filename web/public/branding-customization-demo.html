@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branding Customization Demo - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Dark Theme CSS -->
+    <link href="css/dark-theme.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --secondary-color: #1a1a1a;
+            --accent-color: #ffffff;
+            --background-color: #1a1a1a;
+            --surface-color: #2a2a2a;
+            --text-color: #ffffff;
+            --text-secondary-color: #cccccc;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .demo-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .demo-nav {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .demo-nav a {
+            color: var(--text-secondary-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .demo-nav a:hover {
+            color: var(--primary-color);
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .demo-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        
+        .demo-btn:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.secondary {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-btn.secondary:hover {
+            background: var(--background-color);
+        }
+        
+        .demo-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .demo-hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--surface-color) 0%, var(--background-color) 100%);
+            border-radius: 12px;
+            margin-bottom: 3rem;
+        }
+        
+        .demo-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .demo-hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary-color);
+            margin-bottom: 2rem;
+        }
+        
+        .demo-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-color);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary-color);
+            line-height: 1.6;
+        }
+        
+        .demo-content {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-content h2 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .demo-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary-color);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .branding-trigger {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .branding-trigger:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 25px rgba(255, 0, 0, 0.4);
+        }
+        
+        .branding-trigger i {
+            font-size: 1.5rem;
+        }
+        
+        .demo-footer {
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .demo-footer p {
+            color: var(--text-secondary-color);
+            margin: 0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .demo-nav {
+                gap: 1rem;
+            }
+            
+            .demo-main {
+                padding: 1rem;
+            }
+            
+            .demo-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-features {
+                grid-template-columns: 1fr;
+            }
+            
+            .branding-trigger {
+                right: 10px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .branding-trigger i {
+                font-size: 1.2rem;
+            }
+        }
+        
+        /* Animation Classes */
+        .enable-animations * {
+            transition: all 0.3s ease;
+        }
+        
+        .enable-shadows .feature-card,
+        .enable-shadows .demo-content,
+        .enable-shadows .stat-card {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Logo Position Classes */
+        .logo-top-left .demo-logo {
+            order: -1;
+        }
+        
+        .logo-top-center .demo-navbar {
+            flex-direction: column;
+        }
+        
+        .logo-top-center .demo-logo {
+            order: -1;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-top-right .demo-logo {
+            order: 1;
+        }
+        
+        /* Logo Size Classes */
+        .logo-small .demo-logo {
+            font-size: 1.2rem;
+        }
+        
+        .logo-medium .demo-logo {
+            font-size: 1.5rem;
+        }
+        
+        .logo-large .demo-logo {
+            font-size: 2rem;
+        }
+        
+        /* Header Style Classes */
+        .header-clean .demo-header {
+            background: transparent;
+            border-bottom: none;
+        }
+        
+        .header-corporate .demo-header {
+            background: var(--background-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .header-modern .demo-header {
+            background: linear-gradient(135deg, var(--surface-color) 0%, var(--background-color) 100%);
+        }
+    </style>
+</head>
+<body class="enable-animations enable-shadows logo-top-left header-modern">
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <nav class="demo-navbar">
+            <a href="#" class="demo-logo brand-logo-primary">
+                <i class="fas fa-video"></i>
+                Interviews.tv
+            </a>
+            
+            <ul class="demo-nav">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            
+            <div class="demo-controls">
+                <button class="demo-btn secondary">
+                    <i class="fas fa-user"></i>
+                    Login
+                </button>
+                <button class="demo-btn">
+                    <i class="fas fa-rocket"></i>
+                    Get Started
+                </button>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="demo-main">
+        <!-- Hero Section -->
+        <section class="demo-hero">
+            <h1>Brand Customization Demo</h1>
+            <p>Experience the power of white-label branding with real-time customization</p>
+            <button class="demo-btn" onclick="showBrandingPanel()">
+                <i class="fas fa-palette"></i>
+                Customize Branding
+            </button>
+        </section>
+        
+        <!-- Features Grid -->
+        <section class="demo-features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>Color Customization</h3>
+                <p>Customize primary, secondary, and accent colors to match your brand identity perfectly.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-font"></i>
+                </div>
+                <h3>Typography Control</h3>
+                <p>Choose from professional font families and customize headings, body text, and monospace fonts.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-image"></i>
+                </div>
+                <h3>Logo Management</h3>
+                <p>Upload and manage primary logos, secondary logos, favicons, and watermarks with ease.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-layout"></i>
+                </div>
+                <h3>Layout Options</h3>
+                <p>Control logo positioning, sizing, header styles, spacing, shadows, and animations.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3>Live Preview</h3>
+                <p>See your changes in real-time with instant preview mode and device-specific views.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-save"></i>
+                </div>
+                <h3>Brand Presets</h3>
+                <p>Save custom brand configurations and switch between professional preset themes instantly.</p>
+            </div>
+        </section>
+        
+        <!-- Demo Content -->
+        <section class="demo-content">
+            <h2>Enterprise Branding Features</h2>
+            <p>Our branding customization system provides enterprise-grade white-label capabilities that allow you to completely customize the look and feel of your interview platform. From colors and fonts to logos and layouts, every aspect can be tailored to match your brand identity.</p>
+            
+            <div class="demo-stats">
+                <div class="stat-card">
+                    <span class="stat-number">4</span>
+                    <div class="stat-label">Brand Presets</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">12</span>
+                    <div class="stat-label">Color Options</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">6</span>
+                    <div class="stat-label">Font Families</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">3</span>
+                    <div class="stat-label">Logo Types</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="demo-footer">
+        <p>&copy; 2024 Interviews.tv - Professional Interview Platform with Enterprise Branding</p>
+    </footer>
+    
+    <!-- Branding Trigger Button -->
+    <button class="branding-trigger" onclick="showBrandingPanel()" title="Customize Branding">
+        <i class="fas fa-palette"></i>
+    </button>
+    
+    <!-- Branding Container -->
+    <div id="branding-container"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/BrandingCustomizationSystem.js"></script>
+    
+    <script>
+        // Demo Application
+        class BrandingCustomizationDemo {
+            constructor() {
+                this.brandingSystem = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('🎨 Initializing Branding Customization Demo...');
+                
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+            
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+                    
+                    // Initialize branding system
+                    this.initializeBrandingSystem();
+                    
+                    console.log('✅ Branding Customization Demo initialized successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize branding customization demo');
+                }
+            }
+            
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+                    
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+            
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Theme system initialized');
+                }
+            }
+            
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+                    
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+            
+            initializeBrandingSystem() {
+                const container = document.getElementById('branding-container');
+                
+                if (!container) {
+                    throw new Error('Branding container not found');
+                }
+                
+                this.brandingSystem = new BrandingCustomizationSystem(container, {
+                    enableLogoCustomization: true,
+                    enableColorCustomization: true,
+                    enableFontCustomization: true,
+                    enableLayoutCustomization: true,
+                    enableWhiteLabel: true,
+                    enableBrandPresets: true,
+                    enableRealTimePreview: true,
+                    enableExportImport: true,
+                    maxLogoSize: 5 * 1024 * 1024, // 5MB
+                    supportedLogoFormats: ['png', 'jpg', 'jpeg', 'svg', 'webp'],
+                    defaultBrandPreset: 'interviews-tv',
+                    enableBrandValidation: true,
+                    enableBrandAnalytics: true,
+                    themeSystem: this.themeSystem,
+                    accessibilitySystem: this.accessibilitySystem,
+                    responsiveSystem: this.responsiveSystem
+                });
+                
+                // Setup branding events
+                container.addEventListener('branding-initialized', (e) => {
+                    console.log('Branding system initialized:', e.detail);
+                });
+                
+                container.addEventListener('branding-applied', (e) => {
+                    console.log('Branding applied:', e.detail);
+                    this.updateDemoStats();
+                });
+                
+                container.addEventListener('brand-preset-applied', (e) => {
+                    console.log('Brand preset applied:', e.detail);
+                    this.showNotification(`Applied ${e.detail.brand.name} preset`, 'success');
+                });
+                
+                container.addEventListener('brand-colors-updated', (e) => {
+                    console.log('Brand colors updated:', e.detail);
+                });
+                
+                container.addEventListener('logo-uploaded', (e) => {
+                    console.log('Logo uploaded:', e.detail);
+                    this.showNotification(`${e.detail.logoType} logo uploaded successfully`, 'success');
+                });
+                
+                console.log('✅ Branding system initialized');
+            }
+            
+            showBrandingPanel() {
+                if (this.brandingSystem) {
+                    this.brandingSystem.showBrandingPanel();
+                }
+            }
+            
+            updateDemoStats() {
+                // Update demo statistics based on current branding
+                const stats = document.querySelectorAll('.stat-number');
+                stats.forEach((stat, index) => {
+                    const currentValue = parseInt(stat.textContent);
+                    stat.textContent = currentValue + Math.floor(Math.random() * 3);
+                });
+            }
+            
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--${type === 'success' ? 'success' : 'info'}-color);
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    animation: slideInDown 0.3s ease;
+                `;
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutUp 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+            
+            showError(message) {
+                this.showNotification(message, 'error');
+            }
+            
+            destroy() {
+                if (this.brandingSystem) {
+                    this.brandingSystem.destroy();
+                }
+                
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+                
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+                
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+            }
+        }
+        
+        // Global function for branding trigger
+        function showBrandingPanel() {
+            if (window.demoApp && window.demoApp.brandingSystem) {
+                window.demoApp.brandingSystem.showBrandingPanel();
+            }
+        }
+        
+        // Initialize demo when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.demoApp = new BrandingCustomizationDemo();
+            });
+        } else {
+            window.demoApp = new BrandingCustomizationDemo();
+        }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.demoApp) {
+                window.demoApp.destroy();
+            }
+        });
+        
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInDown {
+                from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutUp {
+                from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
