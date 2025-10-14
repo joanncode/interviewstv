@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable Layouts System - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .shortcut-key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        
+        .layouts-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .layouts-stats h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-indicator.active {
+            background: var(--success-color);
+            box-shadow: 0 0 6px var(--success-color);
+        }
+        
+        .status-indicator.inactive {
+            background: var(--text-muted);
+        }
+        
+        .streaming-interface {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .main-video-container {
+            position: absolute;
+            background: linear-gradient(45deg, #333, #555);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-videos {
+            position: absolute;
+            background: linear-gradient(45deg, #222, #444);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-container {
+            position: absolute;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .control-bar {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .presentation-area {
+            position: absolute;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .participant-sidebar {
+            position: absolute;
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .layout-transition {
+            animation: layoutFade 0.3s ease-in-out;
+        }
+        
+        @keyframes layoutFade {
+            0% { opacity: 0.7; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .validation-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .validation-indicator.valid {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .validation-indicator.warning {
+            background: var(--warning-color);
+            color: black;
+        }
+        
+        .validation-indicator.error {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .layouts-stats {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-th-large" aria-hidden="true"></i>
+            Customizable Layouts System
+        </h1>
+        <p class="demo-subtitle">Advanced layout management and customization for streaming interfaces</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Layout Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Layout controls">
+            <!-- Built-in Layouts -->
+            <section class="demo-section" id="builtin-layouts">
+                <h3><i class="fas fa-layer-group" aria-hidden="true"></i>Built-in Layouts</h3>
+                <button class="demo-btn active" onclick="setLayout('spotlight')" aria-describedby="spotlight-desc">
+                    <span>
+                        <div><i class="fas fa-user-circle"></i> Spotlight Layout</div>
+                        <div id="spotlight-desc" style="font-size: 12px; color: var(--text-muted);">Focus on main speaker</div>
+                    </span>
+                    <span class="shortcut-key">Alt+1</span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('grid')" aria-describedby="grid-desc">
+                    <span>
+                        <div><i class="fas fa-th"></i> Grid Layout</div>
+                        <div id="grid-desc" style="font-size: 12px; color: var(--text-muted);">Equal-sized video tiles</div>
+                    </span>
+                    <span class="shortcut-key">Alt+2</span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('sidebar')" aria-describedby="sidebar-desc">
+                    <span>
+                        <div><i class="fas fa-columns"></i> Sidebar Layout</div>
+                        <div id="sidebar-desc" style="font-size: 12px; color: var(--text-muted);">Vertical participant sidebar</div>
+                    </span>
+                    <span class="shortcut-key">Alt+3</span>
+                </button>
+                <button class="demo-btn" onclick="setLayout('presentation')" aria-describedby="presentation-desc">
+                    <span>
+                        <div><i class="fas fa-desktop"></i> Presentation Layout</div>
+                        <div id="presentation-desc" style="font-size: 12px; color: var(--text-muted);">Large content area</div>
+                    </span>
+                    <span class="shortcut-key">Alt+4</span>
+                </button>
+            </section>
+            
+            <!-- Layout Management -->
+            <section class="demo-section" id="layout-management">
+                <h3><i class="fas fa-cogs" aria-hidden="true"></i>Layout Management</h3>
+                <button class="demo-btn" onclick="showLayoutManager()" aria-describedby="manager-desc">
+                    <span>
+                        <div><i class="fas fa-list"></i> Layout Manager</div>
+                        <div id="manager-desc" style="font-size: 12px; color: var(--text-muted);">Manage all layouts</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+L</span>
+                </button>
+                <button class="demo-btn" onclick="createNewLayout()" aria-describedby="create-desc">
+                    <span>
+                        <div><i class="fas fa-plus"></i> Create Layout</div>
+                        <div id="create-desc" style="font-size: 12px; color: var(--text-muted);">Create custom layout</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Alt+L</span>
+                </button>
+                <button class="demo-btn" onclick="toggleLayoutEditor()" aria-describedby="editor-desc">
+                    <span>
+                        <div><i class="fas fa-edit"></i> Layout Editor</div>
+                        <div id="editor-desc" style="font-size: 12px; color: var(--text-muted);">Edit current layout</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Shift+L</span>
+                </button>
+                <button class="demo-btn" onclick="validateCurrentLayout()" aria-describedby="validate-desc">
+                    <span>
+                        <div><i class="fas fa-check-circle"></i> Validate Layout</div>
+                        <div id="validate-desc" style="font-size: 12px; color: var(--text-muted);">Check layout compliance</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+V</span>
+                </button>
+            </section>
+            
+            <!-- Layout Templates -->
+            <section class="demo-section" id="layout-templates">
+                <h3><i class="fas fa-file-alt" aria-hidden="true"></i>Layout Templates</h3>
+                <button class="demo-btn" onclick="createFromTemplate('interview')" aria-describedby="interview-desc">
+                    <span>
+                        <div><i class="fas fa-users"></i> Interview Template</div>
+                        <div id="interview-desc" style="font-size: 12px; color: var(--text-muted);">One-on-one interviews</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="createFromTemplate('webinar')" aria-describedby="webinar-desc">
+                    <span>
+                        <div><i class="fas fa-chalkboard-teacher"></i> Webinar Template</div>
+                        <div id="webinar-desc" style="font-size: 12px; color: var(--text-muted);">Presenter with audience</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="createFromTemplate('panel')" aria-describedby="panel-desc">
+                    <span>
+                        <div><i class="fas fa-users-cog"></i> Panel Template</div>
+                        <div id="panel-desc" style="font-size: 12px; color: var(--text-muted);">Panel discussions</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Layout History -->
+            <section class="demo-section" id="layout-history">
+                <h3><i class="fas fa-history" aria-hidden="true"></i>Layout History</h3>
+                <button class="demo-btn" onclick="previousLayout()" aria-describedby="previous-desc">
+                    <span>
+                        <div><i class="fas fa-arrow-left"></i> Previous Layout</div>
+                        <div id="previous-desc" style="font-size: 12px; color: var(--text-muted);">Go to previous layout</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Alt+←</span>
+                </button>
+                <button class="demo-btn" onclick="nextLayout()" aria-describedby="next-desc">
+                    <span>
+                        <div><i class="fas fa-arrow-right"></i> Next Layout</div>
+                        <div id="next-desc" style="font-size: 12px; color: var(--text-muted);">Go to next layout</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Alt+→</span>
+                </button>
+            </section>
+            
+            <!-- Import/Export -->
+            <section class="demo-section" id="import-export">
+                <h3><i class="fas fa-exchange-alt" aria-hidden="true"></i>Import/Export</h3>
+                <button class="demo-btn" onclick="exportCurrentLayout()" aria-describedby="export-desc">
+                    <span>
+                        <div><i class="fas fa-download"></i> Export Layout</div>
+                        <div id="export-desc" style="font-size: 12px; color: var(--text-muted);">Export current layout</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="importLayout()" aria-describedby="import-desc">
+                    <span>
+                        <div><i class="fas fa-upload"></i> Import Layout</div>
+                        <div id="import-desc" style="font-size: 12px; color: var(--text-muted);">Import layout file</div>
+                    </span>
+                </button>
+            </section>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Layout preview area">
+            <div class="streaming-interface" id="streaming-interface">
+                <!-- Layout components will be rendered here -->
+                <div class="main-video-container" id="main-video">Main Video</div>
+                <div class="secondary-videos" id="participant-grid">Participants</div>
+                <div class="chat-container" id="chat-panel">Chat</div>
+                <div class="control-bar" id="controls">Controls</div>
+                <div class="presentation-area" id="presentation" style="display: none;">Presentation</div>
+                <div class="participant-sidebar" id="participants" style="display: none;">Participants</div>
+                
+                <!-- Validation Indicator -->
+                <div class="validation-indicator valid" id="validation-indicator">
+                    <i class="fas fa-check"></i> Valid Layout
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Layout Statistics Panel -->
+    <aside class="layouts-stats" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Layout Status
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">System Status:</span>
+            <span class="stat-value">
+                <span class="status-indicator active" id="system-status"></span>
+                <span id="system-status-text">Active</span>
+            </span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Current Layout:</span>
+            <span class="stat-value" id="current-layout">Spotlight</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Total Layouts:</span>
+            <span class="stat-value" id="total-layouts">4</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Custom Layouts:</span>
+            <span class="stat-value" id="custom-layouts">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Layout History:</span>
+            <span class="stat-value" id="layout-history">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Is Editing:</span>
+            <span class="stat-value" id="is-editing">No</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Validation:</span>
+            <span class="stat-value" id="validation-status">Valid</span>
+        </div>
+    </aside>
+    
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/KeyboardShortcutsSystem.js"></script>
+    <script src="../src/components/CustomizableLayoutsSystem.js"></script>
+
+    <script>
+        // Global variables
+        let customizableLayouts = null;
+        let accessibilitySystem = null;
+        let themeSystem = null;
+        let responsiveSystem = null;
+        let keyboardShortcuts = null;
+
+        // Demo state
+        let currentLayoutId = 'spotlight';
+        let isSystemActive = true;
+
+        // Initialize the customizable layouts system
+        function initializeCustomizableLayouts() {
+            const container = document.getElementById('streaming-interface');
+
+            // Initialize accessibility system first
+            if (typeof AccessibilitySystem !== 'undefined') {
+                accessibilitySystem = new AccessibilitySystem({
+                    container: container,
+                    settings: {
+                        wcagLevel: 'AA',
+                        announcements: true,
+                        keyboardNavigation: true,
+                        focusIndicators: true
+                    }
+                });
+            }
+
+            // Initialize theme system
+            if (typeof ThemeSystem !== 'undefined') {
+                themeSystem = new ThemeSystem({
+                    container: container,
+                    settings: {
+                        defaultTheme: 'dark',
+                        enableAutoTheme: false,
+                        enableCustomThemes: true
+                    }
+                });
+            }
+
+            // Initialize responsive system
+            if (typeof ResponsiveDesignSystem !== 'undefined') {
+                responsiveSystem = new ResponsiveDesignSystem({
+                    container: container,
+                    settings: {
+                        enableResponsiveDesign: true,
+                        enableTouchOptimization: true,
+                        enableGestureSupport: true
+                    }
+                });
+            }
+
+            // Initialize keyboard shortcuts
+            if (typeof KeyboardShortcutsSystem !== 'undefined') {
+                keyboardShortcuts = new KeyboardShortcutsSystem({
+                    container: container,
+                    accessibilitySystem: accessibilitySystem,
+                    settings: {
+                        enabled: true,
+                        enableGlobalShortcuts: true,
+                        enableContextualShortcuts: true,
+                        enableSequenceShortcuts: true,
+                        enableCustomShortcuts: true,
+                        enableVisualFeedback: true,
+                        enableSoundFeedback: false,
+                        enableHapticFeedback: false
+                    }
+                });
+
+                // Add demo-specific shortcuts
+                addDemoShortcuts();
+            }
+
+            // Initialize customizable layouts system
+            if (typeof CustomizableLayoutsSystem !== 'undefined') {
+                customizableLayouts = new CustomizableLayoutsSystem({
+                    container: container,
+                    accessibilitySystem: accessibilitySystem,
+                    themeSystem: themeSystem,
+                    responsiveSystem: responsiveSystem,
+                    keyboardShortcuts: keyboardShortcuts,
+                    settings: {
+                        enableCustomLayouts: true,
+                        enableLayoutAnimations: true,
+                        enableLayoutPersistence: true,
+                        enableResponsiveLayouts: true,
+                        enableLayoutSharing: true,
+                        defaultTransitionDuration: 300,
+                        maxCustomLayouts: 20,
+                        enableLayoutPreview: true,
+                        enableLayoutTemplates: true,
+                        enableLayoutValidation: true
+                    }
+                });
+
+                // Listen for layout changes
+                container.addEventListener('layout-changed', handleLayoutChange);
+
+                // Update stats
+                updateStats();
+
+                // Set initial layout
+                setLayout('spotlight');
+            }
+        }
+
+        // Add demo-specific keyboard shortcuts
+        function addDemoShortcuts() {
+            if (!keyboardShortcuts) return;
+
+            // Layout shortcuts
+            keyboardShortcuts.addShortcut('Alt+1', () => setLayout('spotlight'), 'Switch to spotlight layout', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Alt+2', () => setLayout('grid'), 'Switch to grid layout', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Alt+3', () => setLayout('sidebar'), 'Switch to sidebar layout', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Alt+4', () => setLayout('presentation'), 'Switch to presentation layout', 'layout', 'global', 1);
+
+            // Management shortcuts
+            keyboardShortcuts.addShortcut('Ctrl+l', () => showLayoutManager(), 'Show layout manager', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Ctrl+Shift+l', () => toggleLayoutEditor(), 'Toggle layout editor', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Ctrl+Alt+l', () => createNewLayout(), 'Create new layout', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Ctrl+v', () => validateCurrentLayout(), 'Validate current layout', 'layout', 'global', 1);
+
+            // History shortcuts
+            keyboardShortcuts.addShortcut('Ctrl+Alt+Left', () => previousLayout(), 'Previous layout', 'layout', 'global', 1);
+            keyboardShortcuts.addShortcut('Ctrl+Alt+Right', () => nextLayout(), 'Next layout', 'layout', 'global', 1);
+        }
+
+        // Set layout
+        function setLayout(layoutId) {
+            if (!customizableLayouts) return;
+
+            const success = customizableLayouts.setLayout(layoutId);
+            if (success) {
+                currentLayoutId = layoutId;
+                updateActiveButton(layoutId);
+                updateStats();
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback(`Layout changed to ${layoutId}`);
+                }
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce(`Layout changed to ${layoutId}`, 'polite');
+                }
+            }
+        }
+
+        // Update active button
+        function updateActiveButton(layoutId) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.demo-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to current layout button
+            const activeButton = document.querySelector(`[onclick="setLayout('${layoutId}')"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // Show layout manager
+        function showLayoutManager() {
+            if (!customizableLayouts) return;
+
+            customizableLayouts.showLayoutManager();
+
+            // Show feedback
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback('Layout manager opened');
+            }
+        }
+
+        // Create new layout
+        function createNewLayout() {
+            if (!customizableLayouts) return;
+
+            const layoutId = customizableLayouts.createNewLayout();
+            if (layoutId) {
+                updateStats();
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback('New layout created');
+                }
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce('New custom layout created', 'polite');
+                }
+            }
+        }
+
+        // Toggle layout editor
+        function toggleLayoutEditor() {
+            if (!customizableLayouts) return;
+
+            const isEditing = customizableLayouts.isEditing;
+
+            if (isEditing) {
+                customizableLayouts.hideLayoutEditor();
+            } else {
+                customizableLayouts.editLayout(currentLayoutId);
+            }
+
+            updateStats();
+
+            // Show feedback
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback(`Layout editor ${isEditing ? 'closed' : 'opened'}`);
+            }
+        }
+
+        // Validate current layout
+        function validateCurrentLayout() {
+            if (!customizableLayouts) return;
+
+            const layout = customizableLayouts.getCurrentLayout();
+            if (!layout) return;
+
+            const validation = customizableLayouts.validateLayout(layout);
+            updateValidationIndicator(validation);
+
+            // Show feedback
+            if (keyboardShortcuts) {
+                const status = validation.valid ? 'valid' :
+                              validation.hasErrors ? 'has errors' : 'has warnings';
+                keyboardShortcuts.showShortcutFeedback(`Layout validation: ${status}`);
+            }
+
+            // Announce to screen reader
+            if (accessibilitySystem) {
+                const message = validation.valid ?
+                    'Layout validation passed' :
+                    `Layout validation failed: ${validation.issues.length} issues found`;
+                accessibilitySystem.announce(message, 'polite');
+            }
+        }
+
+        // Create layout from template
+        function createFromTemplate(templateId) {
+            if (!customizableLayouts) return;
+
+            const layoutId = customizableLayouts.createNewLayout(templateId);
+            if (layoutId) {
+                updateStats();
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback(`Layout created from ${templateId} template`);
+                }
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce(`New layout created from ${templateId} template`, 'polite');
+                }
+            }
+        }
+
+        // Previous layout
+        function previousLayout() {
+            if (!customizableLayouts) return;
+
+            const previousLayoutId = customizableLayouts.previousLayout();
+            if (previousLayoutId) {
+                currentLayoutId = previousLayoutId;
+                updateActiveButton(previousLayoutId);
+                updateStats();
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback(`Switched to previous layout: ${previousLayoutId}`);
+                }
+            } else {
+                // Show feedback for no previous layout
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback('No previous layout available');
+                }
+            }
+        }
+
+        // Next layout
+        function nextLayout() {
+            if (!customizableLayouts) return;
+
+            const nextLayoutId = customizableLayouts.nextLayout();
+            if (nextLayoutId) {
+                currentLayoutId = nextLayoutId;
+                updateActiveButton(nextLayoutId);
+                updateStats();
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback(`Switched to next layout: ${nextLayoutId}`);
+                }
+            }
+        }
+
+        // Export current layout
+        function exportCurrentLayout() {
+            if (!customizableLayouts) return;
+
+            const exportData = customizableLayouts.exportLayout(currentLayoutId);
+            if (exportData) {
+                // Create download link
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `layout_${currentLayoutId}_${Date.now()}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                // Show feedback
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback('Layout exported successfully');
+                }
+
+                // Announce to screen reader
+                if (accessibilitySystem) {
+                    accessibilitySystem.announce('Layout exported and downloaded', 'polite');
+                }
+            }
+        }
+
+        // Import layout
+        function importLayout() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        const layoutId = customizableLayouts.importLayout(data);
+
+                        if (layoutId) {
+                            updateStats();
+
+                            // Show feedback
+                            if (keyboardShortcuts) {
+                                keyboardShortcuts.showShortcutFeedback('Layout imported successfully');
+                            }
+
+                            // Announce to screen reader
+                            if (accessibilitySystem) {
+                                accessibilitySystem.announce('Layout imported successfully', 'polite');
+                            }
+                        } else {
+                            throw new Error('Failed to import layout');
+                        }
+                    } catch (error) {
+                        console.error('Import error:', error);
+
+                        // Show error feedback
+                        if (keyboardShortcuts) {
+                            keyboardShortcuts.showShortcutFeedback('Failed to import layout');
+                        }
+
+                        // Announce error to screen reader
+                        if (accessibilitySystem) {
+                            accessibilitySystem.announce('Failed to import layout', 'assertive');
+                        }
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Handle layout change event
+        function handleLayoutChange(e) {
+            const { newLayout, layoutId } = e.detail;
+            currentLayoutId = layoutId;
+            updateActiveButton(layoutId);
+            updateStats();
+
+            // Add transition animation
+            const container = document.getElementById('streaming-interface');
+            container.classList.add('layout-transition');
+            setTimeout(() => {
+                container.classList.remove('layout-transition');
+            }, 300);
+        }
+
+        // Update validation indicator
+        function updateValidationIndicator(validation) {
+            const indicator = document.getElementById('validation-indicator');
+            if (!indicator) return;
+
+            // Remove existing classes
+            indicator.classList.remove('valid', 'warning', 'error');
+
+            // Update indicator based on validation result
+            if (validation.valid) {
+                indicator.classList.add('valid');
+                indicator.innerHTML = '<i class="fas fa-check"></i> Valid Layout';
+            } else if (validation.hasErrors) {
+                indicator.classList.add('error');
+                indicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Layout Errors';
+            } else if (validation.hasWarnings) {
+                indicator.classList.add('warning');
+                indicator.innerHTML = '<i class="fas fa-exclamation-circle"></i> Layout Warnings';
+            }
+
+            // Update validation status in stats
+            const validationStatus = document.getElementById('validation-status');
+            if (validationStatus) {
+                if (validation.valid) {
+                    validationStatus.textContent = 'Valid';
+                    validationStatus.style.color = 'var(--success-color)';
+                } else if (validation.hasErrors) {
+                    validationStatus.textContent = 'Errors';
+                    validationStatus.style.color = 'var(--danger-color)';
+                } else {
+                    validationStatus.textContent = 'Warnings';
+                    validationStatus.style.color = 'var(--warning-color)';
+                }
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            if (!customizableLayouts) return;
+
+            const stats = customizableLayouts.getLayoutStats();
+
+            // Update system status
+            const systemStatus = document.getElementById('system-status');
+            const systemStatusText = document.getElementById('system-status-text');
+            if (systemStatus && systemStatusText) {
+                if (isSystemActive) {
+                    systemStatus.className = 'status-indicator active';
+                    systemStatusText.textContent = 'Active';
+                } else {
+                    systemStatus.className = 'status-indicator inactive';
+                    systemStatusText.textContent = 'Inactive';
+                }
+            }
+
+            // Update current layout
+            const currentLayoutElement = document.getElementById('current-layout');
+            if (currentLayoutElement) {
+                currentLayoutElement.textContent = stats.currentLayout || 'None';
+            }
+
+            // Update total layouts
+            const totalLayoutsElement = document.getElementById('total-layouts');
+            if (totalLayoutsElement) {
+                totalLayoutsElement.textContent = stats.totalLayouts || 0;
+            }
+
+            // Update custom layouts
+            const customLayoutsElement = document.getElementById('custom-layouts');
+            if (customLayoutsElement) {
+                customLayoutsElement.textContent = stats.customLayouts || 0;
+            }
+
+            // Update layout history
+            const layoutHistoryElement = document.getElementById('layout-history');
+            if (layoutHistoryElement) {
+                layoutHistoryElement.textContent = stats.layoutHistory || 0;
+            }
+
+            // Update editing status
+            const isEditingElement = document.getElementById('is-editing');
+            if (isEditingElement) {
+                isEditingElement.textContent = stats.isEditing ? 'Yes' : 'No';
+                isEditingElement.style.color = stats.isEditing ? 'var(--warning-color)' : 'var(--text-light)';
+            }
+        }
+
+        // Toggle system status
+        function toggleSystemStatus() {
+            isSystemActive = !isSystemActive;
+
+            if (customizableLayouts) {
+                if (isSystemActive) {
+                    customizableLayouts.enable();
+                } else {
+                    customizableLayouts.disable();
+                }
+            }
+
+            updateStats();
+
+            // Show feedback
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback(`Customizable layouts ${isSystemActive ? 'enabled' : 'disabled'}`);
+            }
+        }
+
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCustomizableLayouts();
+
+            // Auto-validate current layout after initialization
+            setTimeout(() => {
+                validateCurrentLayout();
+            }, 1000);
+
+            // Update stats every 5 seconds
+            setInterval(updateStats, 5000);
+        });
+
+        // Handle window resize for responsive demo
+        window.addEventListener('resize', function() {
+            if (customizableLayouts) {
+                // Trigger responsive layout update
+                setTimeout(() => {
+                    updateStats();
+                }, 100);
+            }
+        });
+
+        // Keyboard event handling for demo
+        document.addEventListener('keydown', function(e) {
+            // Toggle system with Ctrl+Shift+T
+            if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleSystemStatus();
+            }
+
+            // Show help with F1 or Ctrl+/
+            if (e.key === 'F1' || (e.ctrlKey && e.key === '/')) {
+                e.preventDefault();
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutsHelp();
+                }
+            }
+        });
+
+        // Accessibility enhancements
+        function enhanceAccessibility() {
+            // Add skip links
+            const skipLink = document.createElement('a');
+            skipLink.href = '#main-content';
+            skipLink.textContent = 'Skip to main content';
+            skipLink.className = 'sr-only sr-only-focusable';
+            skipLink.style.cssText = `
+                position: absolute;
+                top: -40px;
+                left: 6px;
+                width: 1px;
+                height: 1px;
+                padding: 8px 16px;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+                background: var(--primary-color);
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                z-index: 10001;
+            `;
+
+            skipLink.addEventListener('focus', function() {
+                this.style.cssText = this.style.cssText.replace('top: -40px', 'top: 6px');
+                this.style.cssText = this.style.cssText.replace('width: 1px; height: 1px', 'width: auto; height: auto');
+                this.style.cssText = this.style.cssText.replace('overflow: hidden', 'overflow: visible');
+                this.style.cssText = this.style.cssText.replace('clip: rect(0, 0, 0, 0)', 'clip: auto');
+            });
+
+            skipLink.addEventListener('blur', function() {
+                this.style.cssText = this.style.cssText.replace('top: 6px', 'top: -40px');
+                this.style.cssText = this.style.cssText.replace('width: auto; height: auto', 'width: 1px; height: 1px');
+                this.style.cssText = this.style.cssText.replace('overflow: visible', 'overflow: hidden');
+                this.style.cssText = this.style.cssText.replace('clip: auto', 'clip: rect(0, 0, 0, 0)');
+            });
+
+            document.body.insertBefore(skipLink, document.body.firstChild);
+
+            // Add ARIA live region for announcements
+            const liveRegion = document.createElement('div');
+            liveRegion.setAttribute('aria-live', 'polite');
+            liveRegion.setAttribute('aria-atomic', 'true');
+            liveRegion.className = 'sr-only';
+            liveRegion.id = 'live-announcements';
+            document.body.appendChild(liveRegion);
+        }
+
+        // Initialize accessibility enhancements
+        enhanceAccessibility();
+    </script>
+</body>
+</html>
