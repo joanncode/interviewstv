@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen Sharing with Annotations - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-screen {
+            width: 80%;
+            height: 80%;
+            background: #333;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            flex-direction: column;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .control-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 5px;
+        }
+        
+        .control-btn:hover {
+            background: #cc0000;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .keyboard-shortcuts {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .keyboard-shortcuts h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .shortcut-key {
+            background: var(--input-dark);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--primary-color);
+        }
+        
+        .browser-support {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .browser-support h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .browser-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .support-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .support-status.supported {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .support-status.partial {
+            background: var(--warning-color);
+            color: black;
+        }
+        
+        .support-status.not-supported {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-desktop" aria-hidden="true"></i>
+            Screen Sharing with Annotations
+        </h1>
+        <p class="demo-subtitle">Advanced screen sharing and collaborative annotation tools with real-time collaboration</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Information -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Screen sharing information">
+            <!-- Features Overview -->
+            <section class="demo-section" id="features-overview">
+                <h3><i class="fas fa-star" aria-hidden="true"></i>Key Features</h3>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-desktop"></i>Full screen, window, or tab sharing</li>
+                    <li><i class="fas fa-pencil-alt"></i>Real-time annotation tools</li>
+                    <li><i class="fas fa-users"></i>Collaborative annotations</li>
+                    <li><i class="fas fa-cog"></i>Quality control settings</li>
+                    <li><i class="fas fa-save"></i>Save and export annotations</li>
+                    <li><i class="fas fa-undo"></i>Undo/redo functionality</li>
+                    <li><i class="fas fa-keyboard"></i>Keyboard shortcuts</li>
+                    <li><i class="fas fa-mobile-alt"></i>Mobile responsive design</li>
+                </ul>
+            </section>
+            
+            <!-- Annotation Tools -->
+            <section class="demo-section" id="annotation-tools">
+                <h3><i class="fas fa-pencil-alt" aria-hidden="true"></i>Annotation Tools</h3>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-mouse-pointer"></i>Pointer tool for navigation</li>
+                    <li><i class="fas fa-pen"></i>Pen for freehand drawing</li>
+                    <li><i class="fas fa-highlighter"></i>Highlighter for emphasis</li>
+                    <li><i class="fas fa-eraser"></i>Eraser for corrections</li>
+                    <li><i class="fas fa-square"></i>Rectangle shapes</li>
+                    <li><i class="fas fa-circle"></i>Circle shapes</li>
+                    <li><i class="fas fa-arrow-right"></i>Arrow indicators</li>
+                    <li><i class="fas fa-font"></i>Text annotations</li>
+                    <li><i class="fas fa-comment"></i>Callout bubbles</li>
+                    <li><i class="fas fa-search"></i>Spotlight effects</li>
+                </ul>
+            </section>
+            
+            <!-- Quality Settings -->
+            <section class="demo-section" id="quality-settings">
+                <h3><i class="fas fa-cog" aria-hidden="true"></i>Quality Options</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong>Low Quality:</strong> 1280×720 • 15 FPS<br>
+                    <small style="color: var(--text-muted);">Best for slow connections</small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong>Medium Quality:</strong> 1920×1080 • 24 FPS<br>
+                    <small style="color: var(--text-muted);">Balanced quality and performance</small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong>High Quality:</strong> 1920×1080 • 30 FPS<br>
+                    <small style="color: var(--text-muted);">Best for detailed content</small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong>Ultra Quality:</strong> 2560×1440 • 30 FPS<br>
+                    <small style="color: var(--text-muted);">Maximum quality (requires fast connection)</small>
+                </div>
+            </section>
+            
+            <!-- Browser Support -->
+            <div class="browser-support">
+                <h4><i class="fas fa-globe" aria-hidden="true"></i>Browser Support</h4>
+                
+                <div class="browser-item">
+                    <span><i class="fab fa-chrome"></i> Chrome 72+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-firefox"></i> Firefox 66+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-edge"></i> Edge 79+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-safari"></i> Safari 13+</span>
+                    <span class="support-status partial">Partial Support</span>
+                </div>
+                <div class="browser-item">
+                    <span><i class="fab fa-opera"></i> Opera 60+</span>
+                    <span class="support-status supported">Full Support</span>
+                </div>
+            </div>
+            
+            <!-- Keyboard Shortcuts -->
+            <div class="keyboard-shortcuts">
+                <h4><i class="fas fa-keyboard" aria-hidden="true"></i>Keyboard Shortcuts</h4>
+                
+                <div class="shortcut-item">
+                    <span>Start Sharing</span>
+                    <span class="shortcut-key">Ctrl+Shift+S</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Toggle Annotations</span>
+                    <span class="shortcut-key">Ctrl+Shift+A</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Undo Annotation</span>
+                    <span class="shortcut-key">Ctrl+Z</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Redo Annotation</span>
+                    <span class="shortcut-key">Ctrl+Y</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Pointer Tool</span>
+                    <span class="shortcut-key">1</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Pen Tool</span>
+                    <span class="shortcut-key">2</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Highlighter</span>
+                    <span class="shortcut-key">3</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Eraser</span>
+                    <span class="shortcut-key">4</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Screen sharing preview area">
+            <div class="screen-area" id="screen-area">
+                <div class="demo-screen" id="demo-screen">
+                    <i class="fas fa-desktop" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <div>Screen Sharing Demo</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Click "Start Sharing" to begin screen sharing</div>
+                    <div style="font-size: 0.8rem; margin-top: 10px; color: var(--text-muted);">
+                        Screen sharing controls and annotation tools will appear here
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Sharing Statistics
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Sharing Status:</span>
+            <span class="stat-value" id="sharing-status-stat">Not Active</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Annotations Created:</span>
+            <span class="stat-value" id="annotations-created-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Current Tool:</span>
+            <span class="stat-value" id="current-tool-stat">Pointer</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Quality Setting:</span>
+            <span class="stat-value" id="quality-setting-stat">Medium</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Sharing Duration:</span>
+            <span class="stat-value" id="sharing-duration-stat">00:00</span>
+        </div>
+    </aside>
+    
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/ScreenSharingSystem.js"></script>
+
+    <script>
+        // Demo Application
+        class ScreenSharingDemo {
+            constructor() {
+                this.screenSharingSystem = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                this.statsUpdateInterval = null;
+
+                this.init();
+            }
+
+            init() {
+                console.log('🎬 Initializing Screen Sharing Demo...');
+
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+
+                    // Initialize screen sharing system
+                    this.initializeScreenSharingSystem();
+
+                    // Setup demo functionality
+                    this.setupDemoFeatures();
+                    this.setupEventListeners();
+                    this.startStatsUpdates();
+
+                    console.log('✅ Screen Sharing Demo initialized successfully');
+
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize screen sharing demo');
+                }
+            }
+
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+
+                    console.log('✅ Theme system initialized');
+                }
+            }
+
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+
+            initializeScreenSharingSystem() {
+                const container = document.getElementById('screen-area');
+
+                if (!container) {
+                    throw new Error('Screen area container not found');
+                }
+
+                this.screenSharingSystem = new ScreenSharingSystem(container, {
+                    enableAnnotations: true,
+                    enableCollaboration: true,
+                    enableRecording: true,
+                    enableQualityControls: true,
+                    maxAnnotations: 100,
+                    annotationTimeout: 300000,
+                    defaultTool: 'pointer',
+                    allowedSources: ['screen', 'window', 'tab'],
+                    accessibilitySystem: this.accessibilitySystem,
+                    themeSystem: this.themeSystem,
+                    responsiveSystem: this.responsiveSystem
+                });
+
+                console.log('✅ Screen sharing system initialized');
+            }
+
+            setupDemoFeatures() {
+                // Add demo content to screen area
+                this.createDemoContent();
+
+                // Setup browser support detection
+                this.updateBrowserSupport();
+
+                // Setup initial stats
+                this.updateStats();
+            }
+
+            createDemoContent() {
+                const demoScreen = document.getElementById('demo-screen');
+
+                // Add animated demo content
+                const animatedContent = document.createElement('div');
+                animatedContent.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    right: 20px;
+                    width: 100px;
+                    height: 100px;
+                    background: linear-gradient(45deg, #FF0000, #FF6666);
+                    border-radius: 50%;
+                    animation: demo-pulse 2s infinite;
+                `;
+
+                // Add CSS animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes demo-pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.7; }
+                        50% { transform: scale(1.1); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                demoScreen.appendChild(animatedContent);
+            }
+
+            setupEventListeners() {
+                // Screen sharing events
+                document.getElementById('screen-area').addEventListener('screen-sharing-started', (e) => {
+                    console.log('Screen sharing started:', e.detail);
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce('Screen sharing started successfully', 'polite');
+                    }
+                });
+
+                document.getElementById('screen-area').addEventListener('screen-sharing-stopped', (e) => {
+                    console.log('Screen sharing stopped:', e.detail);
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce('Screen sharing stopped', 'polite');
+                    }
+                });
+
+                document.getElementById('screen-area').addEventListener('screen-sharing-error', (e) => {
+                    console.error('Screen sharing error:', e.detail);
+                    this.showError(`Screen sharing error: ${e.detail.error}`);
+                });
+
+                // Annotation events
+                document.getElementById('screen-area').addEventListener('annotation-created', (e) => {
+                    console.log('Annotation created:', e.detail);
+                    this.updateStats();
+                });
+
+                document.getElementById('screen-area').addEventListener('annotation-deleted', (e) => {
+                    console.log('Annotation deleted:', e.detail);
+                    this.updateStats();
+                });
+
+                document.getElementById('screen-area').addEventListener('annotations-cleared', (e) => {
+                    console.log('Annotations cleared:', e.detail);
+                    this.updateStats();
+                });
+
+                // Window events
+                window.addEventListener('beforeunload', () => {
+                    if (this.screenSharingSystem) {
+                        this.screenSharingSystem.destroy();
+                    }
+                });
+            }
+
+            startStatsUpdates() {
+                this.statsUpdateInterval = setInterval(() => {
+                    this.updateStats();
+                }, 1000);
+            }
+
+            updateStats() {
+                if (!this.screenSharingSystem) return;
+
+                const status = this.screenSharingSystem.getSharingStatus();
+                const stats = this.screenSharingSystem.getPerformanceStats();
+
+                // Update status indicators
+                document.getElementById('sharing-status-stat').textContent =
+                    status.isSharing ? 'Active' : 'Not Active';
+
+                document.getElementById('annotations-created-stat').textContent =
+                    stats.annotationsCreated || 0;
+
+                document.getElementById('current-tool-stat').textContent =
+                    status.currentTool?.charAt(0).toUpperCase() + status.currentTool?.slice(1) || 'Pointer';
+
+                document.getElementById('quality-setting-stat').textContent =
+                    status.currentQuality?.charAt(0).toUpperCase() + status.currentQuality?.slice(1) || 'Medium';
+
+                // Update duration from the sharing system's display
+                const durationElement = document.getElementById('sharing-duration');
+                if (durationElement) {
+                    document.getElementById('sharing-duration-stat').textContent =
+                        durationElement.textContent || '00:00';
+                }
+            }
+
+            updateBrowserSupport() {
+                // Check actual browser support
+                const hasGetDisplayMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+                const hasWebRTC = !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+
+                if (!hasGetDisplayMedia) {
+                    this.showWarning('Screen sharing is not supported in this browser');
+                }
+
+                if (!hasWebRTC) {
+                    this.showWarning('WebRTC is not supported in this browser');
+                }
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--danger-color);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(errorDiv);
+
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+
+            showWarning(message) {
+                const warningDiv = document.createElement('div');
+                warningDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--warning-color);
+                    color: black;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(warningDiv);
+
+                setTimeout(() => {
+                    warningDiv.remove();
+                }, 5000);
+            }
+
+            destroy() {
+                if (this.statsUpdateInterval) {
+                    clearInterval(this.statsUpdateInterval);
+                }
+
+                if (this.screenSharingSystem) {
+                    this.screenSharingSystem.destroy();
+                }
+
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+            }
+        }
+
+        // Initialize demo when page loads
+        let demoApp;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                demoApp = new ScreenSharingDemo();
+            });
+        } else {
+            demoApp = new ScreenSharingDemo();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (demoApp) {
+                demoApp.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
