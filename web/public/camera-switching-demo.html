@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Switching System - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .camera-preview-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .main-camera-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .no-camera-message {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .no-camera-message i {
+            font-size: 4rem;
+            color: var(--text-muted);
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .feature-list li i {
+            color: var(--primary-color);
+            width: 16px;
+        }
+        
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .demo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .demo-btn.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .demo-btn.primary:hover {
+            background: #cc0000;
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .camera-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .camera-control-btn {
+            width: 50px;
+            height: 50px;
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .camera-control-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+        
+        .camera-control-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .keyboard-shortcuts {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .keyboard-shortcuts h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .shortcut-key {
+            background: var(--input-dark);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--primary-color);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+            
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .camera-controls {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                margin: 20px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-video" aria-hidden="true"></i>
+            Camera Switching System
+        </h1>
+        <p class="demo-subtitle">Multi-camera device management with seamless switching and quality control</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Information -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Camera switching information">
+            <!-- Features Overview -->
+            <section class="demo-section" id="features-overview">
+                <h3><i class="fas fa-star" aria-hidden="true"></i>Key Features</h3>
+                
+                <ul class="feature-list">
+                    <li><i class="fas fa-video"></i>Multi-camera support (up to 8 devices)</li>
+                    <li><i class="fas fa-exchange-alt"></i>Seamless camera switching</li>
+                    <li><i class="fas fa-sliders-h"></i>Quality presets (Low to Ultra)</li>
+                    <li><i class="fas fa-eye"></i>Live camera preview</li>
+                    <li><i class="fas fa-tags"></i>Custom device labeling</li>
+                    <li><i class="fas fa-memory"></i>Device memory & preferences</li>
+                    <li><i class="fas fa-keyboard"></i>Keyboard shortcuts</li>
+                    <li><i class="fas fa-mobile-alt"></i>Mobile optimized</li>
+                </ul>
+                
+                <div class="control-buttons">
+                    <button class="demo-btn primary" id="open-camera-panel-btn">
+                        <i class="fas fa-video"></i>
+                        Open Camera Panel
+                    </button>
+                    <button class="demo-btn" id="refresh-cameras-btn">
+                        <i class="fas fa-sync"></i>
+                        Refresh Cameras
+                    </button>
+                    <button class="demo-btn" id="next-camera-btn">
+                        <i class="fas fa-forward"></i>
+                        Next Camera
+                    </button>
+                    <button class="demo-btn" id="prev-camera-btn">
+                        <i class="fas fa-backward"></i>
+                        Previous Camera
+                    </button>
+                </div>
+            </section>
+
+            <!-- Quality Settings -->
+            <section class="demo-section" id="quality-settings">
+                <h3><i class="fas fa-sliders-h" aria-hidden="true"></i>Quality Presets</h3>
+
+                <div class="control-buttons">
+                    <button class="demo-btn" data-quality="low">
+                        <i class="fas fa-signal"></i>
+                        Low (640×480)
+                    </button>
+                    <button class="demo-btn" data-quality="medium">
+                        <i class="fas fa-signal"></i>
+                        Medium (1280×720)
+                    </button>
+                    <button class="demo-btn" data-quality="high">
+                        <i class="fas fa-signal"></i>
+                        High (1920×1080)
+                    </button>
+                    <button class="demo-btn" data-quality="ultra">
+                        <i class="fas fa-signal"></i>
+                        Ultra (2560×1440)
+                    </button>
+                </div>
+            </section>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="keyboard-shortcuts">
+                <h4><i class="fas fa-keyboard" aria-hidden="true"></i>Keyboard Shortcuts</h4>
+
+                <div class="shortcut-item">
+                    <span>Toggle Camera Panel</span>
+                    <span class="shortcut-key">Ctrl+Shift+C</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Next Camera</span>
+                    <span class="shortcut-key">Ctrl+Shift+N</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Previous Camera</span>
+                    <span class="shortcut-key">Ctrl+Shift+Alt+P</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Camera 1</span>
+                    <span class="shortcut-key">Alt+Shift+1</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Camera 2</span>
+                    <span class="shortcut-key">Alt+Shift+2</span>
+                </div>
+                <div class="shortcut-item">
+                    <span>Camera 3</span>
+                    <span class="shortcut-key">Alt+Shift+3</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Camera preview area">
+            <div class="camera-preview-area" id="camera-preview-area">
+                <div class="no-camera-message" id="no-camera-message">
+                    <i class="fas fa-video-slash"></i>
+                    <div>No Camera Active</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Click "Open Camera Panel" to select a camera</div>
+                </div>
+                <video class="main-camera-video" id="main-camera-video" autoplay muted playsinline style="display: none;"></video>
+            </div>
+
+            <!-- Camera Controls -->
+            <div class="camera-controls" id="camera-controls">
+                <button class="camera-control-btn" id="toggle-camera-btn" title="Toggle Camera">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="camera-control-btn" id="switch-camera-btn" title="Switch Camera">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+                <button class="camera-control-btn" id="camera-settings-btn" title="Camera Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="camera-control-btn" id="fullscreen-btn" title="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Camera Statistics
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Active Camera:</span>
+            <span class="stat-value" id="active-camera-stat">None</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Available Cameras:</span>
+            <span class="stat-value" id="available-cameras-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Current Quality:</span>
+            <span class="stat-value" id="current-quality-stat">-</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Switch Count:</span>
+            <span class="stat-value" id="switch-count-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Avg Switch Time:</span>
+            <span class="stat-value" id="avg-switch-time-stat">0ms</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">System Status:</span>
+            <span class="stat-value" id="system-status-stat">Initializing...</span>
+        </div>
+    </aside>
+
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/CameraSwitchingSystem.js"></script>
+
+    <script>
+        // Demo Application
+        class CameraSwitchingDemo {
+            constructor() {
+                this.cameraSwitchingSystem = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                this.statsUpdateInterval = null;
+                this.mainVideo = null;
+
+                this.init();
+            }
+
+            init() {
+                console.log('🎥 Initializing Camera Switching Demo...');
+
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+
+                    // Get main video element
+                    this.mainVideo = document.getElementById('main-camera-video');
+
+                    // Initialize camera switching system
+                    this.initializeCameraSwitchingSystem();
+
+                    // Setup demo functionality
+                    this.setupDemoFeatures();
+                    this.setupEventListeners();
+                    this.startStatsUpdates();
+
+                    console.log('✅ Camera Switching Demo initialized successfully');
+
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize camera switching demo');
+                }
+            }
+
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+
+                    console.log('✅ Theme system initialized');
+                }
+            }
+
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+
+            initializeCameraSwitchingSystem() {
+                const container = document.getElementById('camera-preview-area');
+
+                if (!container) {
+                    throw new Error('Camera preview area container not found');
+                }
+
+                this.cameraSwitchingSystem = new CameraSwitchingSystem(container, {
+                    enableAutoDetection: true,
+                    enableHotSwapping: true,
+                    enableDeviceLabeling: true,
+                    enableQualityPresets: true,
+                    enableDevicePreview: true,
+                    enableDeviceStatus: true,
+                    maxCameras: 8,
+                    defaultQuality: 'high',
+                    autoSwitchOnDisconnect: true,
+                    enableDeviceMemory: true,
+                    enablePermissionHandling: true,
+                    enableErrorRecovery: true,
+                    accessibilitySystem: this.accessibilitySystem,
+                    themeSystem: this.themeSystem,
+                    responsiveSystem: this.responsiveSystem
+                });
+
+                console.log('✅ Camera switching system initialized');
+            }
+
+            setupDemoFeatures() {
+                // Setup initial stats
+                this.updateStats();
+            }
+
+            setupEventListeners() {
+                // Demo control buttons
+                document.getElementById('open-camera-panel-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.showCameraPanel();
+                });
+
+                document.getElementById('refresh-cameras-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.enumerateCameras();
+                });
+
+                document.getElementById('next-camera-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.switchToNextCamera();
+                });
+
+                document.getElementById('prev-camera-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.switchToPreviousCamera();
+                });
+
+                // Quality preset buttons
+                document.querySelectorAll('[data-quality]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const quality = e.target.closest('[data-quality]').dataset.quality;
+                        this.cameraSwitchingSystem.changeCameraQuality(quality);
+                    });
+                });
+
+                // Camera control buttons
+                document.getElementById('toggle-camera-btn')?.addEventListener('click', () => {
+                    this.toggleCamera();
+                });
+
+                document.getElementById('switch-camera-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.switchToNextCamera();
+                });
+
+                document.getElementById('camera-settings-btn')?.addEventListener('click', () => {
+                    this.cameraSwitchingSystem.toggleCameraPanel();
+                });
+
+                document.getElementById('fullscreen-btn')?.addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
+
+                // Camera system events
+                document.getElementById('camera-preview-area').addEventListener('system-initialized', (e) => {
+                    console.log('Camera system initialized:', e.detail);
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce('Camera system initialized', 'polite');
+                    }
+                });
+
+                document.getElementById('camera-preview-area').addEventListener('camera-switched', (e) => {
+                    console.log('Camera switched:', e.detail);
+                    this.updateMainVideo();
+                    this.updateStats();
+
+                    if (this.accessibilitySystem) {
+                        this.accessibilitySystem.announce(`Switched to ${e.detail.camera.label}`, 'polite');
+                    }
+                });
+
+                document.getElementById('camera-preview-area').addEventListener('devices-enumerated', (e) => {
+                    console.log('Devices enumerated:', e.detail);
+                    this.updateStats();
+                });
+
+                document.getElementById('camera-preview-area').addEventListener('devices-changed', (e) => {
+                    console.log('Devices changed:', e.detail);
+                    this.updateStats();
+                });
+
+                // Window events
+                window.addEventListener('beforeunload', () => {
+                    if (this.cameraSwitchingSystem) {
+                        this.cameraSwitchingSystem.destroy();
+                    }
+                });
+            }
+
+            toggleCamera() {
+                const currentStream = this.cameraSwitchingSystem.getCurrentStream();
+
+                if (currentStream) {
+                    // Stop current camera
+                    currentStream.getTracks().forEach(track => track.stop());
+                    this.updateMainVideo();
+                } else {
+                    // Try to start default camera
+                    const availableCameras = this.cameraSwitchingSystem.getAvailableCameras();
+                    if (availableCameras.length > 0) {
+                        this.cameraSwitchingSystem.switchToCamera(availableCameras[0].deviceId);
+                    }
+                }
+            }
+
+            toggleFullscreen() {
+                const videoArea = document.getElementById('camera-preview-area');
+
+                if (!document.fullscreenElement) {
+                    videoArea.requestFullscreen().catch(err => {
+                        console.error('Error attempting to enable fullscreen:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            updateMainVideo() {
+                const currentStream = this.cameraSwitchingSystem.getCurrentStream();
+                const noMessage = document.getElementById('no-camera-message');
+
+                if (currentStream) {
+                    this.mainVideo.srcObject = currentStream;
+                    this.mainVideo.style.display = 'block';
+                    noMessage.style.display = 'none';
+                } else {
+                    this.mainVideo.srcObject = null;
+                    this.mainVideo.style.display = 'none';
+                    noMessage.style.display = 'flex';
+                }
+            }
+
+            startStatsUpdates() {
+                this.statsUpdateInterval = setInterval(() => {
+                    this.updateStats();
+                }, 1000);
+            }
+
+            updateStats() {
+                if (!this.cameraSwitchingSystem) return;
+
+                const status = this.cameraSwitchingSystem.getSystemStatus();
+                const stats = this.cameraSwitchingSystem.getPerformanceStats();
+                const currentCamera = this.cameraSwitchingSystem.getCurrentCamera();
+
+                // Update status indicators
+                document.getElementById('active-camera-stat').textContent =
+                    currentCamera ? currentCamera.label : 'None';
+
+                document.getElementById('available-cameras-stat').textContent = status.availableCameras;
+
+                document.getElementById('current-quality-stat').textContent =
+                    status.currentQuality || '-';
+
+                document.getElementById('switch-count-stat').textContent = stats.switchCount;
+
+                document.getElementById('avg-switch-time-stat').textContent =
+                    `${stats.averageSwitchTime.toFixed(1)}ms`;
+
+                document.getElementById('system-status-stat').textContent =
+                    status.isInitialized ? 'Ready' : 'Initializing...';
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--danger-color);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                `;
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(errorDiv);
+
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+
+            destroy() {
+                if (this.statsUpdateInterval) {
+                    clearInterval(this.statsUpdateInterval);
+                }
+
+                if (this.cameraSwitchingSystem) {
+                    this.cameraSwitchingSystem.destroy();
+                }
+
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+            }
+        }
+
+        // Initialize demo when page loads
+        let demoApp;
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                demoApp = new CameraSwitchingDemo();
+            });
+        } else {
+            demoApp = new CameraSwitchingDemo();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (demoApp) {
+                demoApp.destroy();
+            }
+        });
+    </script>
+</body>
+</html>
