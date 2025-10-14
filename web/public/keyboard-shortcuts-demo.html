@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Shortcuts System Demo - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --theme-primary: #FF0000;
+            --theme-surface: #1a1a1a;
+            --theme-card: #2a2a2a;
+            --theme-cardHover: #333333;
+            --theme-input: #3a3a3a;
+            --theme-border: #444444;
+            --theme-text: #ffffff;
+            --theme-textSecondary: #cccccc;
+            --theme-textOnPrimary: #ffffff;
+            --theme-success: #00cc66;
+            --theme-warning: #ff9900;
+            --theme-danger: #ff3333;
+            --theme-info: #0066cc;
+            --theme-borderRadius: 8px;
+            --theme-boxShadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            background: var(--theme-surface);
+            color: var(--theme-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .demo-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--theme-card);
+            border-right: 1px solid var(--theme-border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .demo-main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .demo-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: var(--theme-card);
+            border: 1px solid var(--theme-border);
+            border-radius: var(--theme-borderRadius);
+        }
+        
+        .demo-section h3 {
+            margin: 0 0 16px 0;
+            color: var(--theme-primary);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .demo-btn {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: var(--theme-input);
+            border: 1px solid var(--theme-border);
+            border-radius: 6px;
+            color: var(--theme-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--theme-cardHover);
+            border-color: var(--theme-primary);
+        }
+        
+        .demo-btn:focus {
+            outline: 2px solid var(--theme-primary);
+            outline-offset: 2px;
+        }
+        
+        .demo-btn .shortcut-key {
+            background: var(--theme-surface);
+            color: var(--theme-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            border: 1px solid var(--theme-border);
+        }
+        
+        .demo-area {
+            background: var(--theme-card);
+            border: 1px solid var(--theme-border);
+            border-radius: var(--theme-borderRadius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-area h2 {
+            margin: 0 0 20px 0;
+            color: var(--theme-primary);
+            text-align: center;
+        }
+        
+        .shortcuts-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .showcase-card {
+            background: var(--theme-input);
+            border: 1px solid var(--theme-border);
+            border-radius: var(--theme-borderRadius);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .showcase-card:hover {
+            border-color: var(--theme-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--theme-boxShadow);
+        }
+        
+        .showcase-card h4 {
+            margin: 0 0 12px 0;
+            color: var(--theme-primary);
+            font-size: 1.1rem;
+        }
+        
+        .showcase-card p {
+            margin: 0 0 16px 0;
+            color: var(--theme-textSecondary);
+            line-height: 1.5;
+        }
+        
+        .showcase-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .showcase-btn {
+            padding: 8px 16px;
+            background: var(--theme-primary);
+            color: var(--theme-textOnPrimary);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .showcase-btn:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+        
+        .showcase-btn:focus {
+            outline: 2px solid var(--theme-primary);
+            outline-offset: 2px;
+        }
+        
+        .shortcuts-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--theme-card);
+            border: 1px solid var(--theme-border);
+            border-radius: var(--theme-borderRadius);
+            padding: 16px;
+            min-width: 200px;
+            box-shadow: var(--theme-boxShadow);
+        }
+        
+        .shortcuts-stats h4 {
+            margin: 0 0 12px 0;
+            color: var(--theme-primary);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .stat-label {
+            color: var(--theme-textSecondary);
+        }
+        
+        .stat-value {
+            color: var(--theme-text);
+            font-weight: 500;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-indicator.active {
+            background: var(--theme-success);
+        }
+        
+        .status-indicator.inactive {
+            background: var(--theme-danger);
+        }
+        
+        .context-indicator {
+            background: var(--theme-info);
+            color: var(--theme-textOnPrimary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .demo-instructions {
+            background: var(--theme-input);
+            border: 1px solid var(--theme-border);
+            border-radius: var(--theme-borderRadius);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-instructions h3 {
+            margin: 0 0 12px 0;
+            color: var(--theme-primary);
+            font-size: 1.1rem;
+        }
+        
+        .demo-instructions ul {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--theme-textSecondary);
+        }
+        
+        .demo-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .demo-instructions kbd {
+            background: var(--theme-surface);
+            color: var(--theme-primary);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 11px;
+            border: 1px solid var(--theme-border);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--theme-border);
+            }
+            
+            .shortcuts-stats {
+                position: static;
+                margin-top: 20px;
+            }
+            
+            .shortcuts-showcase {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip Links -->
+    <div class="skip-links" role="navigation" aria-label="Skip links">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <a href="#navigation" class="skip-link">Skip to navigation</a>
+        <a href="#shortcuts-controls" class="skip-link">Skip to shortcuts controls</a>
+    </div>
+
+    <div class="demo-container">
+        <!-- Sidebar with Shortcuts Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Keyboard shortcuts controls">
+            <section class="demo-section" id="shortcuts-controls">
+                <h3><i class="fas fa-keyboard" aria-hidden="true"></i>System Controls</h3>
+                <button class="demo-btn" onclick="toggleShortcuts()" aria-describedby="toggle-shortcuts-desc">
+                    <span>
+                        <div>Toggle Shortcuts</div>
+                        <div id="toggle-shortcuts-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Enable/disable all keyboard shortcuts</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Shift+K</span>
+                </button>
+                
+                <button class="demo-btn" onclick="showShortcutsHelp()" aria-describedby="show-help-desc">
+                    <span>
+                        <div>Show Help</div>
+                        <div id="show-help-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Display keyboard shortcuts reference</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+/ or F1</span>
+                </button>
+                
+                <button class="demo-btn" onclick="recordCustomShortcut()" aria-describedby="record-shortcut-desc">
+                    <span>
+                        <div>Record Shortcut</div>
+                        <div id="record-shortcut-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Create a custom keyboard shortcut</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Shift+R</span>
+                </button>
+                
+                <button class="demo-btn" onclick="resetShortcuts()" aria-describedby="reset-shortcuts-desc">
+                    <span>
+                        <div>Reset to Defaults</div>
+                        <div id="reset-shortcuts-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Reset all shortcuts to default settings</div>
+                    </span>
+                    <span class="shortcut-key">Ctrl+Shift+H</span>
+                </button>
+            </section>
+
+            <section class="demo-section">
+                <h3><i class="fas fa-play" aria-hidden="true"></i>Media Controls</h3>
+                <button class="demo-btn" onclick="testMediaShortcut('play-pause')" aria-describedby="play-pause-desc">
+                    <span>
+                        <div>Play/Pause</div>
+                        <div id="play-pause-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Toggle media playback</div>
+                    </span>
+                    <span class="shortcut-key">Space or K</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testMediaShortcut('mute')" aria-describedby="mute-desc">
+                    <span>
+                        <div>Toggle Mute</div>
+                        <div id="mute-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Mute/unmute microphone</div>
+                    </span>
+                    <span class="shortcut-key">M</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testMediaShortcut('camera')" aria-describedby="camera-desc">
+                    <span>
+                        <div>Toggle Camera</div>
+                        <div id="camera-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Turn camera on/off</div>
+                    </span>
+                    <span class="shortcut-key">V</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testMediaShortcut('volume-up')" aria-describedby="volume-up-desc">
+                    <span>
+                        <div>Volume Up</div>
+                        <div id="volume-up-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Increase audio volume</div>
+                    </span>
+                    <span class="shortcut-key">↑</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testMediaShortcut('volume-down')" aria-describedby="volume-down-desc">
+                    <span>
+                        <div>Volume Down</div>
+                        <div id="volume-down-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Decrease audio volume</div>
+                    </span>
+                    <span class="shortcut-key">↓</span>
+                </button>
+            </section>
+
+            <section class="demo-section">
+                <h3><i class="fas fa-universal-access" aria-hidden="true"></i>Accessibility</h3>
+                <button class="demo-btn" onclick="testAccessibilityShortcut('high-contrast')" aria-describedby="high-contrast-desc">
+                    <span>
+                        <div>High Contrast</div>
+                        <div id="high-contrast-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Toggle high contrast mode</div>
+                    </span>
+                    <span class="shortcut-key">Alt+Shift+H</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testAccessibilityShortcut('reduced-motion')" aria-describedby="reduced-motion-desc">
+                    <span>
+                        <div>Reduced Motion</div>
+                        <div id="reduced-motion-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Toggle reduced motion</div>
+                    </span>
+                    <span class="shortcut-key">Alt+Shift+M</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testAccessibilityShortcut('large-text')" aria-describedby="large-text-desc">
+                    <span>
+                        <div>Large Text</div>
+                        <div id="large-text-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Toggle large text mode</div>
+                    </span>
+                    <span class="shortcut-key">Alt+Shift+F</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testNavigationShortcut('next-heading')" aria-describedby="next-heading-desc">
+                    <span>
+                        <div>Next Heading</div>
+                        <div id="next-heading-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Navigate to next heading</div>
+                    </span>
+                    <span class="shortcut-key">H</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testNavigationShortcut('skip-main')" aria-describedby="skip-main-desc">
+                    <span>
+                        <div>Skip to Main</div>
+                        <div id="skip-main-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Skip to main content</div>
+                    </span>
+                    <span class="shortcut-key">Alt+1</span>
+                </button>
+            </section>
+
+            <section class="demo-section">
+                <h3><i class="fas fa-th-large" aria-hidden="true"></i>Layout & Theme</h3>
+                <button class="demo-btn" onclick="testLayoutShortcut('spotlight')" aria-describedby="spotlight-desc">
+                    <span>
+                        <div>Spotlight Layout</div>
+                        <div id="spotlight-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Switch to spotlight view</div>
+                    </span>
+                    <span class="shortcut-key">1</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testLayoutShortcut('grid')" aria-describedby="grid-desc">
+                    <span>
+                        <div>Grid Layout</div>
+                        <div id="grid-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Switch to grid view</div>
+                    </span>
+                    <span class="shortcut-key">2</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testThemeShortcut('toggle')" aria-describedby="toggle-theme-desc">
+                    <span>
+                        <div>Toggle Theme</div>
+                        <div id="toggle-theme-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Switch between dark/light theme</div>
+                    </span>
+                    <span class="shortcut-key">T T</span>
+                </button>
+                
+                <button class="demo-btn" onclick="testViewShortcut('fullscreen')" aria-describedby="fullscreen-desc">
+                    <span>
+                        <div>Fullscreen</div>
+                        <div id="fullscreen-desc" style="font-size: 12px; color: var(--theme-textSecondary);">Toggle fullscreen mode</div>
+                    </span>
+                    <span class="shortcut-key">F or F11</span>
+                </button>
+            </section>
+        </aside>
+
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main">
+            <div class="demo-instructions">
+                <h3>How to Use Keyboard Shortcuts</h3>
+                <ul>
+                    <li>Press <kbd>Ctrl</kbd> + <kbd>/</kbd> or <kbd>F1</kbd> to open the shortcuts help modal</li>
+                    <li>Use <kbd>Tab</kbd> to navigate between interactive elements</li>
+                    <li>Press <kbd>Escape</kbd> to close modals or cancel operations</li>
+                    <li>Sequence shortcuts like <kbd>T</kbd> <kbd>T</kbd> require pressing keys in order</li>
+                    <li>Shortcuts are context-aware and change based on focused area</li>
+                    <li>All shortcuts respect accessibility preferences and work with screen readers</li>
+                </ul>
+            </div>
+            
+            <div class="demo-area">
+                <header>
+                    <h2>Comprehensive Keyboard Shortcuts System</h2>
+                </header>
+                
+                <div class="shortcuts-showcase">
+                    <article class="showcase-card">
+                        <h4>System Integration</h4>
+                        <p>Seamlessly integrated with streaming interface, accessibility system, and theme management.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="testSystemIntegration()">
+                                <i class="fas fa-cogs" aria-hidden="true"></i>Test Integration
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Context Awareness</h4>
+                        <p>Shortcuts adapt based on current focus - video player, chat, settings, or global context.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="demonstrateContexts()">
+                                <i class="fas fa-sitemap" aria-hidden="true"></i>Show Contexts
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Sequence Shortcuts</h4>
+                        <p>Advanced multi-key sequences like Vim-style navigation for power users.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="demonstrateSequences()">
+                                <i class="fas fa-list-ol" aria-hidden="true"></i>Try Sequences
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Custom Shortcuts</h4>
+                        <p>Create, modify, and manage custom keyboard shortcuts with conflict detection.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="showCustomization()">
+                                <i class="fas fa-edit" aria-hidden="true"></i>Customize
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Accessibility First</h4>
+                        <p>Full screen reader support, keyboard navigation, and WCAG 2.1 AA compliance.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="testAccessibilityFeatures()">
+                                <i class="fas fa-universal-access" aria-hidden="true"></i>Test A11y
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <article class="showcase-card">
+                        <h4>Visual Feedback</h4>
+                        <p>Real-time feedback with visual indicators, sound effects, and haptic feedback.</p>
+                        <div class="showcase-buttons">
+                            <button class="showcase-btn" onclick="testFeedbackSystems()">
+                                <i class="fas fa-bell" aria-hidden="true"></i>Test Feedback
+                            </button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Shortcuts Stats Panel -->
+    <aside class="shortcuts-stats" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Shortcuts Status
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">System Status:</span>
+            <span class="stat-value">
+                <span class="status-indicator active" id="system-status"></span>
+                <span id="system-status-text">Active</span>
+            </span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Total Shortcuts:</span>
+            <span class="stat-value" id="total-shortcuts">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Active Context:</span>
+            <span class="stat-value">
+                <span class="context-indicator" id="current-context">Global</span>
+            </span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Custom Shortcuts:</span>
+            <span class="stat-value" id="custom-shortcuts">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Last Shortcut:</span>
+            <span class="stat-value" id="last-shortcut">None</span>
+        </div>
+    </aside>
+
+    <!-- Load Dependencies -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/KeyboardShortcutsSystem.js"></script>
+    
+    <!-- Demo Script -->
+    <script>
+        let keyboardShortcuts = null;
+        let accessibilitySystem = null;
+        let demoStats = {
+            totalShortcuts: 0,
+            customShortcuts: 0,
+            lastShortcut: 'None',
+            currentContext: 'global'
+        };
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeKeyboardShortcuts();
+            updateStats();
+            setupDemoEventListeners();
+
+            // Announce page load
+            setTimeout(() => {
+                if (keyboardShortcuts) {
+                    keyboardShortcuts.showShortcutFeedback('Keyboard shortcuts demo loaded. Press Ctrl+/ for help.', 'info');
+                }
+            }, 1000);
+        });
+
+        function initializeKeyboardShortcuts() {
+            const container = document.body;
+
+            // Initialize accessibility system first
+            if (typeof AccessibilitySystem !== 'undefined') {
+                accessibilitySystem = new AccessibilitySystem({
+                    container: container,
+                    settings: {
+                        wcagLevel: 'AA',
+                        announcements: true,
+                        keyboardNavigation: true,
+                        focusIndicators: true
+                    }
+                });
+            }
+
+            // Initialize keyboard shortcuts system
+            if (typeof KeyboardShortcutsSystem !== 'undefined') {
+                keyboardShortcuts = new KeyboardShortcutsSystem({
+                    container: container,
+                    accessibilitySystem: accessibilitySystem,
+                    settings: {
+                        enabled: true,
+                        enableGlobalShortcuts: true,
+                        enableContextualShortcuts: true,
+                        enableSequenceShortcuts: true,
+                        enableCustomShortcuts: true,
+                        enableVisualFeedback: true,
+                        enableSoundFeedback: false,
+                        enableHapticFeedback: false
+                    }
+                });
+
+                // Add demo-specific shortcuts
+                addDemoShortcuts();
+
+                // Update stats
+                updateStats();
+            } else {
+                console.error('KeyboardShortcutsSystem not loaded');
+            }
+        }
+
+        function addDemoShortcuts() {
+            if (!keyboardShortcuts) return;
+
+            // Demo-specific shortcuts
+            keyboardShortcuts.addShortcut('d', () => demonstrateFeature(), 'Demonstrate random feature', 'demo', 'global', 2);
+            keyboardShortcuts.addShortcut('Ctrl+d', () => toggleDemoMode(), 'Toggle demo mode', 'demo', 'global', 1);
+            keyboardShortcuts.addShortcut('Shift+?', () => showDemoHelp(), 'Show demo help', 'demo', 'global', 1);
+
+            // Context-specific demo shortcuts
+            keyboardShortcuts.addShortcut('Enter', () => activateElement(), 'Activate focused element', 'demo', 'global', 2);
+            keyboardShortcuts.addShortcut('Ctrl+Enter', () => activateElementNewTab(), 'Activate in new context', 'demo', 'global', 2);
+        }
+
+        function setupDemoEventListeners() {
+            // Listen for shortcut events
+            document.addEventListener('shortcut-context-change', (e) => {
+                demoStats.currentContext = e.detail.newContext;
+                updateStats();
+            });
+
+            // Listen for keyboard events to update last shortcut
+            document.addEventListener('keydown', (e) => {
+                if (keyboardShortcuts) {
+                    const keyCombo = buildKeyCombo(e);
+                    if (keyCombo && keyCombo !== 'Tab' && keyCombo !== 'Shift' && keyCombo !== 'Ctrl' && keyCombo !== 'Alt') {
+                        demoStats.lastShortcut = keyCombo;
+                        updateStats();
+                    }
+                }
+            });
+
+            // Update stats periodically
+            setInterval(updateStats, 5000);
+        }
+
+        function buildKeyCombo(e) {
+            const parts = [];
+            if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+            if (e.altKey) parts.push('Alt');
+            if (e.shiftKey) parts.push('Shift');
+
+            let key = e.key;
+            if (key === ' ') key = 'Space';
+            if (key === 'Control' || key === 'Alt' || key === 'Shift' || key === 'Meta') return '';
+
+            parts.push(key);
+            return parts.join('+');
+        }
+
+        function updateStats() {
+            if (keyboardShortcuts) {
+                const stats = keyboardShortcuts.getUsageStats();
+                demoStats.totalShortcuts = stats.totalShortcuts;
+                demoStats.customShortcuts = stats.customShortcuts;
+                demoStats.currentContext = stats.currentContext;
+
+                if (stats.lastShortcut) {
+                    demoStats.lastShortcut = stats.lastShortcut.description || 'Unknown';
+                }
+            }
+
+            // Update UI
+            document.getElementById('total-shortcuts').textContent = demoStats.totalShortcuts;
+            document.getElementById('custom-shortcuts').textContent = demoStats.customShortcuts;
+            document.getElementById('current-context').textContent = demoStats.currentContext.charAt(0).toUpperCase() + demoStats.currentContext.slice(1);
+            document.getElementById('last-shortcut').textContent = demoStats.lastShortcut;
+
+            // Update system status
+            const isEnabled = keyboardShortcuts ? keyboardShortcuts.isShortcutsEnabled() : false;
+            const statusIndicator = document.getElementById('system-status');
+            const statusText = document.getElementById('system-status-text');
+
+            if (isEnabled) {
+                statusIndicator.className = 'status-indicator active';
+                statusText.textContent = 'Active';
+            } else {
+                statusIndicator.className = 'status-indicator inactive';
+                statusText.textContent = 'Disabled';
+            }
+        }
+
+        // Demo functions
+        function toggleShortcuts() {
+            if (!keyboardShortcuts) return;
+
+            if (keyboardShortcuts.isShortcutsEnabled()) {
+                keyboardShortcuts.disable();
+                showNotification('Keyboard shortcuts disabled', 'warning');
+            } else {
+                keyboardShortcuts.enable();
+                showNotification('Keyboard shortcuts enabled', 'success');
+            }
+
+            updateStats();
+        }
+
+        function showShortcutsHelp() {
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutsHelp();
+            }
+        }
+
+        function recordCustomShortcut() {
+            if (keyboardShortcuts) {
+                keyboardShortcuts.startRecording();
+                showNotification('Recording shortcut... Press keys to record, Escape to cancel', 'info');
+            }
+        }
+
+        function resetShortcuts() {
+            if (keyboardShortcuts && confirm('Reset all keyboard shortcuts to defaults? This will remove all customizations.')) {
+                keyboardShortcuts.resetToDefaults();
+                showNotification('Shortcuts reset to defaults', 'success');
+                updateStats();
+            }
+        }
+
+        function testMediaShortcut(action) {
+            const messages = {
+                'play-pause': 'Media playback toggled',
+                'mute': 'Microphone muted/unmuted',
+                'camera': 'Camera toggled on/off',
+                'volume-up': 'Volume increased',
+                'volume-down': 'Volume decreased'
+            };
+
+            showNotification(messages[action] || 'Media action executed', 'info');
+
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback(messages[action] || 'Media action executed');
+            }
+        }
+
+        function testAccessibilityShortcut(feature) {
+            const messages = {
+                'high-contrast': 'High contrast mode toggled',
+                'reduced-motion': 'Reduced motion toggled',
+                'large-text': 'Large text mode toggled'
+            };
+
+            showNotification(messages[feature] || 'Accessibility feature toggled', 'info');
+
+            if (accessibilitySystem) {
+                accessibilitySystem.announce(messages[feature] || 'Accessibility feature toggled', 'polite');
+            }
+        }
+
+        function testNavigationShortcut(action) {
+            const messages = {
+                'next-heading': 'Navigated to next heading',
+                'skip-main': 'Skipped to main content'
+            };
+
+            showNotification(messages[action] || 'Navigation action executed', 'info');
+
+            if (action === 'next-heading') {
+                // Find and focus next heading
+                const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                if (headings.length > 0) {
+                    const currentIndex = Array.from(headings).findIndex(h => h === document.activeElement);
+                    const nextIndex = currentIndex < headings.length - 1 ? currentIndex + 1 : 0;
+                    headings[nextIndex].focus();
+                    headings[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (action === 'skip-main') {
+                const mainContent = document.getElementById('main-content');
+                if (mainContent) {
+                    mainContent.focus();
+                    mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+
+        function testLayoutShortcut(layout) {
+            const messages = {
+                'spotlight': 'Switched to spotlight layout',
+                'grid': 'Switched to grid layout'
+            };
+
+            showNotification(messages[layout] || `Switched to ${layout} layout`, 'info');
+
+            // Visual demonstration
+            const showcaseCards = document.querySelectorAll('.showcase-card');
+            showcaseCards.forEach(card => {
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 200);
+            });
+        }
+
+        function testThemeShortcut(action) {
+            if (action === 'toggle') {
+                // Simple theme toggle demonstration
+                const isDark = document.body.style.background === 'rgb(26, 26, 26)' || !document.body.style.background;
+
+                if (isDark) {
+                    document.body.style.background = '#ffffff';
+                    document.body.style.color = '#000000';
+                    showNotification('Switched to light theme', 'info');
+                } else {
+                    document.body.style.background = '';
+                    document.body.style.color = '';
+                    showNotification('Switched to dark theme', 'info');
+                }
+            }
+        }
+
+        function testViewShortcut(action) {
+            if (action === 'fullscreen') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    showNotification('Exited fullscreen', 'info');
+                } else {
+                    document.documentElement.requestFullscreen().catch(() => {
+                        showNotification('Fullscreen not supported or blocked', 'warning');
+                    });
+                    showNotification('Entered fullscreen', 'info');
+                }
+            }
+        }
+
+        function testSystemIntegration() {
+            if (keyboardShortcuts) {
+                const stats = keyboardShortcuts.getUsageStats();
+                const message = `System Integration Test:
+                - Total Shortcuts: ${stats.totalShortcuts}
+                - Custom Shortcuts: ${stats.customShortcuts}
+                - Current Context: ${stats.currentContext}
+                - System Status: ${stats.isEnabled ? 'Enabled' : 'Disabled'}`;
+
+                alert(message);
+                showNotification('System integration test completed', 'success');
+            }
+        }
+
+        function demonstrateContexts() {
+            const contexts = ['global', 'streaming', 'modal', 'video', 'chat'];
+            let currentIndex = 0;
+
+            function cycleContext() {
+                if (currentIndex < contexts.length) {
+                    const context = contexts[currentIndex];
+                    if (keyboardShortcuts) {
+                        keyboardShortcuts.setContext(context);
+                    }
+                    showNotification(`Context: ${context}`, 'info');
+                    currentIndex++;
+                    setTimeout(cycleContext, 2000);
+                } else {
+                    if (keyboardShortcuts) {
+                        keyboardShortcuts.setContext('global');
+                    }
+                    showNotification('Context demonstration complete', 'success');
+                }
+            }
+
+            cycleContext();
+        }
+
+        function demonstrateSequences() {
+            showNotification('Try sequence shortcuts: G H (go home), T T (toggle theme), L S (spotlight layout)', 'info');
+
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback('Sequence shortcuts ready. Try: G H, T T, L S');
+            }
+        }
+
+        function showCustomization() {
+            if (keyboardShortcuts) {
+                keyboardShortcuts.openCustomizationPanel();
+            } else {
+                showNotification('Customization panel would open here', 'info');
+            }
+        }
+
+        function testAccessibilityFeatures() {
+            if (accessibilitySystem) {
+                accessibilitySystem.announce('Testing accessibility features. All shortcuts work with screen readers.', 'assertive');
+                showNotification('Accessibility test: Screen reader announcement sent', 'success');
+
+                // Test focus management
+                const firstButton = document.querySelector('.demo-btn');
+                if (firstButton) {
+                    accessibilitySystem.focusElement(firstButton, {
+                        announce: 'Focus moved to first shortcut button',
+                        scroll: true
+                    });
+                }
+            } else {
+                showNotification('Accessibility system not available', 'warning');
+            }
+        }
+
+        function testFeedbackSystems() {
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback('Visual feedback test', 'info');
+
+                // Test different feedback types
+                setTimeout(() => {
+                    keyboardShortcuts.showShortcutFeedback('Success feedback', 'success');
+                }, 1000);
+
+                setTimeout(() => {
+                    keyboardShortcuts.showShortcutFeedback('Warning feedback', 'warning');
+                }, 2000);
+
+                setTimeout(() => {
+                    keyboardShortcuts.showShortcutFeedback('Error feedback', 'error');
+                }, 3000);
+            }
+
+            showNotification('Feedback systems test completed', 'success');
+        }
+
+        function demonstrateFeature() {
+            const features = [
+                'Context-aware shortcuts',
+                'Sequence shortcuts',
+                'Custom shortcuts',
+                'Accessibility integration',
+                'Visual feedback',
+                'Conflict detection'
+            ];
+
+            const randomFeature = features[Math.floor(Math.random() * features.length)];
+            showNotification(`Demonstrating: ${randomFeature}`, 'info');
+
+            if (keyboardShortcuts) {
+                keyboardShortcuts.showShortcutFeedback(`Feature demo: ${randomFeature}`);
+            }
+        }
+
+        function toggleDemoMode() {
+            const isDemoMode = document.body.classList.contains('demo-mode');
+
+            if (isDemoMode) {
+                document.body.classList.remove('demo-mode');
+                showNotification('Demo mode disabled', 'info');
+            } else {
+                document.body.classList.add('demo-mode');
+                showNotification('Demo mode enabled', 'info');
+            }
+        }
+
+        function showDemoHelp() {
+            const helpText = `Keyboard Shortcuts Demo Help:
+
+            System Controls:
+            - Ctrl+/ or F1: Show shortcuts help
+            - Ctrl+Shift+K: Toggle shortcuts
+            - Ctrl+Shift+R: Record custom shortcut
+            - Escape: Close modals/cancel
+
+            Demo Shortcuts:
+            - D: Demonstrate random feature
+            - Ctrl+D: Toggle demo mode
+            - Shift+?: Show this help
+
+            Navigation:
+            - Tab: Navigate elements
+            - H: Next heading
+            - Alt+1: Skip to main content
+
+            Try the sidebar buttons or use keyboard shortcuts directly!`;
+
+            alert(helpText);
+        }
+
+        function activateElement() {
+            const focused = document.activeElement;
+            if (focused && focused.click) {
+                focused.click();
+                showNotification('Element activated', 'info');
+            }
+        }
+
+        function activateElementNewTab() {
+            const focused = document.activeElement;
+            if (focused && focused.href) {
+                window.open(focused.href, '_blank');
+                showNotification('Opened in new tab', 'info');
+            } else {
+                activateElement();
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'info' ? 'info' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 9999;
+                min-width: 300px;
+                max-width: 500px;
+                background: var(--theme-card);
+                border: 1px solid var(--theme-primary);
+                color: var(--theme-text);
+                border-radius: var(--theme-borderRadius);
+                box-shadow: var(--theme-boxShadow);
+            `;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()" style="filter: invert(1);" aria-label="Close notification"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Handle responsive behavior
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.demo-container').style.flexDirection = 'column';
+            } else {
+                document.querySelector('.demo-container').style.flexDirection = 'row';
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (window.innerWidth <= 768) {
+                document.querySelector('.demo-container').style.flexDirection = 'column';
+            }
+        });
+    </script>
+</body>
+</html>
