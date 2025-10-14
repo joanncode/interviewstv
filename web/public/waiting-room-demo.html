@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Room Demo - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Dark Theme CSS -->
+    <link href="css/dark-theme.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --secondary-color: #1a1a1a;
+            --accent-color: #ffffff;
+            --background-color: #1a1a1a;
+            --surface-color: #2a2a2a;
+            --text-color: #ffffff;
+            --text-secondary-color: #cccccc;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .demo-header {
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .demo-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .demo-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .demo-btn:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+            color: white;
+        }
+        
+        .demo-btn.secondary {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-btn.secondary:hover {
+            background: var(--background-color);
+        }
+        
+        .demo-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .demo-hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, var(--surface-color) 0%, var(--background-color) 100%);
+            border-radius: 12px;
+            margin-bottom: 3rem;
+        }
+        
+        .demo-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .demo-hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary-color);
+            margin-bottom: 2rem;
+        }
+        
+        .demo-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .option-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-color);
+        }
+        
+        .option-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .option-card h3 {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .option-card p {
+            color: var(--text-secondary-color);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .demo-features {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .demo-features h2 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .feature-icon {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-top: 0.2rem;
+        }
+        
+        .feature-content h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-color);
+        }
+        
+        .feature-content p {
+            margin: 0;
+            color: var(--text-secondary-color);
+            font-size: 0.9rem;
+        }
+        
+        .demo-footer {
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .demo-footer p {
+            color: var(--text-secondary-color);
+            margin: 0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .demo-main {
+                padding: 1rem;
+            }
+            
+            .demo-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <nav class="demo-navbar">
+            <a href="#" class="demo-logo">
+                <i class="fas fa-video"></i>
+                Interviews.tv
+            </a>
+            
+            <div class="demo-controls">
+                <a href="/" class="demo-btn secondary">
+                    <i class="fas fa-home"></i>
+                    Home
+                </a>
+                <a href="/interview-room.html" class="demo-btn secondary">
+                    <i class="fas fa-video"></i>
+                    Interview Room
+                </a>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="demo-main">
+        <!-- Hero Section -->
+        <section class="demo-hero">
+            <h1>Waiting Room Demo</h1>
+            <p>Experience professional waiting room functionality with custom messages and guest management</p>
+            <div class="demo-controls">
+                <button class="demo-btn" onclick="startHostDemo()">
+                    <i class="fas fa-user-tie"></i>
+                    Host Experience
+                </button>
+                <button class="demo-btn secondary" onclick="startGuestDemo()">
+                    <i class="fas fa-user"></i>
+                    Guest Experience
+                </button>
+            </div>
+        </section>
+        
+        <!-- Demo Options -->
+        <section class="demo-options">
+            <div class="option-card" onclick="startHostDemo()">
+                <div class="option-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3>Host Dashboard</h3>
+                <p>Manage waiting guests, customize messages, control room settings, and start interviews with professional host controls.</p>
+                <button class="demo-btn">
+                    <i class="fas fa-play"></i>
+                    Start Host Demo
+                </button>
+            </div>
+            
+            <div class="option-card" onclick="startGuestDemo()">
+                <div class="option-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Guest Waiting Area</h3>
+                <p>Experience the guest perspective with device testing, custom messages, countdown timers, and waiting room features.</p>
+                <button class="demo-btn">
+                    <i class="fas fa-play"></i>
+                    Start Guest Demo
+                </button>
+            </div>
+        </section>
+        
+        <!-- Features Overview -->
+        <section class="demo-features">
+            <h2>Waiting Room Features</h2>
+            <p>Our professional waiting room system provides comprehensive functionality for managing interview guests and creating a professional pre-interview experience.</p>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Custom Messages</h4>
+                        <p>Create and edit custom welcome messages, waiting instructions, and countdown notifications</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Guest Management</h4>
+                        <p>View waiting guests, admit or reject participants, and manage room capacity</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Countdown Timer</h4>
+                        <p>Start countdown timers to notify guests when the interview will begin</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Device Testing</h4>
+                        <p>Built-in camera and microphone testing for guests before joining the interview</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Background Music</h4>
+                        <p>Optional background music player to create a relaxing waiting environment</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Real-time Updates</h4>
+                        <p>Live notifications and status updates via WebSocket connections</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Mobile Responsive</h4>
+                        <p>Fully responsive design optimized for desktop, tablet, and mobile devices</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h4>Secure & Reliable</h4>
+                        <p>Enterprise-grade security with automatic reconnection and error handling</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="demo-footer">
+        <p>&copy; 2024 Interviews.tv - Professional Interview Platform with Advanced Waiting Room</p>
+    </footer>
+    
+    <!-- Waiting Room Container -->
+    <div id="waiting-room-container"></div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/BrandingCustomizationSystem.js"></script>
+    <script src="../src/components/WaitingRoomSystem.js"></script>
+    
+    <script>
+        // Demo Application
+        class WaitingRoomDemo {
+            constructor() {
+                this.waitingRoomSystem = null;
+                this.accessibilitySystem = null;
+                this.themeSystem = null;
+                this.responsiveSystem = null;
+                this.brandingSystem = null;
+                this.currentDemo = null;
+                
+                this.init();
+            }
+            
+            init() {
+                console.log('🏛️ Initializing Waiting Room Demo...');
+                
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.initializeSystems());
+                } else {
+                    this.initializeSystems();
+                }
+            }
+            
+            initializeSystems() {
+                try {
+                    // Initialize support systems
+                    this.initializeAccessibilitySystem();
+                    this.initializeThemeSystem();
+                    this.initializeResponsiveSystem();
+                    this.initializeBrandingSystem();
+                    
+                    console.log('✅ Waiting Room Demo initialized successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to initialize demo:', error);
+                    this.showError('Failed to initialize waiting room demo');
+                }
+            }
+            
+            initializeAccessibilitySystem() {
+                if (typeof AccessibilitySystem !== 'undefined') {
+                    this.accessibilitySystem = new AccessibilitySystem(document.body, {
+                        enableKeyboardNavigation: true,
+                        enableScreenReader: true,
+                        enableHighContrast: false,
+                        enableFocusIndicators: true,
+                        announceChanges: true
+                    });
+                    
+                    console.log('✅ Accessibility system initialized');
+                }
+            }
+            
+            initializeThemeSystem() {
+                if (typeof ThemeSystem !== 'undefined') {
+                    this.themeSystem = new ThemeSystem(document.body, {
+                        defaultTheme: 'dark',
+                        enableAutoDetection: false,
+                        enableTransitions: true,
+                        customThemes: {
+                            dark: {
+                                primary: '#FF0000',
+                                background: '#1a1a1a',
+                                surface: '#2a2a2a',
+                                text: '#ffffff'
+                            }
+                        }
+                    });
+                    
+                    console.log('✅ Theme system initialized');
+                }
+            }
+            
+            initializeResponsiveSystem() {
+                if (typeof ResponsiveDesignSystem !== 'undefined') {
+                    this.responsiveSystem = new ResponsiveDesignSystem(document.body, {
+                        enableFluidTypography: true,
+                        enableResponsiveImages: true,
+                        enableTouchOptimization: true,
+                        breakpoints: {
+                            mobile: 768,
+                            tablet: 1024,
+                            desktop: 1200
+                        }
+                    });
+                    
+                    console.log('✅ Responsive system initialized');
+                }
+            }
+            
+            initializeBrandingSystem() {
+                if (typeof BrandingCustomizationSystem !== 'undefined') {
+                    const brandingContainer = document.createElement('div');
+                    brandingContainer.id = 'branding-container';
+                    document.body.appendChild(brandingContainer);
+                    
+                    this.brandingSystem = new BrandingCustomizationSystem(brandingContainer, {
+                        enableLogoCustomization: true,
+                        enableColorCustomization: true,
+                        enableFontCustomization: true,
+                        enableLayoutCustomization: true,
+                        themeSystem: this.themeSystem,
+                        accessibilitySystem: this.accessibilitySystem,
+                        responsiveSystem: this.responsiveSystem
+                    });
+                    
+                    console.log('✅ Branding system initialized');
+                }
+            }
+            
+            startHostDemo() {
+                this.currentDemo = 'host';
+                this.initializeWaitingRoom(true);
+            }
+            
+            startGuestDemo() {
+                this.currentDemo = 'guest';
+                this.initializeWaitingRoom(false);
+            }
+            
+            initializeWaitingRoom(isHost) {
+                const container = document.getElementById('waiting-room-container');
+                
+                if (!container) {
+                    this.showError('Waiting room container not found');
+                    return;
+                }
+                
+                // Clear existing content
+                container.innerHTML = '';
+                
+                // Hide demo content
+                document.querySelector('.demo-main').style.display = 'none';
+                
+                // Initialize waiting room system
+                this.waitingRoomSystem = new WaitingRoomSystem(container, {
+                    enableCustomMessages: true,
+                    enableCountdownTimer: true,
+                    enableGuestList: true,
+                    enableHostControls: isHost,
+                    enableMusicPlayer: !isHost,
+                    enableDeviceCheck: !isHost,
+                    enableChatPreview: false,
+                    enableBrandingIntegration: true,
+                    autoAdmitGuests: false,
+                    maxWaitingGuests: 50,
+                    defaultWaitingMessage: 'Please wait while the host prepares the interview room.',
+                    countdownDuration: 300,
+                    refreshInterval: 5000,
+                    enableNotifications: true,
+                    enableSoundAlerts: true,
+                    themeSystem: this.themeSystem,
+                    accessibilitySystem: this.accessibilitySystem,
+                    responsiveSystem: this.responsiveSystem,
+                    brandingSystem: this.brandingSystem
+                });
+                
+                // Setup waiting room events
+                container.addEventListener('waiting-room-initialized', (e) => {
+                    console.log('Waiting room initialized:', e.detail);
+                });
+                
+                container.addEventListener('waiting-room-joined', (e) => {
+                    console.log('Joined waiting room:', e.detail);
+                });
+                
+                container.addEventListener('waiting-room-left', (e) => {
+                    console.log('Left waiting room:', e.detail);
+                    this.endDemo();
+                });
+                
+                // Join the waiting room
+                const mockUser = {
+                    id: isHost ? 'host-1' : 'guest-' + Date.now(),
+                    name: isHost ? 'Demo Host' : 'Demo Guest',
+                    email: isHost ? 'host@demo.com' : 'guest@demo.com',
+                    avatar: '/assets/default-avatar.png',
+                    joinedAt: Date.now()
+                };
+                
+                this.waitingRoomSystem.joinWaitingRoom('demo-room-123', mockUser, isHost);
+                
+                // Set global reference for button callbacks
+                window.waitingRoom = this.waitingRoomSystem;
+                
+                this.showNotification(`Started ${isHost ? 'host' : 'guest'} demo`, 'success');
+            }
+            
+            endDemo() {
+                // Show demo content
+                document.querySelector('.demo-main').style.display = 'block';
+                
+                // Clear waiting room container
+                const container = document.getElementById('waiting-room-container');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                
+                // Destroy waiting room system
+                if (this.waitingRoomSystem) {
+                    this.waitingRoomSystem.destroy();
+                    this.waitingRoomSystem = null;
+                }
+                
+                // Clear global reference
+                window.waitingRoom = null;
+                
+                this.currentDemo = null;
+                
+                this.showNotification('Demo ended', 'info');
+            }
+            
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'}-color);
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    animation: slideInDown 0.3s ease;
+                `;
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle" style="margin-right: 8px;"></i>
+                    ${message}
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutUp 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+            
+            showError(message) {
+                this.showNotification(message, 'error');
+            }
+            
+            destroy() {
+                if (this.waitingRoomSystem) {
+                    this.waitingRoomSystem.destroy();
+                }
+                
+                if (this.accessibilitySystem) {
+                    this.accessibilitySystem.destroy();
+                }
+                
+                if (this.themeSystem) {
+                    this.themeSystem.destroy();
+                }
+                
+                if (this.responsiveSystem) {
+                    this.responsiveSystem.destroy();
+                }
+                
+                if (this.brandingSystem) {
+                    this.brandingSystem.destroy();
+                }
+            }
+        }
+        
+        // Global functions for demo buttons
+        function startHostDemo() {
+            if (window.demoApp) {
+                window.demoApp.startHostDemo();
+            }
+        }
+        
+        function startGuestDemo() {
+            if (window.demoApp) {
+                window.demoApp.startGuestDemo();
+            }
+        }
+        
+        // Initialize demo when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.demoApp = new WaitingRoomDemo();
+            });
+        } else {
+            window.demoApp = new WaitingRoomDemo();
+        }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.demoApp) {
+                window.demoApp.destroy();
+            }
+        });
+        
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInDown {
+                from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutUp {
+                from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
