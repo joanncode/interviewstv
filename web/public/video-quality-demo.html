@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Quality System - Demo | Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .demo-header {
+            background: var(--card-dark);
+            padding: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .demo-title {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .demo-subtitle {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 1.1rem;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: calc(100vh - 120px);
+        }
+        
+        .demo-sidebar {
+            width: 350px;
+            background: var(--card-dark);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .demo-main {
+            flex: 1;
+            background: var(--bg-dark);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-area {
+            flex: 1;
+            position: relative;
+            background: #000;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-video {
+            width: 80%;
+            height: 80%;
+            background: #333;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--input-dark);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .demo-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            background: var(--input-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .demo-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .demo-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .control-btn {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 5px;
+        }
+        
+        .control-btn:hover {
+            background: #cc0000;
+        }
+        
+        .network-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .network-condition {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .network-condition:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .network-condition.active {
+            border-color: var(--primary-color);
+            background: rgba(255, 0, 0, 0.1);
+        }
+        
+        .condition-name {
+            font-weight: bold;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        
+        .condition-speed {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .quality-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .metric-card {
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .stats-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 250px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .slider-group {
+            margin-bottom: 15px;
+        }
+        
+        .slider-group label {
+            display: block;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .slider-value {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .demo-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .demo-main {
+                height: 400px;
+            }
+            
+            .stats-panel {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+            
+            .network-simulator,
+            .quality-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <header class="demo-header">
+        <h1 class="demo-title">
+            <i class="fas fa-cog" aria-hidden="true"></i>
+            Video Quality System
+        </h1>
+        <p class="demo-subtitle">Advanced video quality controls and adaptive streaming with real-time monitoring</p>
+    </header>
+    
+    <!-- Demo Container -->
+    <div class="demo-container">
+        <!-- Sidebar with Controls -->
+        <aside class="demo-sidebar" id="navigation" role="complementary" aria-label="Video quality controls">
+            <!-- Quality Selection -->
+            <section class="demo-section" id="quality-selection">
+                <h3><i class="fas fa-video" aria-hidden="true"></i>Quality Selection</h3>
+                
+                <button class="demo-btn active" onclick="setQuality('auto')">
+                    <span>
+                        <div><i class="fas fa-magic"></i> Auto Quality</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Automatically adjust based on conditions</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setQuality('1080p')">
+                    <span>
+                        <div><i class="fas fa-video"></i> 1080p Full HD</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">1920x1080 • 4.5 Mbps</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setQuality('720p')">
+                    <span>
+                        <div><i class="fas fa-video"></i> 720p HD</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">1280x720 • 2.5 Mbps</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setQuality('480p')">
+                    <span>
+                        <div><i class="fas fa-video"></i> 480p Good</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">854x480 • 1.2 Mbps</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setQuality('360p')">
+                    <span>
+                        <div><i class="fas fa-video"></i> 360p Medium</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">640x360 • 800 Kbps</div>
+                    </span>
+                </button>
+                <button class="demo-btn" onclick="setQuality('240p')">
+                    <span>
+                        <div><i class="fas fa-video"></i> 240p Low</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">426x240 • 400 Kbps</div>
+                    </span>
+                </button>
+            </section>
+            
+            <!-- Network Simulation -->
+            <section class="demo-section" id="network-simulation">
+                <h3><i class="fas fa-wifi" aria-hidden="true"></i>Network Simulation</h3>
+                
+                <div class="network-simulator">
+                    <div class="network-condition active" onclick="setNetworkCondition('excellent')">
+                        <div class="condition-name">Excellent</div>
+                        <div class="condition-speed">5+ Mbps</div>
+                    </div>
+                    <div class="network-condition" onclick="setNetworkCondition('good')">
+                        <div class="condition-name">Good</div>
+                        <div class="condition-speed">2-5 Mbps</div>
+                    </div>
+                    <div class="network-condition" onclick="setNetworkCondition('fair')">
+                        <div class="condition-name">Fair</div>
+                        <div class="condition-speed">1-2 Mbps</div>
+                    </div>
+                    <div class="network-condition" onclick="setNetworkCondition('poor')">
+                        <div class="condition-name">Poor</div>
+                        <div class="condition-speed">< 1 Mbps</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <div class="slider-group">
+                        <label for="bandwidth-slider">Bandwidth:</label>
+                        <input type="range" id="bandwidth-slider" min="0.1" max="10" step="0.1" value="5">
+                        <div class="slider-value" id="bandwidth-value">5.0 Mbps</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="latency-slider">Latency:</label>
+                        <input type="range" id="latency-slider" min="10" max="500" step="10" value="50">
+                        <div class="slider-value" id="latency-value">50 ms</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label for="packet-loss-slider">Packet Loss:</label>
+                        <input type="range" id="packet-loss-slider" min="0" max="10" step="0.1" value="0">
+                        <div class="slider-value" id="packet-loss-value">0.0%</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Quality Settings -->
+            <section class="demo-section" id="quality-settings">
+                <h3><i class="fas fa-sliders-h" aria-hidden="true"></i>Settings</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="adaptive-streaming" style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="adaptive-streaming" checked style="margin-right: 8px;">
+                        Enable Adaptive Streaming
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="data-saver" style="display: flex; align-items: center; color: var(--text-light);">
+                        <input type="checkbox" id="data-saver" style="margin-right: 8px;">
+                        Data Saver Mode
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="quality-priority" style="display: block; margin-bottom: 5px; color: var(--text-light);">
+                        Quality Priority:
+                    </label>
+                    <select id="quality-priority" style="width: 100%; background: var(--input-dark); border: 1px solid var(--border-color); color: var(--text-light); padding: 8px; border-radius: 4px;">
+                        <option value="quality">Best Quality</option>
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="performance">Best Performance</option>
+                        <option value="bandwidth">Save Bandwidth</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="control-btn" onclick="resetStats()" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-redo"></i> Reset Stats
+                    </button>
+                    <button class="control-btn" onclick="forceQualityCheck()" style="flex: 1; justify-content: center;">
+                        <i class="fas fa-sync"></i> Force Check
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Quality Metrics -->
+            <section class="demo-section" id="quality-metrics">
+                <h3><i class="fas fa-chart-line" aria-hidden="true"></i>Live Metrics</h3>
+                
+                <div class="quality-metrics">
+                    <div class="metric-card">
+                        <div class="metric-value" id="current-quality-metric">Auto</div>
+                        <div class="metric-label">Current Quality</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="bandwidth-metric">5.0</div>
+                        <div class="metric-label">Bandwidth (Mbps)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="dropped-frames-metric">0.0</div>
+                        <div class="metric-label">Dropped Frames (%)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="buffer-health-metric">Good</div>
+                        <div class="metric-label">Buffer Health</div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+        
+        <!-- Main Demo Area -->
+        <main class="demo-main" id="main-content" role="main" aria-label="Video quality preview area">
+            <div class="video-area" id="video-area">
+                <div class="demo-video" id="demo-video">
+                    <i class="fas fa-play-circle" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <div>Demo Video Stream</div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Quality controls will appear here</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Statistics Panel -->
+    <aside class="stats-panel" role="complementary" aria-labelledby="stats-heading">
+        <h4 id="stats-heading">
+            <i class="fas fa-chart-bar" aria-hidden="true"></i>Quality Statistics
+        </h4>
+        <div class="stat-row">
+            <span class="stat-label">Quality Changes:</span>
+            <span class="stat-value" id="quality-changes-stat">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Network Condition:</span>
+            <span class="stat-value" id="network-condition-stat">Excellent</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Adaptation Efficiency:</span>
+            <span class="stat-value" id="adaptation-efficiency-stat">100%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Average Quality:</span>
+            <span class="stat-value" id="average-quality-stat">720p</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Playback Stalls:</span>
+            <span class="stat-value" id="playback-stalls-stat">0</span>
+        </div>
+    </aside>
+    
+    <!-- Include required components -->
+    <script src="../src/components/AccessibilitySystem.js"></script>
+    <script src="../src/components/ThemeSystem.js"></script>
+    <script src="../src/components/ResponsiveDesignSystem.js"></script>
+    <script src="../src/components/VideoQualitySystem.js"></script>
+
+    <script>
+        // Demo Application
+        class VideoQualityDemo {
+            constructor() {
+                this.videoQualitySystem = null;
+                this.currentQuality = 'auto';
+                this.networkCondition = 'excellent';
+                this.simulatedBandwidth = 5000000; // 5 Mbps
+                this.simulatedLatency = 50;
+                this.simulatedPacketLoss = 0;
+                this.qualityChangeCount = 0;
+                this.demoVideo = null;
+
+                this.init();
+            }
+
+            init() {
+                // Initialize video quality system
+                const container = document.getElementById('video-area');
+                this.videoQualitySystem = new VideoQualitySystem(container, {
+                    enableAdaptiveStreaming: true,
+                    enableManualControls: true,
+                    enableQualityIndicators: true,
+                    enableBandwidthMonitoring: true,
+                    defaultQuality: 'auto'
+                });
+
+                // Create demo video element
+                this.createDemoVideo();
+
+                // Setup event listeners
+                this.setupEventListeners();
+
+                // Setup sliders
+                this.setupSliders();
+
+                // Start demo simulation
+                this.startSimulation();
+
+                // Update initial stats
+                this.updateStats();
+
+                console.log('Video Quality Demo initialized successfully!');
+            }
+
+            createDemoVideo() {
+                this.demoVideo = document.createElement('video');
+                this.demoVideo.autoplay = true;
+                this.demoVideo.muted = true;
+                this.demoVideo.playsInline = true;
+                this.demoVideo.loop = true;
+                this.demoVideo.style.width = '100%';
+                this.demoVideo.style.height = '100%';
+                this.demoVideo.style.objectFit = 'cover';
+
+                // Create a simple canvas-based video source for demo
+                this.createDemoVideoSource();
+
+                // Replace demo placeholder
+                const demoVideoDiv = document.getElementById('demo-video');
+                demoVideoDiv.innerHTML = '';
+                demoVideoDiv.appendChild(this.demoVideo);
+
+                // Add to quality system
+                this.videoQualitySystem.addVideoElement(this.demoVideo, 'demo-participant');
+            }
+
+            createDemoVideoSource() {
+                // Create a canvas for demo video content
+                const canvas = document.createElement('canvas');
+                canvas.width = 1280;
+                canvas.height = 720;
+                const ctx = canvas.getContext('2d');
+
+                // Create animated demo content
+                let frame = 0;
+                const animate = () => {
+                    // Clear canvas
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw animated background
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#ff0000');
+                    gradient.addColorStop(0.5, '#ff6600');
+                    gradient.addColorStop(1, '#ff0000');
+
+                    ctx.fillStyle = gradient;
+                    ctx.globalAlpha = 0.1 + 0.1 * Math.sin(frame * 0.02);
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.globalAlpha = 1;
+
+                    // Draw quality indicator
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 48px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Current Quality: ${this.currentQuality}`, canvas.width / 2, canvas.height / 2 - 50);
+
+                    // Draw network info
+                    ctx.font = '24px Arial';
+                    ctx.fillText(`Network: ${this.networkCondition}`, canvas.width / 2, canvas.height / 2);
+                    ctx.fillText(`Bandwidth: ${(this.simulatedBandwidth / 1000000).toFixed(1)} Mbps`, canvas.width / 2, canvas.height / 2 + 30);
+
+                    // Draw frame counter
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`Frame: ${frame}`, 20, 30);
+
+                    frame++;
+                    requestAnimationFrame(animate);
+                };
+
+                animate();
+
+                // Convert canvas to video stream
+                const stream = canvas.captureStream(30);
+                this.demoVideo.srcObject = stream;
+            }
+
+            setupEventListeners() {
+                // Quality change events
+                document.getElementById('video-area').addEventListener('video-quality-changed', (e) => {
+                    this.currentQuality = e.detail.newQuality;
+                    this.qualityChangeCount++;
+                    this.updateStats();
+                    this.updateActiveQualityButton();
+
+                    console.log('Quality changed:', e.detail);
+                });
+
+                // Settings events
+                document.getElementById('adaptive-streaming').addEventListener('change', (e) => {
+                    this.videoQualitySystem.setAdaptiveStreaming(e.target.checked);
+                });
+
+                document.getElementById('data-saver').addEventListener('change', (e) => {
+                    this.videoQualitySystem.setDataSaverMode(e.target.checked);
+                });
+
+                document.getElementById('quality-priority').addEventListener('change', (e) => {
+                    this.videoQualitySystem.setQualityPriority(e.target.value);
+                });
+            }
+
+            setupSliders() {
+                // Bandwidth slider
+                const bandwidthSlider = document.getElementById('bandwidth-slider');
+                const bandwidthValue = document.getElementById('bandwidth-value');
+
+                bandwidthSlider.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    this.simulatedBandwidth = value * 1000000; // Convert to bps
+                    bandwidthValue.textContent = `${value.toFixed(1)} Mbps`;
+                    this.updateNetworkSimulation();
+                });
+
+                // Latency slider
+                const latencySlider = document.getElementById('latency-slider');
+                const latencyValue = document.getElementById('latency-value');
+
+                latencySlider.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    this.simulatedLatency = value;
+                    latencyValue.textContent = `${value} ms`;
+                    this.updateNetworkSimulation();
+                });
+
+                // Packet loss slider
+                const packetLossSlider = document.getElementById('packet-loss-slider');
+                const packetLossValue = document.getElementById('packet-loss-value');
+
+                packetLossSlider.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    this.simulatedPacketLoss = value / 100; // Convert to ratio
+                    packetLossValue.textContent = `${value.toFixed(1)}%`;
+                    this.updateNetworkSimulation();
+                });
+            }
+
+            updateNetworkSimulation() {
+                // Update video quality system with simulated network stats
+                this.videoQualitySystem.networkStats.bandwidth = this.simulatedBandwidth;
+                this.videoQualitySystem.networkStats.latency = this.simulatedLatency;
+                this.videoQualitySystem.networkStats.packetLoss = this.simulatedPacketLoss;
+
+                // Update bandwidth history
+                this.videoQualitySystem.updateBandwidthStats(this.simulatedBandwidth);
+
+                // Determine network condition
+                if (this.simulatedBandwidth >= 5000000) {
+                    this.networkCondition = 'excellent';
+                } else if (this.simulatedBandwidth >= 2000000) {
+                    this.networkCondition = 'good';
+                } else if (this.simulatedBandwidth >= 1000000) {
+                    this.networkCondition = 'fair';
+                } else {
+                    this.networkCondition = 'poor';
+                }
+
+                // Force quality check if adaptive streaming is enabled
+                if (this.videoQualitySystem.isAdaptiveEnabled) {
+                    this.videoQualitySystem.forceQualityCheck();
+                }
+
+                this.updateStats();
+            }
+
+            startSimulation() {
+                // Simulate network fluctuations
+                setInterval(() => {
+                    if (this.videoQualitySystem.isAdaptiveEnabled) {
+                        // Add some random variation to bandwidth
+                        const variation = (Math.random() - 0.5) * 0.2; // ±10% variation
+                        const newBandwidth = this.simulatedBandwidth * (1 + variation);
+
+                        this.videoQualitySystem.networkStats.bandwidth = newBandwidth;
+                        this.videoQualitySystem.updateBandwidthStats(newBandwidth);
+
+                        // Update display
+                        document.getElementById('bandwidth-metric').textContent =
+                            (newBandwidth / 1000000).toFixed(1);
+                    }
+                }, 2000);
+
+                // Update metrics periodically
+                setInterval(() => {
+                    this.updateMetrics();
+                }, 1000);
+            }
+
+            updateStats() {
+                const stats = this.videoQualitySystem.getPerformanceStats();
+
+                document.getElementById('quality-changes-stat').textContent = this.qualityChangeCount;
+                document.getElementById('network-condition-stat').textContent =
+                    this.networkCondition.charAt(0).toUpperCase() + this.networkCondition.slice(1);
+                document.getElementById('adaptation-efficiency-stat').textContent =
+                    `${(stats.adaptationEfficiency * 100).toFixed(1)}%`;
+                document.getElementById('average-quality-stat').textContent =
+                    this.getAverageQualityLabel(stats.averageQuality);
+                document.getElementById('playback-stalls-stat').textContent = stats.playbackStalls;
+            }
+
+            updateMetrics() {
+                // Update live metrics
+                document.getElementById('current-quality-metric').textContent =
+                    this.currentQuality === 'auto' ? 'Auto' : this.currentQuality;
+
+                document.getElementById('bandwidth-metric').textContent =
+                    (this.simulatedBandwidth / 1000000).toFixed(1);
+
+                // Simulate dropped frames based on network condition
+                let droppedFrameRatio = 0;
+                if (this.networkCondition === 'poor') droppedFrameRatio = Math.random() * 5;
+                else if (this.networkCondition === 'fair') droppedFrameRatio = Math.random() * 2;
+                else if (this.networkCondition === 'good') droppedFrameRatio = Math.random() * 0.5;
+
+                document.getElementById('dropped-frames-metric').textContent =
+                    droppedFrameRatio.toFixed(1);
+
+                // Update buffer health
+                const bufferConditions = ['Poor', 'Fair', 'Good', 'Excellent'];
+                const bufferIndex = Math.min(3, Math.floor(this.simulatedBandwidth / 1250000));
+                document.getElementById('buffer-health-metric').textContent =
+                    bufferConditions[bufferIndex];
+            }
+
+            updateActiveQualityButton() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.demo-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Add active class to current quality button
+                const activeBtn = document.querySelector(`[onclick="setQuality('${this.currentQuality}')"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+
+            getAverageQualityLabel(averageIndex) {
+                const qualityLevels = ['240p', '360p', '480p', '720p', '1080p'];
+                const index = Math.round(averageIndex || 2);
+                return qualityLevels[Math.min(index, qualityLevels.length - 1)] || '480p';
+            }
+        }
+
+        // Global functions for demo
+        let demo;
+
+        function setQuality(quality) {
+            if (demo && demo.videoQualitySystem) {
+                demo.videoQualitySystem.setQuality(quality);
+            }
+        }
+
+        function setNetworkCondition(condition) {
+            if (!demo) return;
+
+            // Remove active class from all network conditions
+            document.querySelectorAll('.network-condition').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Add active class to selected condition
+            event.target.classList.add('active');
+
+            // Set bandwidth based on condition
+            let bandwidth;
+            switch (condition) {
+                case 'excellent': bandwidth = 6; break;
+                case 'good': bandwidth = 3; break;
+                case 'fair': bandwidth = 1.5; break;
+                case 'poor': bandwidth = 0.5; break;
+                default: bandwidth = 3;
+            }
+
+            // Update sliders
+            document.getElementById('bandwidth-slider').value = bandwidth;
+            document.getElementById('bandwidth-value').textContent = `${bandwidth.toFixed(1)} Mbps`;
+
+            // Update simulation
+            demo.simulatedBandwidth = bandwidth * 1000000;
+            demo.networkCondition = condition;
+            demo.updateNetworkSimulation();
+        }
+
+        function resetStats() {
+            if (demo && demo.videoQualitySystem) {
+                demo.videoQualitySystem.resetStatistics();
+                demo.qualityChangeCount = 0;
+                demo.updateStats();
+            }
+        }
+
+        function forceQualityCheck() {
+            if (demo && demo.videoQualitySystem) {
+                demo.videoQualitySystem.forceQualityCheck();
+            }
+        }
+
+        // Initialize demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            demo = new VideoQualityDemo();
+        });
+    </script>
+</body>
+</html>
