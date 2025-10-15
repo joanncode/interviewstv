@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Streaming Demo - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --input-bg: #3a3a3a;
+            --text-light: #f8f9fa;
+            --text-muted: #6c757d;
+            --border-color: #404040;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-red) !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-red);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-red);
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-light);
+            border: none;
+        }
+
+        .platform-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .platform-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-2px);
+        }
+
+        .platform-card.selected {
+            border-color: var(--primary-red);
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .connection-card {
+            transition: all 0.3s ease;
+        }
+
+        .connection-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-active { background-color: #28a745; }
+        .status-inactive { background-color: #6c757d; }
+        .status-error { background-color: #dc3545; }
+        .status-streaming { background-color: var(--primary-red); animation: pulse 2s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .stream-card {
+            border-left: 4px solid var(--primary-red);
+        }
+
+        .analytics-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #333 100%);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .platform-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .youtube { color: #FF0000; }
+        .facebook { color: #1877F2; }
+        .twitch { color: #9146FF; }
+        .linkedin { color: #0A66C2; }
+        .twitter { color: #1DA1F2; }
+
+        .metric-card {
+            background: linear-gradient(45deg, var(--card-bg), #333);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .chat-message {
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-username {
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 400px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        .table-dark {
+            --bs-table-bg: var(--card-bg);
+            --bs-table-border-color: var(--border-color);
+        }
+
+        .progress {
+            background-color: var(--input-bg);
+        }
+
+        .progress-bar {
+            background-color: var(--primary-red);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .text-primary {
+            color: var(--primary-red) !important;
+        }
+
+        .border-primary {
+            border-color: var(--primary-red) !important;
+        }
+
+        .list-group-item {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .list-group-item:hover {
+            background-color: var(--input-bg);
+        }
+
+        .dropdown-menu {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-light);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--input-bg);
+            color: var(--text-light);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .form-check-input:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25);
+        }
+
+        .accordion-button {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            border: none;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: var(--input-bg);
+            color: var(--primary-red);
+        }
+
+        .accordion-body {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+        }
+
+        .toast {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .toast-header {
+            background-color: var(--input-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .offcanvas {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+        }
+
+        .offcanvas-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 0.5rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .metric-card {
+                padding: 1rem;
+            }
+            
+            .metric-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="host-dashboard.html">
+                <i class="fas fa-video me-2"></i>
+                Interviews.tv
+            </a>
+            <span class="navbar-text">
+                <i class="fas fa-share-alt me-2"></i>
+                Social Media Streaming Demo
+            </span>
+        </div>
+    </nav>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="alert-container"></div>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="card-title">
+                            <i class="fas fa-broadcast-tower text-primary me-3"></i>
+                            Social Media Streaming Integration
+                        </h1>
+                        <p class="card-text text-muted">
+                            Stream your interviews live to multiple social media platforms simultaneously. 
+                            Connect with YouTube, Facebook, Twitch, LinkedIn, and Twitter/X for maximum reach and engagement.
+                        </p>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="totalPlatforms">0</div>
+                                    <div class="metric-label">Available Platforms</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="connectedPlatforms">0</div>
+                                    <div class="metric-label">Connected Platforms</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="activeStreams">0</div>
+                                    <div class="metric-label">Active Streams</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="totalViewers">0</div>
+                                    <div class="metric-label">Total Viewers</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="platforms-tab" data-bs-toggle="tab" data-bs-target="#platforms" type="button" role="tab">
+                    <i class="fas fa-plug me-2"></i>Platforms
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab">
+                    <i class="fas fa-link me-2"></i>Connections
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="streaming-tab" data-bs-toggle="tab" data-bs-target="#streaming" type="button" role="tab">
+                    <i class="fas fa-broadcast-tower me-2"></i>Streaming
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                    <i class="fas fa-chart-line me-2"></i>Analytics
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat" type="button" role="tab">
+                    <i class="fas fa-comments me-2"></i>Live Chat
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- Platforms Tab -->
+            <div class="tab-pane fade show active" id="platforms" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plug me-2"></i>
+                            Available Social Media Platforms
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="platformsContainer">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                <p class="mt-2">Loading platforms...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connections Tab -->
+            <div class="tab-pane fade" id="connections" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-link me-2"></i>
+                            Connected Platforms
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="socialStreamingDemo.loadConnections()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="connectionsContainer">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                <p class="mt-2">Loading connections...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streaming Tab -->
+            <div class="tab-pane fade" id="streaming" role="tabpanel">
+                <div class="row">
+                    <!-- Stream Creation -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Create Multi-Platform Stream
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="createStreamForm">
+                                    <div class="mb-3">
+                                        <label for="streamTitle" class="form-label">Stream Title *</label>
+                                        <input type="text" class="form-control" id="streamTitle" required
+                                               placeholder="Enter stream title">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="streamDescription" class="form-label">Description</label>
+                                        <textarea class="form-control" id="streamDescription" rows="3"
+                                                  placeholder="Describe your stream"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="streamCategory" class="form-label">Category</label>
+                                        <select class="form-select" id="streamCategory">
+                                            <option value="interview">Interview</option>
+                                            <option value="education">Education</option>
+                                            <option value="business">Business</option>
+                                            <option value="technology">Technology</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="streamTags" class="form-label">Tags</label>
+                                        <input type="text" class="form-control" id="streamTags"
+                                               placeholder="Enter tags separated by commas">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="scheduledStartTime" class="form-label">Scheduled Start Time</label>
+                                        <input type="datetime-local" class="form-control" id="scheduledStartTime">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Platform Selection</label>
+                                        <div id="platformSelection">
+                                            <!-- Platform checkboxes will be populated here -->
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chatEnabled" checked>
+                                                <label class="form-check-label" for="chatEnabled">
+                                                    Enable Chat
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="recordingEnabled" checked>
+                                                <label class="form-check-label" for="recordingEnabled">
+                                                    Enable Recording
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-plus me-2"></i>
+                                            Create Stream Session
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stream Control -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-play-circle me-2"></i>
+                                    Stream Control
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="streamControlContainer">
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Create a stream session to access controls</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Streams -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-broadcast-tower me-2"></i>
+                            Active Streams
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="activeStreamsContainer">
+                            <div class="text-center py-4">
+                                <i class="fas fa-stream fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No active streams</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics" role="tabpanel">
+                <div class="row">
+                    <!-- Overview Metrics -->
+                    <div class="col-12 mb-4">
+                        <div class="card analytics-card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Streaming Analytics Overview
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row" id="analyticsOverview">
+                                    <div class="col-md-3">
+                                        <div class="metric-card">
+                                            <div class="metric-value" id="totalStreams">0</div>
+                                            <div class="metric-label">Total Streams</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric-card">
+                                            <div class="metric-value" id="totalViews">0</div>
+                                            <div class="metric-label">Total Views</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric-card">
+                                            <div class="metric-value" id="totalWatchTime">0h</div>
+                                            <div class="metric-label">Watch Time</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="metric-card">
+                                            <div class="metric-value" id="totalEngagement">0</div>
+                                            <div class="metric-label">Engagement</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Platform Breakdown -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Platform Performance
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="platformBreakdown">
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No analytics data available</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-history me-2"></i>
+                                    Recent Activity
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentActivity">
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No recent activity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Chat Tab -->
+            <div class="tab-pane fade" id="chat" role="tabpanel">
+                <div class="row">
+                    <!-- Chat Messages -->
+                    <div class="col-md-8 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-comments me-2"></i>
+                                    Live Chat Messages
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="chatMessagesContainer" style="height: 400px; overflow-y: auto;">
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No chat messages yet</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Statistics -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Chat Statistics
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="totalChatMessages">0</div>
+                                    <div class="metric-label">Total Messages</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value" id="activeChatters">0</div>
+                                    <div class="metric-label">Active Chatters</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value" id="messagesPerMinute">0</div>
+                                    <div class="metric-label">Messages/Min</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- OAuth Modal -->
+    <div class="modal fade" id="oauthModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>
+                        Connect to <span id="oauthPlatformName"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You will be redirected to <span id="oauthPlatformName2"></span> to authorize the connection.</p>
+                    <p class="text-muted">This will allow Interviews.tv to:</p>
+                    <ul class="text-muted">
+                        <li>Create and manage live streams</li>
+                        <li>Read chat messages and interactions</li>
+                        <li>Access basic profile information</li>
+                        <li>View analytics and statistics</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="proceedOAuthBtn">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        Continue to Authorization
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stream Details Modal -->
+    <div class="modal fade" id="streamDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Stream Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="streamDetailsContent">
+                        <!-- Stream details will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Social Media Streaming Demo JS -->
+    <script src="js/social-media-streaming-demo.js"></script>
+
+    <script>
+        // Initialize the demo when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.socialStreamingDemo = new SocialMediaStreamingDemo();
+            socialStreamingDemo.init();
+        });
+    </script>
+</body>
+</html>

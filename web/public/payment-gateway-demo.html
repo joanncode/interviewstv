@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Gateway Integration - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --input-bg: #3a3a3a;
+            --text-light: #f8f9fa;
+            --text-muted: #6c757d;
+            --border-color: #404040;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-red) !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .card-header {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-red);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-red);
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-light);
+            border: none;
+        }
+
+        .table-dark {
+            background-color: var(--card-bg);
+        }
+
+        .table-dark td, .table-dark th {
+            border-color: var(--border-color);
+        }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        .provider-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .provider-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+        }
+
+        .provider-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .connection-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-active { background-color: var(--success-color); }
+        .status-inactive { background-color: var(--text-muted); }
+        .status-error { background-color: var(--danger-color); }
+        .status-pending { background-color: var(--warning-color); }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, rgba(255, 0, 0, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            height: 100%;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .alert-dark {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .border-start {
+            border-left: 3px solid var(--primary-red) !important;
+        }
+
+        .payment-method-card {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .payment-method-card:hover {
+            border-color: var(--primary-red);
+        }
+
+        .payment-method-card.selected {
+            border-color: var(--primary-red);
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .subscription-plan {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+        .subscription-plan:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-4px);
+        }
+
+        .subscription-plan.featured {
+            border-color: var(--primary-red);
+            background: linear-gradient(135deg, var(--card-bg) 0%, rgba(255, 0, 0, 0.1) 100%);
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .plan-currency {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .plan-interval {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li i {
+            color: var(--success-color);
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .metric-value {
+                font-size: 1.5rem;
+            }
+            
+            .provider-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="host-dashboard.html">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="host-dashboard.html">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="mb-1">
+                            <i class="fas fa-credit-card text-danger me-2"></i>
+                            Payment Gateway Integration
+                        </h1>
+                        <p class="text-muted mb-0">Manage payment providers, process transactions, and handle subscriptions</p>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-outline-primary" onclick="refreshAllData()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="paymentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="providers-tab" data-bs-toggle="tab" data-bs-target="#providers" type="button" role="tab">
+                    <i class="fas fa-store me-1"></i>Payment Providers
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab">
+                    <i class="fas fa-link me-1"></i>Connections
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="methods-tab" data-bs-toggle="tab" data-bs-target="#methods" type="button" role="tab">
+                    <i class="fas fa-credit-card me-1"></i>Payment Methods
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
+                    <i class="fas fa-exchange-alt me-1"></i>Transactions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subscriptions-tab" data-bs-toggle="tab" data-bs-target="#subscriptions" type="button" role="tab">
+                    <i class="fas fa-calendar-alt me-1"></i>Subscriptions
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                    <i class="fas fa-chart-bar me-1"></i>Analytics
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="paymentTabContent">
+            <!-- Payment Providers Tab -->
+            <div class="tab-pane fade show active" id="providers" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control" id="providerSearch" placeholder="Search payment providers...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="providerTypeFilter">
+                            <option value="">All Provider Types</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="digital_wallet">Digital Wallet</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cryptocurrency">Cryptocurrency</option>
+                            <option value="buy_now_pay_later">Buy Now Pay Later</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="currencyFilter">
+                            <option value="">All Currencies</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="CAD">CAD</option>
+                            <option value="AUD">AUD</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="providersGrid" class="row">
+                    <!-- Providers will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Connections Tab -->
+            <div class="tab-pane fade" id="connections" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <h4>Payment Gateway Connections</h4>
+                        <p class="text-muted">Manage your connected payment providers and their configurations</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" onclick="showConnectProviderModal()">
+                            <i class="fas fa-plus me-1"></i>Connect Provider
+                        </button>
+                    </div>
+                </div>
+
+                <div id="connectionsContainer">
+                    <!-- Connections will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Payment Methods Tab -->
+            <div class="tab-pane fade" id="methods" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <h4>Payment Methods</h4>
+                        <p class="text-muted">Manage customer payment methods and instruments</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" onclick="showAddPaymentMethodModal()">
+                            <i class="fas fa-plus me-1"></i>Add Payment Method
+                        </button>
+                    </div>
+                </div>
+
+                <div id="paymentMethodsContainer">
+                    <!-- Payment methods will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-pane fade" id="transactions" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h4>Transaction History</h4>
+                        <p class="text-muted">View and manage payment transactions</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-success me-2" onclick="showProcessPaymentModal()">
+                            <i class="fas fa-credit-card me-1"></i>Process Payment
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="#" onclick="filterTransactions('all')">All Transactions</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterTransactions('succeeded')">Successful</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterTransactions('failed')">Failed</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterTransactions('pending')">Pending</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transactionsContainer">
+                    <!-- Transactions will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div class="tab-pane fade" id="subscriptions" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4>Subscription Management</h4>
+                        <p class="text-muted">Create and manage subscription plans and customer subscriptions</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary" onclick="showCreatePlanModal()">
+                            <i class="fas fa-plus me-1"></i>Create Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subscription Plans -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3">Available Plans</h5>
+                        <div id="subscriptionPlansContainer" class="row">
+                            <!-- Subscription plans will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Subscriptions -->
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="mb-3">Active Subscriptions</h5>
+                        <div id="activeSubscriptionsContainer">
+                            <!-- Active subscriptions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4>Payment Analytics</h4>
+                        <p class="text-muted">Monitor payment performance and financial metrics</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="input-group">
+                            <select class="form-select" id="analyticsDateRange">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="365">Last year</option>
+                            </select>
+                            <button class="btn btn-outline-primary" onclick="loadAnalytics()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalTransactions">-</div>
+                            <div class="metric-label">Total Transactions</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-value" id="totalVolume">-</div>
+                            <div class="metric-label">Total Volume</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-value" id="conversionRate">-</div>
+                            <div class="metric-label">Conversion Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-value" id="netRevenue">-</div>
+                            <div class="metric-label">Net Revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts and Detailed Analytics -->
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Revenue Trends</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="revenueChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Transaction Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statusChart" width="200" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals will be added here -->
+    <div id="modalsContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/payment-gateway-demo.js"></script>
+</body>
+</html>

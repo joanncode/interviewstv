@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/dark-theme.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+        }
+
+        .analytics-card:hover {
+            border-color: #FF0000;
+            transform: translateY(-2px);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #333, #2a2a2a);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #444;
+            height: 100%;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #FF0000;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #ccc;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change.positive {
+            color: #28a745;
+        }
+
+        .metric-change.negative {
+            color: #dc3545;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .chart-container.large {
+            height: 400px;
+        }
+
+        .real-time-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .time-range-selector {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .time-range-selector .btn {
+            border: none;
+            margin: 0 0.25rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .time-range-selector .btn.active {
+            background: #FF0000;
+            color: white;
+        }
+
+        .time-range-selector .btn:not(.active) {
+            background: transparent;
+            color: #ccc;
+        }
+
+        .time-range-selector .btn:not(.active):hover {
+            background: #444;
+            color: white;
+        }
+
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            background: #333;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #FF0000;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .performance-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .performance-indicator.excellent { background: #28a745; }
+        .performance-indicator.good { background: #ffc107; }
+        .performance-indicator.poor { background: #dc3545; }
+
+        .feature-badge {
+            background: linear-gradient(45deg, #FF0000, #CC0000);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .export-dropdown {
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 26, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        .data-table {
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background: #444;
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 1rem;
+        }
+
+        .data-table td {
+            border: none;
+            color: #ccc;
+            padding: 1rem;
+            border-bottom: 1px solid #444;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.online { background: #28a745; color: white; }
+        .status-badge.offline { background: #6c757d; color: white; }
+        .status-badge.live { background: #FF0000; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="text-white mb-2">
+                            <i class="fas fa-chart-line text-danger me-2"></i>
+                            Analytics Dashboard
+                            <span class="feature-badge">Phase 5.3.6 Complete</span>
+                        </h1>
+                        <p class="text-muted">Comprehensive analytics and performance insights</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="time-range-selector me-3">
+                            <button class="btn btn-sm active" data-range="24h">24H</button>
+                            <button class="btn btn-sm" data-range="7d">7D</button>
+                            <button class="btn btn-sm" data-range="30d">30D</button>
+                            <button class="btn btn-sm" data-range="90d">90D</button>
+                        </div>
+                        <div class="dropdown export-dropdown">
+                            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-1"></i> Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="dashboard.exportData('json')">
+                                    <i class="fas fa-file-code me-2"></i> JSON
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="dashboard.exportData('csv')">
+                                    <i class="fas fa-file-csv me-2"></i> CSV
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="dashboard.exportData('pdf')">
+                                    <i class="fas fa-file-pdf me-2"></i> PDF Report
+                                </a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-outline-light btn-sm ms-2" onclick="dashboard.refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="analytics-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="text-white mb-0">
+                            <span class="real-time-indicator"></span>
+                            Real-time Status
+                        </h5>
+                        <small class="text-muted" id="last-updated">Last updated: --</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-interviews">--</div>
+                    <div class="metric-label">Total Interviews</div>
+                    <div class="metric-change positive" id="interviews-change">+0%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-views">--</div>
+                    <div class="metric-label">Total Views</div>
+                    <div class="metric-change positive" id="views-change">+0%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="engagement-rate">--%</div>
+                    <div class="metric-label">Engagement Rate</div>
+                    <div class="metric-change positive" id="engagement-change">+0%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-followers">--</div>
+                    <div class="metric-label">Followers</div>
+                    <div class="metric-change positive" id="followers-change">+0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-chart-area text-danger me-2"></i>
+                        Engagement Trends
+                    </h5>
+                    <div class="chart-container large">
+                        <canvas id="engagement-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-chart-pie text-danger me-2"></i>
+                        Content Categories
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="categories-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance & Activity Row -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-tachometer-alt text-danger me-2"></i>
+                        System Performance
+                    </h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="performance-indicator excellent"></span>
+                                <div>
+                                    <div class="text-white">Response Time</div>
+                                    <small class="text-muted" id="response-time">150ms</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="performance-indicator good"></span>
+                                <div>
+                                    <div class="text-white">Uptime</div>
+                                    <small class="text-muted" id="uptime">99.9%</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="performance-indicator excellent"></span>
+                                <div>
+                                    <div class="text-white">Error Rate</div>
+                                    <small class="text-muted" id="error-rate">0.1%</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="performance-indicator good"></span>
+                                <div>
+                                    <div class="text-white">Active Users</div>
+                                    <small class="text-muted" id="active-users">1,234</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-clock text-danger me-2"></i>
+                        Recent Activity
+                    </h5>
+                    <div class="activity-feed" id="activity-feed">
+                        <!-- Activity items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analytics Tables -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-table text-danger me-2"></i>
+                        Top Performing Content
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table data-table">
+                            <thead>
+                                <tr>
+                                    <th>Interview</th>
+                                    <th>Views</th>
+                                    <th>Engagement</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-content-table">
+                                <!-- Content will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="analytics-card">
+                    <h5 class="text-white mb-3">
+                        <i class="fas fa-users text-danger me-2"></i>
+                        Audience Insights
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="audience-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/analytics-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Language Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/dark-theme.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #444;
+        }
+
+        .language-preview {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 3px solid #FF0000;
+        }
+
+        .translation-key {
+            font-family: 'Courier New', monospace;
+            background: #333;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .api-response {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-loading { background: #ffc107; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .feature-badge {
+            background: linear-gradient(45deg, #FF0000, #CC0000);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .language-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+        }
+
+        .language-card:hover {
+            border-color: #FF0000;
+            transform: translateY(-2px);
+        }
+
+        .language-card.active {
+            border-color: #FF0000;
+            background: #2a2a2a;
+        }
+
+        .flag-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .rtl-demo {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .translation-demo {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-globe text-danger me-2"></i>
+                    Multi-Language Support Demo
+                    <span class="feature-badge">Phase 5.3.5 Complete</span>
+                </h1>
+                <p class="text-muted">Testing the internationalization (i18n) system functionality</p>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-server text-danger me-2"></i>
+                i18n API Status
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="status-indicator status-loading" id="api-status"></span>
+                        <span id="api-status-text">Checking API connection...</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="status-indicator status-loading" id="languages-status"></span>
+                        <span id="languages-status-text">Loading languages...</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="status-indicator status-loading" id="translations-status"></span>
+                        <span id="translations-status-text">Loading translations...</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-outline-light btn-sm me-2" onclick="demo.checkAPIStatus()">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh Status
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="demo.loadLanguages()">
+                        <i class="fas fa-download me-1"></i> Load Languages
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Languages -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-flag text-danger me-2"></i>
+                Available Languages
+            </h3>
+            <div id="languages-container">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2">Loading languages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Translation Demo -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-language text-danger me-2"></i>
+                Translation Demo
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label text-white">Select Language:</label>
+                    <select class="form-select bg-dark border-secondary text-white" id="language-selector">
+                        <option value="">Choose a language...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-white">Translation Key:</label>
+                    <select class="form-select bg-dark border-secondary text-white" id="key-selector">
+                        <option value="">Choose a key...</option>
+                        <option value="common.buttons.save">common.buttons.save</option>
+                        <option value="common.buttons.cancel">common.buttons.cancel</option>
+                        <option value="auth.login.title">auth.login.title</option>
+                        <option value="auth.login.subtitle">auth.login.subtitle</option>
+                        <option value="interviews.title">interviews.title</option>
+                        <option value="templates.title">templates.title</option>
+                        <option value="room.title">room.title</option>
+                    </select>
+                </div>
+            </div>
+            <div id="translation-preview" class="mt-3">
+                <!-- Translation preview will be shown here -->
+            </div>
+        </div>
+
+        <!-- Sample UI Translation -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-desktop text-danger me-2"></i>
+                Sample UI Translation
+            </h3>
+            <div id="ui-demo" class="language-preview">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-white mb-0" data-i18n="auth.login.title">Sign In</h4>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-light btn-sm" onclick="demo.translateUI('en')">🇺🇸 EN</button>
+                        <button class="btn btn-outline-light btn-sm" onclick="demo.translateUI('es')">🇪🇸 ES</button>
+                        <button class="btn btn-outline-light btn-sm" onclick="demo.translateUI('fr')">🇫🇷 FR</button>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" data-i18n="auth.login.subtitle">Welcome back to Interviews.tv</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label text-white" data-i18n="common.labels.email">Email</label>
+                        <input type="email" class="form-control bg-dark border-secondary text-white" data-i18n-placeholder="auth.login.email_placeholder">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white" data-i18n="common.labels.password">Password</label>
+                        <input type="password" class="form-control bg-dark border-secondary text-white" data-i18n-placeholder="auth.login.password_placeholder">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-danger me-2" data-i18n="auth.login.login_button">Sign In</button>
+                    <button class="btn btn-outline-light" data-i18n="common.buttons.cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RTL Demo -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-align-right text-danger me-2"></i>
+                RTL Language Demo
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white">Left-to-Right (LTR)</h5>
+                    <div class="translation-demo">
+                        <p class="text-white mb-2">English: Welcome to Interviews.tv</p>
+                        <p class="text-white mb-2">Spanish: Bienvenido a Interviews.tv</p>
+                        <p class="text-white mb-0">French: Bienvenue sur Interviews.tv</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-white">Right-to-Left (RTL)</h5>
+                    <div class="translation-demo rtl-demo">
+                        <p class="text-white mb-2">Arabic: مرحباً بك في Interviews.tv</p>
+                        <p class="text-white mb-2">Hebrew: ברוכים הבאים ל-Interviews.tv</p>
+                        <p class="text-white mb-0">Persian: به Interviews.tv خوش آمدید</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Response -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-code text-danger me-2"></i>
+                API Response
+            </h3>
+            <div class="api-response" id="api-response">
+                <div class="text-muted">API responses will appear here...</div>
+            </div>
+        </div>
+
+        <!-- Integration Test -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-flask text-danger me-2"></i>
+                Integration Test
+            </h3>
+            <p class="text-muted mb-3">Test the complete i18n workflow:</p>
+            <div class="row">
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testLanguageDetection()">
+                        <i class="fas fa-search me-1"></i> Test Detection
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testTranslationAPI()">
+                        <i class="fas fa-language me-1"></i> Test Translation API
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testLanguageSwitcher()">
+                        <i class="fas fa-toggle-on me-1"></i> Test Switcher
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testRTLSupport()">
+                        <i class="fas fa-align-right me-1"></i> Test RTL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class I18nDemo {
+            constructor() {
+                this.languages = [];
+                this.currentLanguage = 'en';
+                this.translations = {};
+                this.init();
+            }
+
+            init() {
+                this.checkAPIStatus();
+                this.loadLanguages();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Language selector change
+                document.getElementById('language-selector').addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        this.loadTranslations(e.target.value);
+                    }
+                });
+
+                // Key selector change
+                document.getElementById('key-selector').addEventListener('change', (e) => {
+                    this.showTranslationPreview();
+                });
+            }
+
+            async checkAPIStatus() {
+                this.updateStatus('api-status', 'loading', 'Checking API...');
+                
+                try {
+                    const response = await fetch('/api/health');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.updateStatus('api-status', 'success', 'API Connected');
+                    } else {
+                        this.updateStatus('api-status', 'error', 'API Error');
+                    }
+                } catch (error) {
+                    this.updateStatus('api-status', 'error', 'API Unavailable');
+                }
+            }
+
+            async loadLanguages() {
+                this.updateStatus('languages-status', 'loading', 'Loading languages...');
+                
+                try {
+                    const response = await fetch('/api/i18n/languages');
+                    const data = await response.json();
+                    
+                    this.logResponse('GET /api/i18n/languages', data);
+                    
+                    if (data.success) {
+                        this.languages = data.data.languages;
+                        this.updateStatus('languages-status', 'success', `${this.languages.length} languages loaded`);
+                        this.renderLanguages();
+                        this.populateLanguageSelector();
+                    } else {
+                        this.updateStatus('languages-status', 'error', 'Failed to load languages');
+                    }
+                } catch (error) {
+                    this.updateStatus('languages-status', 'error', 'Languages unavailable');
+                    this.logResponse('GET /api/i18n/languages', { error: error.message });
+                }
+            }
+
+            async loadTranslations(locale) {
+                this.updateStatus('translations-status', 'loading', `Loading ${locale} translations...`);
+                
+                try {
+                    const response = await fetch(`/api/i18n/translations/${locale}`);
+                    const data = await response.json();
+                    
+                    this.logResponse(`GET /api/i18n/translations/${locale}`, data);
+                    
+                    if (data.success) {
+                        this.translations[locale] = data.data.translations;
+                        this.updateStatus('translations-status', 'success', `${locale} translations loaded`);
+                        this.showTranslationPreview();
+                    } else {
+                        this.updateStatus('translations-status', 'error', `Failed to load ${locale} translations`);
+                    }
+                } catch (error) {
+                    this.updateStatus('translations-status', 'error', `${locale} translations unavailable`);
+                    this.logResponse(`GET /api/i18n/translations/${locale}`, { error: error.message });
+                }
+            }
+
+            renderLanguages() {
+                const container = document.getElementById('languages-container');
+                
+                if (this.languages.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-4">No languages found</div>';
+                    return;
+                }
+
+                const languagesHtml = this.languages.map(lang => `
+                    <div class="language-card ${lang.code === this.currentLanguage ? 'active' : ''}" 
+                         onclick="demo.selectLanguage('${lang.code}')">
+                        <div class="d-flex align-items-center">
+                            <span class="flag-icon">${lang.flag}</span>
+                            <div>
+                                <h6 class="text-white mb-1">${lang.nativeName}</h6>
+                                <small class="text-muted">${lang.name} (${lang.code})</small>
+                                ${lang.rtl ? '<span class="badge bg-info ms-2">RTL</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = languagesHtml;
+            }
+
+            populateLanguageSelector() {
+                const selector = document.getElementById('language-selector');
+                selector.innerHTML = '<option value="">Choose a language...</option>';
+                
+                this.languages.forEach(lang => {
+                    const option = document.createElement('option');
+                    option.value = lang.code;
+                    option.textContent = `${lang.flag} ${lang.nativeName} (${lang.code})`;
+                    selector.appendChild(option);
+                });
+            }
+
+            selectLanguage(code) {
+                this.currentLanguage = code;
+                document.getElementById('language-selector').value = code;
+                this.loadTranslations(code);
+                this.renderLanguages();
+            }
+
+            showTranslationPreview() {
+                const locale = document.getElementById('language-selector').value;
+                const key = document.getElementById('key-selector').value;
+                const preview = document.getElementById('translation-preview');
+                
+                if (!locale || !key || !this.translations[locale]) {
+                    preview.innerHTML = '';
+                    return;
+                }
+
+                const translation = this.getTranslation(this.translations[locale], key);
+                const language = this.languages.find(l => l.code === locale);
+                
+                preview.innerHTML = `
+                    <div class="translation-demo">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="translation-key">${key}</span>
+                            <span class="badge bg-secondary">${language.flag} ${language.code}</span>
+                        </div>
+                        <div class="text-white" ${language.rtl ? 'dir="rtl"' : ''}>
+                            "${translation || 'Translation not found'}"
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTranslation(translations, key) {
+                const keys = key.split('.');
+                let value = translations;
+                
+                for (const k of keys) {
+                    if (value && typeof value === 'object' && k in value) {
+                        value = value[k];
+                    } else {
+                        return null;
+                    }
+                }
+                
+                return typeof value === 'string' ? value : null;
+            }
+
+            async translateUI(locale) {
+                if (!this.translations[locale]) {
+                    await this.loadTranslations(locale);
+                }
+
+                const translations = this.translations[locale];
+                if (!translations) return;
+
+                // Translate elements with data-i18n attribute
+                document.querySelectorAll('[data-i18n]').forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    const translation = this.getTranslation(translations, key);
+                    if (translation) {
+                        element.textContent = translation;
+                    }
+                });
+
+                // Translate placeholders
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                    const key = element.getAttribute('data-i18n-placeholder');
+                    const translation = this.getTranslation(translations, key);
+                    if (translation) {
+                        element.placeholder = translation;
+                    }
+                });
+
+                // Update direction for RTL languages
+                const language = this.languages.find(l => l.code === locale);
+                const uiDemo = document.getElementById('ui-demo');
+                if (language && language.rtl) {
+                    uiDemo.style.direction = 'rtl';
+                    uiDemo.style.textAlign = 'right';
+                } else {
+                    uiDemo.style.direction = 'ltr';
+                    uiDemo.style.textAlign = 'left';
+                }
+            }
+
+            updateStatus(elementId, status, text) {
+                const indicator = document.getElementById(elementId);
+                const textElement = document.getElementById(elementId.replace('-status', '-status-text'));
+                
+                indicator.className = `status-indicator status-${status}`;
+                textElement.textContent = text;
+            }
+
+            logResponse(endpoint, data) {
+                const responseDiv = document.getElementById('api-response');
+                const timestamp = new Date().toLocaleTimeString();
+                
+                responseDiv.innerHTML = `
+                    <div class="text-info">[${timestamp}] ${endpoint}</div>
+                    <pre class="text-white mt-2">${JSON.stringify(data, null, 2)}</pre>
+                ` + responseDiv.innerHTML;
+            }
+
+            // Test methods
+            testLanguageDetection() {
+                const userLang = navigator.language || navigator.userLanguage;
+                this.logResponse('Language Detection', {
+                    browser_language: userLang,
+                    supported: this.languages.some(l => l.code === userLang.split('-')[0]),
+                    fallback: 'en'
+                });
+            }
+
+            async testTranslationAPI() {
+                try {
+                    const response = await fetch('/api/i18n/stats');
+                    const data = await response.json();
+                    this.logResponse('GET /api/i18n/stats', data);
+                } catch (error) {
+                    this.logResponse('Translation API Test', { error: error.message });
+                }
+            }
+
+            testLanguageSwitcher() {
+                this.logResponse('Language Switcher Test', {
+                    current_language: this.currentLanguage,
+                    available_languages: this.languages.map(l => l.code),
+                    rtl_support: this.languages.filter(l => l.rtl).map(l => l.code)
+                });
+            }
+
+            testRTLSupport() {
+                const rtlLanguages = this.languages.filter(l => l.rtl);
+                this.logResponse('RTL Support Test', {
+                    rtl_languages: rtlLanguages,
+                    css_support: 'direction: rtl',
+                    text_align: 'right'
+                });
+            }
+        }
+
+        // Initialize demo
+        const demo = new I18nDemo();
+    </script>
+</body>
+</html>

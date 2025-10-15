@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Third-Party Integrations - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --input-bg: #3a3a3a;
+            --text-light: #f8f9fa;
+            --text-muted: #6c757d;
+            --border-color: #404040;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-red) !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .card-header {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-red);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-red);
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-light);
+            border: none;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #333 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .app-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .app-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.1);
+        }
+
+        .app-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary-red), #cc0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .connection-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .connection-status.active {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .connection-status.inactive {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .workflow-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .template-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-2px);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .code-block {
+            background-color: #1e1e1e;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        .table-dark {
+            --bs-table-bg: var(--card-bg);
+            --bs-table-border-color: var(--border-color);
+        }
+
+        .alert {
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.3);
+            color: #28a745;
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+        }
+
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+        }
+
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            border-color: rgba(13, 202, 240, 0.3);
+            color: #0dcaf0;
+        }
+
+        @media (max-width: 768px) {
+            .metric-card {
+                margin-bottom: 1rem;
+            }
+            
+            .app-card, .connection-card, .workflow-card, .template-card {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-video me-2"></i>
+                Interviews.tv
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="host-dashboard.html">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2>
+                    <i class="fas fa-plug me-2 text-danger"></i>
+                    Third-Party Integrations
+                </h2>
+                <p class="text-muted">Connect and automate with your favorite business tools and platforms</p>
+            </div>
+        </div>
+
+        <!-- Dashboard Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalConnections">0</div>
+                    <div class="metric-label">Total Connections</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="activeWorkflows">0</div>
+                    <div class="metric-label">Active Workflows</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalExecutions">0</div>
+                    <div class="metric-label">Total Executions</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="successRate">0%</div>
+                    <div class="metric-label">Success Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="integrationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="apps-tab" data-bs-toggle="tab" data-bs-target="#apps" type="button" role="tab">
+                    <i class="fas fa-store me-1"></i>
+                    Available Apps
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="connections-tab" data-bs-toggle="tab" data-bs-target="#connections" type="button" role="tab">
+                    <i class="fas fa-link me-1"></i>
+                    My Connections
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="workflows-tab" data-bs-toggle="tab" data-bs-target="#workflows" type="button" role="tab">
+                    <i class="fas fa-project-diagram me-1"></i>
+                    Workflows
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="templates-tab" data-bs-toggle="tab" data-bs-target="#templates" type="button" role="tab">
+                    <i class="fas fa-file-code me-1"></i>
+                    Templates
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Analytics
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="integrationTabContent">
+            <!-- Available Apps Tab -->
+            <div class="tab-pane fade show active" id="apps" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="appSearch" placeholder="Search apps...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="appCategoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="communication">Communication</option>
+                            <option value="video">Video Conferencing</option>
+                            <option value="productivity">Productivity</option>
+                            <option value="storage">Storage</option>
+                            <option value="analytics">Analytics</option>
+                            <option value="crm">CRM</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="integrationsDemo.refreshApps()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="appsContainer">
+                    <div class="loading-spinner show">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading available apps...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Connections Tab -->
+            <div class="tab-pane fade" id="connections" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-9">
+                        <h5>Connected Applications</h5>
+                        <p class="text-muted">Manage your connected third-party applications</p>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100" onclick="integrationsDemo.refreshConnections()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="connectionsContainer">
+                    <div class="loading-spinner show">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading connections...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflows Tab -->
+            <div class="tab-pane fade" id="workflows" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-9">
+                        <h5>Integration Workflows</h5>
+                        <p class="text-muted">Automate tasks with custom workflows</p>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#createWorkflowModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Create Workflow
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="workflowsContainer">
+                    <div class="loading-spinner show">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading workflows...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Tab -->
+            <div class="tab-pane fade" id="templates" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h5>Integration Templates</h5>
+                        <p class="text-muted">Pre-built automation templates</p>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="templateCategoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="communication">Communication</option>
+                            <option value="productivity">Productivity</option>
+                            <option value="automation">Automation</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="integrationsDemo.refreshTemplates()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="templatesContainer">
+                    <div class="loading-spinner show">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading templates...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-9">
+                        <h5>Integration Analytics</h5>
+                        <p class="text-muted">Monitor integration performance and usage</p>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="analyticsTimeRange">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="analyticsContainer">
+                    <div class="loading-spinner show">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading analytics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/third-party-integrations-demo.js"></script>
+    
+    <script>
+        // Initialize the demo when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.integrationsDemo = new ThirdPartyIntegrationsDemo();
+            integrationsDemo.init();
+        });
+    </script>
+</body>
+</html>

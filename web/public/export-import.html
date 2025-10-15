@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export/Import Data - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/dark-theme.css" rel="stylesheet">
+    <style>
+        .export-import-card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+        }
+
+        .export-import-card:hover {
+            border-color: #FF0000;
+            transform: translateY(-2px);
+        }
+
+        .data-type-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .data-type-card:hover {
+            border-color: #FF0000;
+            background: #3a3a3a;
+        }
+
+        .data-type-card.selected {
+            border-color: #FF0000;
+            background: #2a2a2a;
+        }
+
+        .data-type-icon {
+            font-size: 2rem;
+            color: #FF0000;
+            margin-bottom: 1rem;
+        }
+
+        .format-selector {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .format-option {
+            background: #444;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .format-option:hover {
+            border-color: #FF0000;
+            background: #555;
+        }
+
+        .format-option.selected {
+            border-color: #FF0000;
+            background: #FF0000;
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            background: #333;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #FF0000;
+            background: #3a3a3a;
+        }
+
+        .upload-area.dragover {
+            border-color: #FF0000;
+            background: #2a2a2a;
+        }
+
+        .progress-container {
+            background: #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .history-item {
+            background: #333;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #FF0000;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.success { background: #28a745; color: white; }
+        .status-badge.error { background: #dc3545; color: white; }
+        .status-badge.processing { background: #ffc107; color: black; }
+
+        .feature-badge {
+            background: linear-gradient(45deg, #FF0000, #CC0000);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .option-group {
+            background: #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .file-info {
+            background: #1a1a1a;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 1px solid #444;
+        }
+
+        .validation-result {
+            background: #333;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .validation-result.valid {
+            border-left: 3px solid #28a745;
+        }
+
+        .validation-result.invalid {
+            border-left: 3px solid #dc3545;
+        }
+
+        .backup-item {
+            background: #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #444;
+        }
+
+        .backup-item:hover {
+            border-color: #FF0000;
+        }
+
+        .backup-size {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .backup-date {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-exchange-alt text-danger me-2"></i>
+                    Export/Import Data
+                    <span class="feature-badge">Phase 5.3.7 Complete</span>
+                </h1>
+                <p class="text-muted">Manage your data exports, imports, and backups</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-tabs nav-fill" id="exportImportTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="export-tab" data-bs-toggle="tab" data-bs-target="#export" type="button" role="tab">
+                            <i class="fas fa-download me-2"></i>Export Data
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab">
+                            <i class="fas fa-upload me-2"></i>Import Data
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab">
+                            <i class="fas fa-shield-alt me-2"></i>Backup & Restore
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab">
+                            <i class="fas fa-cogs me-2"></i>Advanced
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">
+                            <i class="fas fa-history me-2"></i>History
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="exportImportTabContent">
+            <!-- Export Tab -->
+            <div class="tab-pane fade show active" id="export" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-download text-danger me-2"></i>
+                                Export Your Data
+                            </h4>
+                            <p class="text-muted mb-4">Select the data types you want to export and choose your preferred format.</p>
+                            
+                            <!-- Data Type Selection -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="data-type-card" data-type="user-data">
+                                        <div class="data-type-icon">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <h6 class="text-white">User Profile</h6>
+                                        <p class="text-muted small">Personal information, preferences, and account settings</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="export-user-data" checked>
+                                            <label class="form-check-label text-white" for="export-user-data">Include</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="data-type-card" data-type="interviews">
+                                        <div class="data-type-icon">
+                                            <i class="fas fa-video"></i>
+                                        </div>
+                                        <h6 class="text-white">Interviews</h6>
+                                        <p class="text-muted small">All your interview data, metadata, and recordings</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="export-interviews" checked>
+                                            <label class="form-check-label text-white" for="export-interviews">Include</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="data-type-card" data-type="templates">
+                                        <div class="data-type-icon">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <h6 class="text-white">Templates</h6>
+                                        <p class="text-muted small">Interview templates and question sets</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="export-templates" checked>
+                                            <label class="form-check-label text-white" for="export-templates">Include</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="data-type-card" data-type="analytics">
+                                        <div class="data-type-icon">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <h6 class="text-white">Analytics</h6>
+                                        <p class="text-muted small">Performance metrics and engagement data</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="export-analytics">
+                                            <label class="form-check-label text-white" for="export-analytics">Include</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Format Selection -->
+                            <div class="format-selector">
+                                <h6 class="text-white mb-3">Export Format</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="format-option selected" data-format="json">
+                                            <i class="fas fa-code mb-2"></i>
+                                            <div>JSON</div>
+                                            <small class="text-muted">Structured data</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="format-option" data-format="csv">
+                                            <i class="fas fa-table mb-2"></i>
+                                            <div>CSV</div>
+                                            <small class="text-muted">Spreadsheet format</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="format-option" data-format="xml">
+                                            <i class="fas fa-file-code mb-2"></i>
+                                            <div>XML</div>
+                                            <small class="text-muted">Markup format</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="format-option" data-format="zip">
+                                            <i class="fas fa-file-archive mb-2"></i>
+                                            <div>ZIP</div>
+                                            <small class="text-muted">Compressed archive</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Export Options -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Export Options</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="include-media">
+                                            <label class="form-check-label text-white" for="include-media">
+                                                Include media files
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="include-recordings">
+                                            <label class="form-check-label text-white" for="include-recordings">
+                                                Include recordings
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="include-metadata" checked>
+                                            <label class="form-check-label text-white" for="include-metadata">
+                                                Include metadata
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="compress-export">
+                                            <label class="form-check-label text-white" for="compress-export">
+                                                Compress export
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Date Range -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Date Range (Optional)</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white">From Date</label>
+                                        <input type="date" class="form-control bg-dark border-secondary text-white" id="export-from-date">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white">To Date</label>
+                                        <input type="date" class="form-control bg-dark border-secondary text-white" id="export-to-date">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Export Button -->
+                            <div class="text-center">
+                                <button class="btn btn-danger btn-lg" id="start-export-btn">
+                                    <i class="fas fa-download me-2"></i>
+                                    Start Export
+                                </button>
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="progress-container" id="export-progress">
+                                <h6 class="text-white mb-2">Exporting Data...</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="text-muted small" id="export-status">Preparing export...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="export-import-card">
+                            <h5 class="text-white mb-3">
+                                <i class="fas fa-info-circle text-danger me-2"></i>
+                                Export Information
+                            </h5>
+                            <div class="text-muted">
+                                <p><strong>Supported Formats:</strong></p>
+                                <ul>
+                                    <li><strong>JSON:</strong> Best for re-importing data</li>
+                                    <li><strong>CSV:</strong> Great for spreadsheet analysis</li>
+                                    <li><strong>XML:</strong> Structured markup format</li>
+                                    <li><strong>ZIP:</strong> Compressed archive with all files</li>
+                                </ul>
+                                
+                                <p class="mt-3"><strong>What's Included:</strong></p>
+                                <ul>
+                                    <li>User profile and settings</li>
+                                    <li>Interview data and metadata</li>
+                                    <li>Templates and configurations</li>
+                                    <li>Analytics and performance data</li>
+                                    <li>Media files (optional)</li>
+                                </ul>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Note:</strong> Large exports may take several minutes to complete.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Tab -->
+            <div class="tab-pane fade" id="import" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-upload text-danger me-2"></i>
+                                Import Your Data
+                            </h4>
+                            <p class="text-muted mb-4">Upload a previously exported file to restore your data.</p>
+                            
+                            <!-- File Upload Area -->
+                            <div class="upload-area" id="upload-area">
+                                <div class="upload-content">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-danger mb-3"></i>
+                                    <h5 class="text-white">Drop your file here or click to browse</h5>
+                                    <p class="text-muted">Supports JSON, CSV, XML, and ZIP files up to 100MB</p>
+                                    <input type="file" id="import-file-input" class="d-none" accept=".json,.csv,.xml,.zip">
+                                </div>
+                            </div>
+
+                            <!-- File Information -->
+                            <div class="file-info d-none" id="file-info">
+                                <h6 class="text-white mb-2">Selected File</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-white" id="file-name">filename.json</div>
+                                        <div class="text-muted small" id="file-details">Size: 2.5 MB | Type: JSON</div>
+                                    </div>
+                                    <button class="btn btn-outline-light btn-sm" id="remove-file-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Validation Results -->
+                            <div class="validation-result d-none" id="validation-result">
+                                <h6 class="text-white mb-2">File Validation</h6>
+                                <div id="validation-content"></div>
+                            </div>
+
+                            <!-- Import Options -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Import Options</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="overwrite-existing">
+                                            <label class="form-check-label text-white" for="overwrite-existing">
+                                                Overwrite existing data
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="validate-import" checked>
+                                            <label class="form-check-label text-white" for="validate-import">
+                                                Validate data before import
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="backup-before-import" checked>
+                                            <label class="form-check-label text-white" for="backup-before-import">
+                                                Create backup before import
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="merge-data" checked>
+                                            <label class="form-check-label text-white" for="merge-data">
+                                                Merge with existing data
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Import Button -->
+                            <div class="text-center">
+                                <button class="btn btn-danger btn-lg" id="start-import-btn" disabled>
+                                    <i class="fas fa-upload me-2"></i>
+                                    Start Import
+                                </button>
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="progress-container" id="import-progress">
+                                <h6 class="text-white mb-2">Importing Data...</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="text-muted small" id="import-status">Preparing import...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="export-import-card">
+                            <h5 class="text-white mb-3">
+                                <i class="fas fa-shield-alt text-danger me-2"></i>
+                                Import Safety
+                            </h5>
+                            <div class="text-muted">
+                                <p><strong>Before importing:</strong></p>
+                                <ul>
+                                    <li>Ensure the file is from a trusted source</li>
+                                    <li>Review the validation results</li>
+                                    <li>Consider creating a backup first</li>
+                                    <li>Check the import options carefully</li>
+                                </ul>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Tip:</strong> Use "Merge with existing data" to avoid losing current information.
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> Importing will modify your current data. This action cannot be easily undone.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup Tab -->
+            <div class="tab-pane fade" id="backup" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-shield-alt text-danger me-2"></i>
+                                Create Backup
+                            </h4>
+                            <p class="text-muted mb-4">Create a complete backup of all your data for safekeeping.</p>
+                            
+                            <!-- Backup Options -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Backup Options</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="backup-include-media" checked>
+                                    <label class="form-check-label text-white" for="backup-include-media">
+                                        Include media files and recordings
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="backup-compress" checked>
+                                    <label class="form-check-label text-white" for="backup-compress">
+                                        Compress backup (recommended)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="backup-encrypt">
+                                    <label class="form-check-label text-white" for="backup-encrypt">
+                                        Encrypt backup file
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button class="btn btn-danger btn-lg" id="create-backup-btn">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    Create Full Backup
+                                </button>
+                            </div>
+
+                            <!-- Backup Progress -->
+                            <div class="progress-container" id="backup-progress">
+                                <h6 class="text-white mb-2">Creating Backup...</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="text-muted small" id="backup-status">Preparing backup...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-history text-danger me-2"></i>
+                                Recent Backups
+                            </h4>
+                            <div id="backup-list">
+                                <!-- Backup items will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-pane fade" id="advanced" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-rocket text-danger me-2"></i>
+                                Advanced Export Features
+                            </h4>
+
+                            <!-- Export Templates -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Export Templates</h6>
+                                <p class="text-muted small mb-3">Create reusable export configurations for common scenarios.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control bg-dark border-secondary text-white"
+                                               id="template-name" placeholder="Template name">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-danger w-100" id="create-template-btn">
+                                            <i class="fas fa-plus me-1"></i> Create Template
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="export-templates-list">
+                                    <!-- Templates will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Scheduled Exports -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Scheduled Exports</h6>
+                                <p class="text-muted small mb-3">Automate regular data exports with custom schedules.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <select class="form-select bg-dark border-secondary text-white" id="schedule-frequency">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly" selected>Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="time" class="form-control bg-dark border-secondary text-white"
+                                               id="schedule-time" value="02:00">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-danger w-100" id="schedule-export-btn">
+                                            <i class="fas fa-clock me-1"></i> Schedule Export
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="scheduled-exports-list">
+                                    <!-- Scheduled exports will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Batch Export -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Batch Export</h6>
+                                <p class="text-muted small mb-3">Export multiple data types simultaneously in one operation.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="batch-user-data" checked>
+                                            <label class="form-check-label text-white" for="batch-user-data">
+                                                User Data
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="batch-interviews" checked>
+                                            <label class="form-check-label text-white" for="batch-interviews">
+                                                Interviews
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="batch-templates" checked>
+                                            <label class="form-check-label text-white" for="batch-templates">
+                                                Templates
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="batch-analytics">
+                                            <label class="form-check-label text-white" for="batch-analytics">
+                                                Analytics
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-danger w-100" id="batch-export-btn">
+                                    <i class="fas fa-layer-group me-2"></i>
+                                    Start Batch Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="export-import-card">
+                            <h4 class="text-white mb-3">
+                                <i class="fas fa-microscope text-danger me-2"></i>
+                                Advanced Import Features
+                            </h4>
+
+                            <!-- Advanced Validation -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Advanced File Validation</h6>
+                                <p class="text-muted small mb-3">Comprehensive analysis of import files before processing.</p>
+
+                                <div class="upload-area" id="advanced-upload-area">
+                                    <div class="upload-content">
+                                        <i class="fas fa-search fa-2x text-danger mb-3"></i>
+                                        <h6 class="text-white">Drop file for advanced analysis</h6>
+                                        <p class="text-muted small">Get detailed compatibility and content analysis</p>
+                                        <input type="file" id="advanced-file-input" class="d-none" accept=".json,.csv,.xml,.zip">
+                                    </div>
+                                </div>
+
+                                <div class="validation-result d-none" id="advanced-validation-result">
+                                    <h6 class="text-white mb-2">Advanced Analysis Results</h6>
+                                    <div id="advanced-validation-content"></div>
+                                </div>
+                            </div>
+
+                            <!-- Performance Options -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Performance Optimization</h6>
+                                <p class="text-muted small mb-3">Optimize exports for large datasets and better performance.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white">Compression Level</label>
+                                        <select class="form-select bg-dark border-secondary text-white" id="compression-level">
+                                            <option value="1">1 - Fastest</option>
+                                            <option value="3">3 - Fast</option>
+                                            <option value="6" selected>6 - Balanced</option>
+                                            <option value="9">9 - Best Compression</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-white">Chunk Size</label>
+                                        <select class="form-select bg-dark border-secondary text-white" id="chunk-size">
+                                            <option value="500">500 records</option>
+                                            <option value="1000" selected>1,000 records</option>
+                                            <option value="5000">5,000 records</option>
+                                            <option value="10000">10,000 records</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-light" id="incremental-export-btn">
+                                        <i class="fas fa-plus-circle me-2"></i>
+                                        Incremental Export (Changes Only)
+                                    </button>
+                                    <button class="btn btn-outline-light" id="optimized-export-btn">
+                                        <i class="fas fa-tachometer-alt me-2"></i>
+                                        Optimized Export (Large Datasets)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Export Metrics -->
+                            <div class="option-group">
+                                <h6 class="text-white mb-3">Export Performance Metrics</h6>
+                                <div id="export-metrics">
+                                    <!-- Metrics will be loaded here -->
+                                </div>
+                                <button class="btn btn-outline-light w-100" id="refresh-metrics-btn">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    Refresh Metrics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div class="tab-pane fade" id="history" role="tabpanel">
+                <div class="export-import-card">
+                    <h4 class="text-white mb-3">
+                        <i class="fas fa-history text-danger me-2"></i>
+                        Export/Import History
+                    </h4>
+                    <p class="text-muted mb-4">View your recent export, import, and backup activities.</p>
+                    
+                    <!-- Filter Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <select class="form-select bg-dark border-secondary text-white" id="history-filter">
+                                <option value="all">All Activities</option>
+                                <option value="export">Exports Only</option>
+                                <option value="import">Imports Only</option>
+                                <option value="backup">Backups Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select bg-dark border-secondary text-white" id="history-limit">
+                                <option value="25">Last 25</option>
+                                <option value="50" selected>Last 50</option>
+                                <option value="100">Last 100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-light" id="refresh-history-btn">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- History List -->
+                    <div id="history-list">
+                        <!-- History items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/export-import.js"></script>
+</body>
+</html>

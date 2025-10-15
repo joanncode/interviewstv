@@ -128,6 +128,57 @@ CREATE TABLE IF NOT EXISTS email_templates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Interview Templates Table
+CREATE TABLE IF NOT EXISTS interview_templates (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) DEFAULT 'general',
+    type VARCHAR(50) DEFAULT 'standard' CHECK (type IN ('standard', 'technical', 'behavioral', 'panel', 'screening')),
+    duration_minutes INTEGER DEFAULT 60,
+    max_guests INTEGER DEFAULT 10,
+    questions TEXT, -- JSON array of questions
+    structure TEXT, -- JSON object defining interview structure
+    settings TEXT, -- JSON object for default room settings
+    is_public BOOLEAN DEFAULT 0,
+    is_featured BOOLEAN DEFAULT 0,
+    created_by INTEGER,
+    usage_count INTEGER DEFAULT 0,
+    rating DECIMAL(3,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Interview Template Questions Table
+CREATE TABLE IF NOT EXISTS interview_template_questions (
+    id VARCHAR(36) PRIMARY KEY,
+    template_id VARCHAR(36) NOT NULL,
+    question_text TEXT NOT NULL,
+    question_type VARCHAR(50) DEFAULT 'open' CHECK (question_type IN ('open', 'multiple_choice', 'rating', 'yes_no', 'technical')),
+    category VARCHAR(100),
+    time_limit_minutes INTEGER,
+    order_index INTEGER DEFAULT 0,
+    is_required BOOLEAN DEFAULT 1,
+    follow_up_questions TEXT, -- JSON array
+    scoring_criteria TEXT, -- JSON object
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES interview_templates(id) ON DELETE CASCADE
+);
+
+-- Interview Template Usage Table
+CREATE TABLE IF NOT EXISTS interview_template_usage (
+    id VARCHAR(36) PRIMARY KEY,
+    template_id VARCHAR(36) NOT NULL,
+    room_id VARCHAR(36) NOT NULL,
+    used_by INTEGER NOT NULL,
+    customizations TEXT, -- JSON object of any customizations made
+    feedback_rating INTEGER CHECK (feedback_rating BETWEEN 1 AND 5),
+    feedback_notes TEXT,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES interview_templates(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES interview_rooms(id) ON DELETE CASCADE
+);
+
 -- Insert default email templates
 INSERT OR REPLACE INTO email_templates (id, template_name, subject, html_content, text_content, variables) VALUES
 ('tpl_invitation', 'guest_invitation', 'You''re invited to join an interview on Interviews.tv', 
@@ -233,3 +284,56 @@ CREATE INDEX IF NOT EXISTS idx_room_settings_key ON room_settings(setting_key);
 
 CREATE INDEX IF NOT EXISTS idx_email_templates_name ON email_templates(template_name);
 CREATE INDEX IF NOT EXISTS idx_email_templates_active ON email_templates(is_active);
+
+-- Interview Template Indexes
+CREATE INDEX IF NOT EXISTS idx_interview_templates_category ON interview_templates(category);
+CREATE INDEX IF NOT EXISTS idx_interview_templates_type ON interview_templates(type);
+CREATE INDEX IF NOT EXISTS idx_interview_templates_public ON interview_templates(is_public);
+CREATE INDEX IF NOT EXISTS idx_interview_templates_featured ON interview_templates(is_featured);
+CREATE INDEX IF NOT EXISTS idx_interview_template_questions_template ON interview_template_questions(template_id);
+CREATE INDEX IF NOT EXISTS idx_interview_template_questions_order ON interview_template_questions(order_index);
+CREATE INDEX IF NOT EXISTS idx_interview_template_usage_template ON interview_template_usage(template_id);
+CREATE INDEX IF NOT EXISTS idx_interview_template_usage_room ON interview_template_usage(room_id);
+
+-- Insert default interview templates
+INSERT OR REPLACE INTO interview_templates (id, name, description, category, type, duration_minutes, max_guests, questions, structure, settings, is_public, is_featured) VALUES
+('tpl_general_interview', 'General Interview', 'A comprehensive general interview template suitable for most positions', 'general', 'standard', 60, 5,
+'[
+    {"text": "Tell me about yourself and your background", "type": "open", "category": "introduction", "time_limit": 5},
+    {"text": "What interests you about this role/company?", "type": "open", "category": "motivation", "time_limit": 3},
+    {"text": "Describe a challenging situation you faced and how you handled it", "type": "open", "category": "behavioral", "time_limit": 5},
+    {"text": "What are your greatest strengths?", "type": "open", "category": "strengths", "time_limit": 3},
+    {"text": "What areas would you like to improve or develop?", "type": "open", "category": "development", "time_limit": 3},
+    {"text": "Where do you see yourself in 5 years?", "type": "open", "category": "goals", "time_limit": 3},
+    {"text": "Do you have any questions for us?", "type": "open", "category": "questions", "time_limit": 10}
+]',
+'{"phases": [{"name": "Introduction", "duration": 5}, {"name": "Background Discussion", "duration": 15}, {"name": "Behavioral Questions", "duration": 20}, {"name": "Skills Assessment", "duration": 10}, {"name": "Q&A", "duration": 10}]}',
+'{"recording_enabled": true, "auto_recording_enabled": true, "chat_enabled": true, "waiting_room_enabled": true, "guest_approval_required": false}',
+1, 1),
+
+('tpl_technical_interview', 'Technical Interview', 'Technical interview template for software engineering and technical roles', 'technical', 'technical', 90, 3,
+'[
+    {"text": "Walk me through your technical background and experience", "type": "open", "category": "background", "time_limit": 5},
+    {"text": "Describe a complex technical problem you solved recently", "type": "open", "category": "problem_solving", "time_limit": 10},
+    {"text": "Code Review: Please review this code snippet and suggest improvements", "type": "technical", "category": "code_review", "time_limit": 15},
+    {"text": "System Design: How would you design a scalable web application?", "type": "technical", "category": "system_design", "time_limit": 20},
+    {"text": "What technologies are you most excited about and why?", "type": "open", "category": "technology", "time_limit": 5},
+    {"text": "How do you approach debugging and troubleshooting?", "type": "open", "category": "debugging", "time_limit": 5},
+    {"text": "Questions about our tech stack and development process?", "type": "open", "category": "questions", "time_limit": 10}
+]',
+'{"phases": [{"name": "Technical Background", "duration": 10}, {"name": "Problem Solving", "duration": 25}, {"name": "Code Review", "duration": 20}, {"name": "System Design", "duration": 25}, {"name": "Q&A", "duration": 10}]}',
+'{"recording_enabled": true, "auto_recording_enabled": true, "chat_enabled": true, "waiting_room_enabled": true, "guest_approval_required": false}',
+1, 1),
+
+('tpl_screening_interview', 'Screening Interview', 'Quick 30-minute screening interview for initial candidate assessment', 'screening', 'screening', 30, 2,
+'[
+    {"text": "Brief introduction - tell me about your current role", "type": "open", "category": "background", "time_limit": 3},
+    {"text": "What motivated you to apply for this position?", "type": "open", "category": "motivation", "time_limit": 3},
+    {"text": "Walk me through your relevant experience", "type": "open", "category": "experience", "time_limit": 8},
+    {"text": "What are your salary expectations?", "type": "open", "category": "compensation", "time_limit": 2},
+    {"text": "When would you be available to start?", "type": "open", "category": "availability", "time_limit": 2},
+    {"text": "Any initial questions about the role or company?", "type": "open", "category": "questions", "time_limit": 5}
+]',
+'{"phases": [{"name": "Quick Introduction", "duration": 5}, {"name": "Experience Review", "duration": 15}, {"name": "Logistics", "duration": 5}, {"name": "Q&A", "duration": 5}]}',
+'{"recording_enabled": true, "auto_recording_enabled": false, "chat_enabled": false, "waiting_room_enabled": true, "guest_approval_required": false}',
+1, 1);

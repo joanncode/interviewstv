@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Recommendations Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --input-bg: #3a3a3a;
+            --text-light: #f8f9fa;
+            --text-muted: #6c757d;
+            --border-color: #404040;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-red) !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-red);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .alert {
+            border: none;
+            border-radius: 8px;
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success-color);
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger-color);
+        }
+
+        .alert-info {
+            background-color: rgba(23, 162, 184, 0.2);
+            color: var(--info-color);
+        }
+
+        .badge {
+            font-size: 0.75em;
+        }
+
+        .badge.bg-success {
+            background-color: var(--success-color) !important;
+        }
+
+        .badge.bg-warning {
+            background-color: var(--warning-color) !important;
+            color: #000;
+        }
+
+        .badge.bg-danger {
+            background-color: var(--danger-color) !important;
+        }
+
+        .badge.bg-info {
+            background-color: var(--info-color) !important;
+        }
+
+        .recommendation-card {
+            transition: transform 0.2s ease-in-out;
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .priority-critical {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .priority-high {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .priority-medium {
+            border-left: 4px solid var(--info-color);
+        }
+
+        .priority-low {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger-color) 0%, var(--warning-color) 50%, var(--success-color) 100%);
+            transition: width 0.3s ease;
+        }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .loading-spinner.show {
+            display: inline-block;
+        }
+
+        .session-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-processing {
+            background-color: rgba(23, 162, 184, 0.2);
+            color: var(--info-color);
+        }
+
+        .status-completed {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-failed {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger-color);
+        }
+
+        .analytics-metric {
+            text-align: center;
+            padding: 1rem;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .analytics-metric h4 {
+            color: var(--primary-red);
+            margin-bottom: 0.5rem;
+        }
+
+        .analytics-metric p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .recommendation-actions .btn {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .demo-section {
+            background-color: rgba(255, 0, 0, 0.05);
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section h6 {
+            color: var(--primary-red);
+            margin-bottom: 0.5rem;
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .border-start {
+            border-left: 1px solid var(--border-color) !important;
+        }
+
+        .border-start-4 {
+            border-left: 4px solid var(--border-color) !important;
+        }
+
+        .recommendation-category {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .actionable-steps {
+            background-color: var(--input-bg);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .actionable-steps ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .actionable-steps li {
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 0.5rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .recommendation-actions {
+                flex-direction: column;
+            }
+            
+            .export-options {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-video me-2"></i>Interviews.tv
+            </a>
+            <span class="navbar-text">
+                <i class="fas fa-robot me-2"></i>AI Interview Recommendations Demo
+            </span>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Demo Information -->
+        <div class="demo-section">
+            <h6><i class="fas fa-info-circle me-2"></i>AI-Powered Interview Recommendations</h6>
+            <p class="mb-0">This demo showcases our advanced AI system that provides intelligent recommendations for interview improvement, candidate assessment, question optimization, and hiring decisions. The system analyzes interview data and generates actionable insights to enhance the interview process.</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <div class="row">
+            <!-- Control Panel -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>AI Recommendation Session</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Session Status -->
+                        <div class="mb-3">
+                            <label class="form-label">Session Status</label>
+                            <div>
+                                <span id="sessionStatus" class="session-status status-pending">No Active Session</span>
+                            </div>
+                        </div>
+
+                        <!-- Session Configuration -->
+                        <div class="mb-3">
+                            <label for="recommendationType" class="form-label">Recommendation Type</label>
+                            <select class="form-select" id="recommendationType">
+                                <option value="comprehensive">Comprehensive Analysis</option>
+                                <option value="interview_improvement">Interview Improvement</option>
+                                <option value="candidate_assessment">Candidate Assessment</option>
+                                <option value="question_optimization">Question Optimization</option>
+                                <option value="hiring_decision">Hiring Decision</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="analysisDepth" class="form-label">Analysis Depth</label>
+                            <select class="form-select" id="analysisDepth">
+                                <option value="quick">Quick Analysis</option>
+                                <option value="standard" selected>Standard Analysis</option>
+                                <option value="deep">Deep Analysis</option>
+                                <option value="comprehensive">Comprehensive Analysis</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="industryContext" class="form-label">Industry Context</label>
+                            <select class="form-select" id="industryContext">
+                                <option value="technology" selected>Technology</option>
+                                <option value="finance">Finance</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="consulting">Consulting</option>
+                                <option value="startup">Startup</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="roleContext" class="form-label">Role Context</label>
+                            <select class="form-select" id="roleContext">
+                                <option value="software_engineer" selected>Software Engineer</option>
+                                <option value="product_manager">Product Manager</option>
+                                <option value="data_scientist">Data Scientist</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="sales">Sales</option>
+                                <option value="executive">Executive</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="experienceLevel" class="form-label">Experience Level</label>
+                            <select class="form-select" id="experienceLevel">
+                                <option value="junior">Junior</option>
+                                <option value="mid" selected>Mid-level</option>
+                                <option value="senior">Senior</option>
+                                <option value="executive">Executive</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" id="startSessionBtn">
+                                <i class="fas fa-play me-2"></i>Start AI Session
+                                <span class="loading-spinner spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                            <button type="button" class="btn btn-success" id="generateRecommendationsBtn" disabled>
+                                <i class="fas fa-magic me-2"></i>Generate Recommendations
+                                <span class="loading-spinner spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                            <button type="button" class="btn btn-info" id="testDemoBtn">
+                                <i class="fas fa-flask me-2"></i>Test with Demo Data
+                                <span class="loading-spinner spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Analytics -->
+                <div class="card mt-3" id="analyticsCard" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Session Analytics</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="analytics-metric">
+                                    <h4 id="totalRecommendations">0</h4>
+                                    <p>Total Recommendations</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="analytics-metric">
+                                    <h4 id="avgConfidence">0%</h4>
+                                    <p>Avg Confidence</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Display -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>AI Recommendations</h5>
+                        <div class="export-options" id="exportOptions" style="display: none;">
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportRecommendations('json')">
+                                <i class="fas fa-download me-1"></i>JSON
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportRecommendations('csv')">
+                                <i class="fas fa-download me-1"></i>CSV
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportRecommendations('html')">
+                                <i class="fas fa-download me-1"></i>HTML
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="exportRecommendations('markdown')">
+                                <i class="fas fa-download me-1"></i>Markdown
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filter Options -->
+                        <div class="row mb-3" id="filterOptions" style="display: none;">
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="categoryFilter">
+                                    <option value="">All Categories</option>
+                                    <option value="interview_improvement">Interview Improvement</option>
+                                    <option value="candidate_assessment">Candidate Assessment</option>
+                                    <option value="question_optimization">Question Optimization</option>
+                                    <option value="hiring_decision">Hiring Decision</option>
+                                    <option value="follow_up_actions">Follow-up Actions</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="priorityFilter">
+                                    <option value="">All Priorities</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="typeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="suggestion">Suggestion</option>
+                                    <option value="insight">Insight</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="opportunity">Opportunity</option>
+                                    <option value="action_item">Action Item</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-primary btn-sm w-100" onclick="applyFilters()">
+                                    <i class="fas fa-filter me-1"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recommendations Container -->
+                        <div id="recommendationsContainer">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-robot fa-3x mb-3"></i>
+                                <h5>No Recommendations Yet</h5>
+                                <p>Start an AI session and generate recommendations to see intelligent insights here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Recommendation Modal -->
+                <div class="modal fade" id="recommendationModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="modalTitle">Recommendation Details</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" id="modalBody">
+                                <!-- Content will be populated dynamically -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="provideFeedbackBtn">
+                                    <i class="fas fa-comment me-2"></i>Provide Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Modal -->
+                <div class="modal fade" id="feedbackModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Recommendation Feedback</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="feedbackForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Usefulness Rating</label>
+                                        <select class="form-select" id="usefulnessRating">
+                                            <option value="5">5 - Very Useful</option>
+                                            <option value="4">4 - Useful</option>
+                                            <option value="3" selected>3 - Somewhat Useful</option>
+                                            <option value="2">2 - Not Very Useful</option>
+                                            <option value="1">1 - Not Useful</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Accuracy Rating</label>
+                                        <select class="form-select" id="accuracyRating">
+                                            <option value="5">5 - Very Accurate</option>
+                                            <option value="4">4 - Accurate</option>
+                                            <option value="3" selected>3 - Somewhat Accurate</option>
+                                            <option value="2">2 - Not Very Accurate</option>
+                                            <option value="1">1 - Inaccurate</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Implementation Status</label>
+                                        <select class="form-select" id="implementationStatus">
+                                            <option value="not_implemented" selected>Not Implemented</option>
+                                            <option value="partially_implemented">Partially Implemented</option>
+                                            <option value="fully_implemented">Fully Implemented</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="additionalComments" class="form-label">Additional Comments</label>
+                                        <textarea class="form-control" id="additionalComments" rows="3" placeholder="Share your thoughts about this recommendation..."></textarea>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="wouldRecommend" checked>
+                                        <label class="form-check-label" for="wouldRecommend">
+                                            I would recommend this to others
+                                        </label>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="submitFeedbackBtn">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.js"></script>
+    <script src="js/ai-recommendations-demo.js"></script>
+</body>
+</html>

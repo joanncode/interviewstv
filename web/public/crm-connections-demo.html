@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Connections Demo - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-red: #FF0000;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --input-bg: #3a3a3a;
+            --text-light: #f8f9fa;
+            --text-muted: #6c757d;
+            --border-color: #404040;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-red) !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .card-header {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--input-bg);
+            border-color: var(--primary-red);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-red);
+            border-color: var(--primary-red);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-red);
+            border-color: var(--primary-red);
+            color: white;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-red);
+            background-color: var(--card-bg);
+            border-bottom: 2px solid var(--primary-red);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--text-light);
+            border: none;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #333 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-red);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .contact-card, .lead-card, .deal-card, .activity-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .contact-card:hover, .lead-card:hover, .deal-card:hover, .activity-card:hover {
+            border-color: var(--primary-red);
+            transform: translateY(-1px);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-synced { background-color: #28a745; color: white; }
+        .status-pending { background-color: #ffc107; color: black; }
+        .status-failed { background-color: #dc3545; color: white; }
+        .status-new { background-color: #17a2b8; color: white; }
+        .status-qualified { background-color: #28a745; color: white; }
+        .status-contacted { background-color: #fd7e14; color: white; }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 8px;
+        }
+
+        .table-dark {
+            --bs-table-bg: var(--card-bg);
+            --bs-table-border-color: var(--border-color);
+        }
+
+        .crm-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
+
+        .hubspot-icon { background-color: #ff7a59; color: white; }
+        .salesforce-icon { background-color: #00a1e0; color: white; }
+        .pipedrive-icon { background-color: #1a1a1a; color: #90ee90; }
+
+        .progress {
+            background-color: var(--input-bg);
+        }
+
+        .progress-bar {
+            background-color: var(--primary-red);
+        }
+
+        @media (max-width: 768px) {
+            .metric-card {
+                margin-bottom: 1rem;
+            }
+            
+            .contact-card, .lead-card, .deal-card, .activity-card {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="host-dashboard.html">
+                <i class="fas fa-video me-2"></i>
+                Interviews.tv
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="host-dashboard.html">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="fas fa-users-cog me-2 text-danger"></i>
+                            CRM Connections Demo
+                        </h1>
+                        <p class="text-muted mb-0">Manage customer relationships and track interview leads</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="crmDemo.refreshAllData()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh All
+                        </button>
+                        <button class="btn btn-primary" onclick="crmDemo.syncAllCRMs()">
+                            <i class="fas fa-cloud-download-alt me-1"></i>
+                            Sync All CRMs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Dashboard Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalContacts">0</div>
+                    <div class="metric-label">Total Contacts</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalLeads">0</div>
+                    <div class="metric-label">Active Leads</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalDeals">0</div>
+                    <div class="metric-label">Open Deals</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="conversionRate">0%</div>
+                    <div class="metric-label">Conversion Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="crmTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab">
+                            <i class="fas fa-address-book me-1"></i>
+                            Contacts
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="leads-tab" data-bs-toggle="tab" data-bs-target="#leads" type="button" role="tab">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Leads
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="deals-tab" data-bs-toggle="tab" data-bs-target="#deals" type="button" role="tab">
+                            <i class="fas fa-handshake me-1"></i>
+                            Deals
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="activities-tab" data-bs-toggle="tab" data-bs-target="#activities" type="button" role="tab">
+                            <i class="fas fa-tasks me-1"></i>
+                            Activities
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Analytics
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="crmTabContent">
+                    <!-- Contacts Tab -->
+                    <div class="tab-pane fade show active" id="contacts" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-dark border-secondary">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="contactSearch" placeholder="Search contacts...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="contactSyncFilter">
+                                    <option value="">All Sync Status</option>
+                                    <option value="synced">Synced</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="failed">Failed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="crmDemo.syncContacts()">
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    Sync Contacts
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-spinner" id="contactsLoading">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Loading contacts...</p>
+                        </div>
+                        
+                        <div id="contactsContainer"></div>
+                    </div>
+
+                    <!-- Leads Tab -->
+                    <div class="tab-pane fade" id="leads" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="leadStatusFilter">
+                                    <option value="">All Lead Status</option>
+                                    <option value="new">New</option>
+                                    <option value="contacted">Contacted</option>
+                                    <option value="qualified">Qualified</option>
+                                    <option value="proposal">Proposal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="leadInterviewFilter">
+                                    <option value="">All Interviews</option>
+                                    <option value="recent">Recent Interviews</option>
+                                    <option value="completed">Completed Only</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" onclick="crmDemo.createLeadFromInterview()">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Create Lead from Interview
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-spinner" id="leadsLoading">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Loading leads...</p>
+                        </div>
+                        
+                        <div id="leadsContainer"></div>
+                    </div>
+
+                    <!-- Deals Tab -->
+                    <div class="tab-pane fade" id="deals" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="dealStageFilter">
+                                    <option value="">All Deal Stages</option>
+                                    <option value="prospecting">Prospecting</option>
+                                    <option value="proposal">Proposal</option>
+                                    <option value="negotiation">Negotiation</option>
+                                    <option value="closed_won">Closed Won</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="dealValueFilter">
+                                    <option value="">All Deal Values</option>
+                                    <option value="small">< $10,000</option>
+                                    <option value="medium">$10,000 - $50,000</option>
+                                    <option value="large">> $50,000</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" onclick="crmDemo.createDealFromLead()">
+                                    <i class="fas fa-handshake me-1"></i>
+                                    Create Deal from Lead
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-spinner" id="dealsLoading">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Loading deals...</p>
+                        </div>
+                        
+                        <div id="dealsContainer"></div>
+                    </div>
+
+                    <!-- Activities Tab -->
+                    <div class="tab-pane fade" id="activities" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="activityTypeFilter">
+                                    <option value="">All Activity Types</option>
+                                    <option value="meeting">Meetings</option>
+                                    <option value="call">Calls</option>
+                                    <option value="email">Emails</option>
+                                    <option value="interview">Interviews</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="activityOutcomeFilter">
+                                    <option value="">All Outcomes</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" onclick="crmDemo.logInterviewActivity()">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Log Interview Activity
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-spinner" id="activitiesLoading">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Loading activities...</p>
+                        </div>
+                        
+                        <div id="activitiesContainer"></div>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div class="tab-pane fade" id="analytics" role="tabpanel">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <select class="form-select" id="analyticsTimeRange">
+                                    <option value="7">Last 7 days</option>
+                                    <option value="30" selected>Last 30 days</option>
+                                    <option value="90">Last 90 days</option>
+                                    <option value="365">Last year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-primary w-100" onclick="crmDemo.refreshAnalytics()">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    Refresh Analytics
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading-spinner" id="analyticsLoading">
+                            <i class="fas fa-spinner fa-spin fa-2x"></i>
+                            <p class="mt-2">Loading analytics...</p>
+                        </div>
+                        
+                        <div id="analyticsContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- CRM Demo JS -->
+    <script src="js/crm-connections-demo.js"></script>
+    
+    <script>
+        // Initialize the demo when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            window.crmDemo = new CRMConnectionsDemo();
+            crmDemo.init();
+        });
+    </script>
+</body>
+</html>

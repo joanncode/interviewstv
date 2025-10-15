@@ -2,12 +2,14 @@ import Auth from '../services/auth.js';
 import Router from '../utils/router.js';
 import SearchBox from './SearchBox.js';
 import NotificationDropdown from './NotificationDropdown.js';
+import LanguageSwitcher from './LanguageSwitcher.js';
 
 class Navigation {
     constructor() {
         this.user = Auth.getCurrentUser();
         this.searchBox = null;
         this.notificationDropdown = null;
+        this.languageSwitcher = null;
     }
 
     render(container) {
@@ -15,6 +17,7 @@ class Navigation {
         this.setupEventListeners(container);
         this.initializeSearchBox(container);
         this.initializeNotificationDropdown(container);
+        this.initializeLanguageSwitcher(container);
     }
 
     getNavigationHTML() {
@@ -78,6 +81,9 @@ class Navigation {
                         </div>
 
                         <ul class="navbar-nav">
+                            <li class="nav-item" id="language-switcher-container">
+                                <!-- Language switcher will be rendered here -->
+                            </li>
                             ${isAuthenticated ? this.getAuthenticatedNav(user) : this.getGuestNav()}
                         </ul>
                     </div>
@@ -107,6 +113,15 @@ class Navigation {
                     </a></li>
                     <li><a class="dropdown-item" href="/my-interviews">
                         <i class="fas fa-video me-2"></i>My Interviews
+                    </a></li>
+                    <li><a class="dropdown-item" href="analytics-dashboard.html">
+                        <i class="fas fa-chart-line me-2"></i>Analytics Dashboard
+                    </a></li>
+                    <li><a class="dropdown-item" href="export-import.html">
+                        <i class="fas fa-exchange-alt me-2"></i>Export/Import Data
+                    </a></li>
+                    <li><a class="dropdown-item" href="backup-management.html">
+                        <i class="fas fa-shield-alt me-2"></i>Backup Management
                     </a></li>
                     <li><a class="dropdown-item" href="/notifications">
                         <i class="fas fa-bell me-2"></i>Notifications
@@ -232,6 +247,14 @@ class Navigation {
         if (notificationContainer && Auth.isAuthenticated()) {
             this.notificationDropdown = new NotificationDropdown();
             this.notificationDropdown.render(notificationContainer);
+        }
+    }
+
+    initializeLanguageSwitcher(container) {
+        const languageContainer = container.querySelector('#language-switcher-container');
+        if (languageContainer) {
+            this.languageSwitcher = new LanguageSwitcher();
+            this.languageSwitcher.render(languageContainer);
         }
     }
 }

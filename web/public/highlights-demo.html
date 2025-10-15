@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Highlights Demo - Interviews.tv</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            min-height: 100vh;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .highlights-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #FF0000;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            background: #333;
+            border-bottom: 1px solid #444;
+            border-radius: 15px 15px 0 0;
+            padding: 15px 20px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .highlight-item {
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #FF0000;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .highlight-item:hover {
+            background: #3a3a3a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .highlight-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .highlight-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+        }
+        
+        .highlight-type {
+            display: inline-block;
+            background: #FF0000;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .highlight-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .highlight-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .highlight-scores {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .confidence-high { background: #28a745; color: white; }
+        .confidence-medium { background: #ffc107; color: #000; }
+        .confidence-low { background: #dc3545; color: white; }
+        
+        .importance-high { background: #17a2b8; color: white; }
+        .importance-medium { background: #6f42c1; color: white; }
+        .importance-low { background: #6c757d; color: white; }
+        
+        .highlight-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+        
+        .btn-primary {
+            background: #FF0000;
+            border-color: #FF0000;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #cc0000;
+            border-color: #cc0000;
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-light {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: #FF0000;
+            border-color: #FF0000;
+            transform: translateY(-1px);
+        }
+        
+        .form-control, .form-select {
+            background: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: #3a3a3a;
+            border-color: #FF0000;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FF0000;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .analysis-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner-border {
+            color: #FF0000;
+        }
+        
+        .timeline-view {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: -20px;
+            width: 2px;
+            background: #444;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            background: #FF0000;
+            border-radius: 50%;
+        }
+        
+        .timeline-time {
+            font-size: 0.9rem;
+            color: #FF0000;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+        
+        .alert-info {
+            background: rgba(23, 162, 184, 0.2);
+            color: #17a2b8;
+        }
+        
+        .keywords-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .keyword-tag {
+            background: #444;
+            color: #ccc;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .emotions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .emotion-tag {
+            background: #6f42c1;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .view-toggle {
+            display: flex;
+            background: #333;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .view-toggle button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ccc;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .view-toggle button.active {
+            background: #FF0000;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="highlights-container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-star"></i> AI-Powered Highlights Demo</h1>
+            <p class="lead">Intelligent detection of key moments, insights, and significant interactions</p>
+        </div>
+
+        <!-- Analysis Controls -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-brain"></i> AI Analysis Controls</h5>
+            </div>
+            <div class="card-body">
+                <div class="analysis-controls">
+                    <div>
+                        <label class="form-label">Interview ID:</label>
+                        <input type="text" id="interview-id" class="form-control" value="demo_interview_001" style="width: 200px;">
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Max Highlights:</label>
+                        <select id="max-highlights" class="form-select" style="width: 120px;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Min Confidence:</label>
+                        <select id="min-confidence" class="form-select" style="width: 120px;">
+                            <option value="0.5">50%</option>
+                            <option value="0.6" selected>60%</option>
+                            <option value="0.7">70%</option>
+                            <option value="0.8">80%</option>
+                        </select>
+                    </div>
+                    
+                    <button id="analyze-btn" class="btn btn-primary">
+                        <i class="fas fa-magic"></i> Analyze Interview
+                    </button>
+                    
+                    <button id="demo-data-btn" class="btn btn-outline-light">
+                        <i class="fas fa-play"></i> Load Demo Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid" id="stats-grid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="total-highlights">0</div>
+                <div class="stat-label">Total Highlights</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avg-confidence">0%</div>
+                <div class="stat-label">Avg Confidence</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avg-importance">0%</div>
+                <div class="stat-label">Avg Importance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-duration">0s</div>
+                <div class="stat-label">Total Duration</div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="card" id="filter-card" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-filter"></i> Filters & View Options</h5>
+            </div>
+            <div class="card-body">
+                <div class="filter-controls">
+                    <div>
+                        <label class="form-label">Type:</label>
+                        <select id="filter-type" class="form-select" style="width: 150px;">
+                            <option value="">All Types</option>
+                            <option value="breakthrough">Breakthrough</option>
+                            <option value="insight">Insight</option>
+                            <option value="emotional_peak">Emotional Peak</option>
+                            <option value="question_answer">Q&A</option>
+                            <option value="topic_change">Topic Change</option>
+                            <option value="key_moment">Key Moment</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Status:</label>
+                        <select id="filter-status" class="form-select" style="width: 120px;">
+                            <option value="">All Status</option>
+                            <option value="detected">Detected</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="approved">Approved</option>
+                            <option value="featured">Featured</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Sort by:</label>
+                        <select id="sort-by" class="form-select" style="width: 150px;">
+                            <option value="importance_score">Importance</option>
+                            <option value="confidence_score">Confidence</option>
+                            <option value="start_time">Time</option>
+                            <option value="duration">Duration</option>
+                        </select>
+                    </div>
+                    
+                    <button id="apply-filters-btn" class="btn btn-outline-light">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    
+                    <button id="export-btn" class="btn btn-outline-light">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+                
+                <div class="view-toggle">
+                    <button id="list-view-btn" class="active">
+                        <i class="fas fa-list"></i> List View
+                    </button>
+                    <button id="timeline-view-btn">
+                        <i class="fas fa-clock"></i> Timeline View
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loading-spinner">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Analyzing...</span>
+            </div>
+            <p class="mt-3">AI is analyzing the interview for highlights...</p>
+        </div>
+
+        <!-- Highlights Results -->
+        <div class="card" id="highlights-card" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-star"></i> Detected Highlights</h5>
+            </div>
+            <div class="card-body">
+                <div id="highlights-container">
+                    <!-- Highlights will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/highlights-demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Templates Demo - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/dark-theme.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #444;
+        }
+
+        .template-preview {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .question-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .question-item {
+            background: #333;
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-left: 3px solid #FF0000;
+        }
+
+        .api-response {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-loading { background: #ffc107; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .feature-badge {
+            background: linear-gradient(45deg, #FF0000, #CC0000);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-clipboard-list text-danger me-2"></i>
+                    Interview Templates Demo
+                    <span class="feature-badge">Phase 5.3.4 Complete</span>
+                </h1>
+                <p class="text-muted">Testing the interview templates system functionality</p>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-server text-danger me-2"></i>
+                API Status
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="status-indicator status-loading" id="api-status"></span>
+                        <span id="api-status-text">Checking API connection...</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="status-indicator status-loading" id="db-status"></span>
+                        <span id="db-status-text">Checking database connection...</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="status-indicator status-loading" id="templates-status"></span>
+                        <span id="templates-status-text">Loading templates...</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-outline-light btn-sm me-2" onclick="demo.checkAPIStatus()">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh Status
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="demo.loadTemplates()">
+                        <i class="fas fa-download me-1"></i> Load Templates
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates List -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-list text-danger me-2"></i>
+                Available Templates
+            </h3>
+            <div id="templates-container">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2">Loading templates...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template Details -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-eye text-danger me-2"></i>
+                Template Details
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label text-white">Select Template:</label>
+                    <select class="form-select bg-dark border-secondary text-white" id="template-selector">
+                        <option value="">Choose a template...</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-white">Actions:</label>
+                    <div>
+                        <button class="btn btn-outline-light btn-sm me-2" onclick="demo.viewTemplate()">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </button>
+                        <button class="btn btn-outline-light btn-sm me-2" onclick="demo.duplicateTemplate()">
+                            <i class="fas fa-copy me-1"></i> Duplicate
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="demo.useTemplate()">
+                            <i class="fas fa-play me-1"></i> Use Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="template-details" class="template-preview mt-3 d-none">
+                <!-- Template details will be loaded here -->
+            </div>
+        </div>
+
+        <!-- API Response -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-code text-danger me-2"></i>
+                API Response
+            </h3>
+            <div class="api-response" id="api-response">
+                <div class="text-muted">API responses will appear here...</div>
+            </div>
+        </div>
+
+        <!-- Integration Test -->
+        <div class="demo-section">
+            <h3 class="text-white mb-3">
+                <i class="fas fa-flask text-danger me-2"></i>
+                Integration Test
+            </h3>
+            <p class="text-muted mb-3">Test the complete template workflow:</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testCreateTemplate()">
+                        <i class="fas fa-plus me-1"></i> Test Create Template
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testApplyTemplate()">
+                        <i class="fas fa-cog me-1"></i> Test Apply Template
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-outline-light w-100 mb-2" onclick="demo.testHostDashboard()">
+                        <i class="fas fa-external-link-alt me-1"></i> Test Host Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class InterviewTemplatesDemo {
+            constructor() {
+                this.templates = [];
+                this.currentTemplate = null;
+                this.init();
+            }
+
+            init() {
+                this.checkAPIStatus();
+                this.loadTemplates();
+            }
+
+            async checkAPIStatus() {
+                this.updateStatus('api-status', 'loading', 'Checking API...');
+                
+                try {
+                    const response = await fetch('/api/health');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.updateStatus('api-status', 'success', 'API Connected');
+                        this.updateStatus('db-status', 'success', 'Database Connected');
+                    } else {
+                        this.updateStatus('api-status', 'error', 'API Error');
+                        this.updateStatus('db-status', 'error', 'Database Error');
+                    }
+                } catch (error) {
+                    this.updateStatus('api-status', 'error', 'API Unavailable');
+                    this.updateStatus('db-status', 'error', 'Database Unavailable');
+                }
+            }
+
+            async loadTemplates() {
+                this.updateStatus('templates-status', 'loading', 'Loading templates...');
+                
+                try {
+                    const response = await fetch('/api/interview-templates');
+                    const data = await response.json();
+                    
+                    this.logResponse('GET /api/interview-templates', data);
+                    
+                    if (data.success) {
+                        this.templates = data.data;
+                        this.updateStatus('templates-status', 'success', `${this.templates.length} templates loaded`);
+                        this.renderTemplates();
+                        this.populateTemplateSelector();
+                    } else {
+                        this.updateStatus('templates-status', 'error', 'Failed to load templates');
+                    }
+                } catch (error) {
+                    this.updateStatus('templates-status', 'error', 'Templates unavailable');
+                    this.logResponse('GET /api/interview-templates', { error: error.message });
+                }
+            }
+
+            renderTemplates() {
+                const container = document.getElementById('templates-container');
+                
+                if (this.templates.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-4">No templates found</div>';
+                    return;
+                }
+
+                const templatesHtml = this.templates.map(template => {
+                    const questions = JSON.parse(template.questions || '[]');
+                    return `
+                        <div class="template-preview">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="text-white mb-1">${template.name}</h5>
+                                <span class="badge bg-secondary">${template.type}</span>
+                            </div>
+                            <p class="text-muted mb-2">${template.description}</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i> ${template.duration_minutes} minutes<br>
+                                        <i class="fas fa-users me-1"></i> ${template.max_guests} max guests<br>
+                                        <i class="fas fa-question-circle me-1"></i> ${questions.length} questions
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">
+                                        <i class="fas fa-star me-1"></i> Rating: ${template.rating || 'N/A'}<br>
+                                        <i class="fas fa-download me-1"></i> Used: ${template.usage_count || 0} times<br>
+                                        ${template.is_featured ? '<i class="fas fa-star text-warning me-1"></i> Featured' : ''}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = templatesHtml;
+            }
+
+            populateTemplateSelector() {
+                const selector = document.getElementById('template-selector');
+                selector.innerHTML = '<option value="">Choose a template...</option>';
+                
+                this.templates.forEach(template => {
+                    const option = document.createElement('option');
+                    option.value = template.id;
+                    option.textContent = `${template.name} (${template.type})`;
+                    selector.appendChild(option);
+                });
+            }
+
+            async viewTemplate() {
+                const templateId = document.getElementById('template-selector').value;
+                if (!templateId) {
+                    alert('Please select a template first');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/interview-templates/${templateId}`);
+                    const data = await response.json();
+                    
+                    this.logResponse(`GET /api/interview-templates/${templateId}`, data);
+                    
+                    if (data.success) {
+                        this.currentTemplate = data.data;
+                        this.showTemplateDetails(data.data);
+                    }
+                } catch (error) {
+                    this.logResponse(`GET /api/interview-templates/${templateId}`, { error: error.message });
+                }
+            }
+
+            showTemplateDetails(template) {
+                const questions = JSON.parse(template.questions || '[]');
+                const structure = JSON.parse(template.structure || '{}');
+                const settings = JSON.parse(template.settings || '{}');
+
+                const questionsHtml = questions.map((q, index) => `
+                    <div class="question-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${index + 1}. ${q.text}</strong>
+                                <div class="small text-muted mt-1">
+                                    Category: ${q.category} | Type: ${q.type} | Time: ${q.time_limit || 5} min
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('template-details').innerHTML = `
+                    <h5 class="text-white mb-3">${template.name}</h5>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="text-white">Questions (${questions.length})</h6>
+                            <div class="question-list">
+                                ${questionsHtml}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-white">Settings</h6>
+                            <div class="small">
+                                <div class="mb-2">
+                                    <strong>Duration:</strong> ${template.duration_minutes} minutes<br>
+                                    <strong>Max Guests:</strong> ${template.max_guests}<br>
+                                    <strong>Category:</strong> ${template.category}<br>
+                                    <strong>Type:</strong> ${template.type}
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" ${settings.recording_enabled ? 'checked' : ''} disabled>
+                                    <label class="form-check-label">Recording Enabled</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" ${settings.chat_enabled ? 'checked' : ''} disabled>
+                                    <label class="form-check-label">Chat Enabled</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" ${settings.waiting_room_enabled ? 'checked' : ''} disabled>
+                                    <label class="form-check-label">Waiting Room</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('template-details').classList.remove('d-none');
+            }
+
+            testHostDashboard() {
+                const templateId = document.getElementById('template-selector').value;
+                if (templateId) {
+                    window.open(`/host-dashboard.html?template=${templateId}`, '_blank');
+                } else {
+                    window.open('/host-dashboard.html', '_blank');
+                }
+            }
+
+            updateStatus(elementId, status, text) {
+                const indicator = document.getElementById(elementId);
+                const textElement = document.getElementById(elementId.replace('-status', '-status-text'));
+                
+                indicator.className = `status-indicator status-${status}`;
+                textElement.textContent = text;
+            }
+
+            logResponse(endpoint, data) {
+                const responseDiv = document.getElementById('api-response');
+                const timestamp = new Date().toLocaleTimeString();
+                
+                responseDiv.innerHTML = `
+                    <div class="text-info">[${timestamp}] ${endpoint}</div>
+                    <pre class="text-white mt-2">${JSON.stringify(data, null, 2)}</pre>
+                ` + responseDiv.innerHTML;
+            }
+        }
+
+        // Initialize demo
+        const demo = new InterviewTemplatesDemo();
+    </script>
+</body>
+</html>
