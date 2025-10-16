@@ -226,8 +226,16 @@ class MonitoringManager extends EventEmitter {
   }
 
   async redisHealthCheck() {
-    const pong = await this.redis.ping();
-    return { redis: pong === 'PONG' ? 'connected' : 'error' };
+    if (!this.redis || !this.redis.isReady) {
+      return { redis: 'disconnected' };
+    }
+
+    try {
+      const pong = await this.redis.ping();
+      return { redis: pong === 'PONG' ? 'connected' : 'error' };
+    } catch (error) {
+      return { redis: 'error', message: error.message };
+    }
   }
 
   /**
@@ -282,22 +290,42 @@ class MonitoringManager extends EventEmitter {
   }
 
   async collectApplicationMetrics() {
-    // Get active streams count
-    const activeStreams = await this.redis.scard('active_streams');
-    
-    // Get total viewers
-    const totalViewers = await this.redis.get('total_viewers') || 0;
-    
-    // Get API request metrics
-    const apiMetrics = await this.redis.hgetall('api_metrics') || {};
-    
-    return {
-      activeStreams: parseInt(activeStreams),
-      totalViewers: parseInt(totalViewers),
-      apiRequests: parseInt(apiMetrics.total_requests || 0),
-      apiErrors: parseInt(apiMetrics.total_errors || 0),
-      averageResponseTime: parseFloat(apiMetrics.avg_response_time || 0)
-    };
+    // Check if Redis is available
+    if (!this.redis || !this.redis.isReady) {
+      return {
+        activeStreams: 0,
+        totalViewers: 0,
+        apiMetrics: {},
+        note: 'Redis unavailable - using fallback values'
+      };
+    }
+
+    try {
+      // Get active streams count
+      const activeStreams = await this.redis.scard('active_streams');
+
+      // Get total viewers
+      const totalViewers = await this.redis.get('total_viewers') || 0;
+
+      // Get API request metrics
+      const apiMetrics = await this.redis.hgetall('api_metrics') || {};
+
+      return {
+        activeStreams: parseInt(activeStreams),
+        totalViewers: parseInt(totalViewers),
+        apiRequests: parseInt(apiMetrics.total_requests || 0),
+        apiErrors: parseInt(apiMetrics.total_errors || 0),
+        averageResponseTime: parseFloat(apiMetrics.avg_response_time || 0)
+      };
+    } catch (error) {
+      this.logger.warn('Error collecting application metrics from Redis:', error.message);
+      return {
+        activeStreams: 0,
+        totalViewers: 0,
+        apiMetrics: {},
+        note: 'Redis error - using fallback values'
+      };
+    }
   }
 
   async collectBusinessMetrics() {
@@ -522,14 +550,26 @@ class MonitoringManager extends EventEmitter {
       overall: overallHealth
     };
     
-    await this.redis.lpush('health_metrics', JSON.stringify(metrics));
-    await this.redis.ltrim('health_metrics', 0, 999);
+    if (this.redis && this.redis.isReady) {
+      try {
+        await this.redis.lpush('health_metrics', JSON.stringify(metrics));
+        await this.redis.ltrim('health_metrics', 0, 999);
+      } catch (error) {
+        this.logger.warn('Error storing health metrics in Redis:', error.message);
+      }
+    }
   }
 
   async storeMetrics(metrics) {
     // Store in Redis for real-time access
-    await this.redis.lpush('system_metrics', JSON.stringify(metrics));
-    await this.redis.ltrim('system_metrics', 0, 999);
+    if (this.redis && this.redis.isReady) {
+      try {
+        await this.redis.lpush('system_metrics', JSON.stringify(metrics));
+        await this.redis.ltrim('system_metrics', 0, 999);
+      } catch (error) {
+        this.logger.warn('Error storing system metrics in Redis:', error.message);
+      }
+    }
     
     // Store in database for long-term analysis
     const query = `
@@ -623,13 +663,19 @@ class MonitoringManager extends EventEmitter {
 
   updateRealTimeMetrics(metrics) {
     // Update real-time metrics in Redis
-    this.redis.hset('realtime_metrics', {
-      'active_streams': metrics.application.activeStreams,
-      'total_viewers': metrics.application.totalViewers,
-      'cpu_usage': (metrics.system.cpu.user + metrics.system.cpu.system) / 1000000,
-      'memory_usage': (metrics.system.memory.heapUsed / metrics.system.memory.heapTotal) * 100,
-      'timestamp': metrics.timestamp
-    });
+    if (this.redis && this.redis.isReady) {
+      try {
+        this.redis.hset('realtime_metrics', {
+          'active_streams': metrics.application.activeStreams,
+          'total_viewers': metrics.application.totalViewers,
+          'cpu_usage': (metrics.system.cpu.user + metrics.system.cpu.system) / 1000000,
+          'memory_usage': (metrics.system.memory.heapUsed / metrics.system.memory.heapTotal) * 100,
+          'timestamp': metrics.timestamp
+        });
+      } catch (error) {
+        this.logger.warn('Error updating real-time metrics in Redis:', error.message);
+      }
+    }
   }
 
   async getDailyRevenue() {

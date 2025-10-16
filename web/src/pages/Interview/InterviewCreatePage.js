@@ -284,16 +284,106 @@ class InterviewCreatePage {
                     <h5 class="mb-0">Media & Content</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Video Platform Links Section (shown only for video interviews) -->
+                    <div id="video-platform-section" class="mb-4" style="display: none;">
+                        <label class="form-label">
+                            <i class="fab fa-youtube text-danger me-2"></i>Video Platform Links
+                        </label>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Add links to existing videos from popular streaming platforms
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="youtube_url" class="form-label">
+                                        <i class="fab fa-youtube text-danger me-1"></i>YouTube URL
+                                    </label>
+                                    <input type="url"
+                                           class="form-control"
+                                           id="youtube_url"
+                                           name="youtube_url"
+                                           placeholder="https://www.youtube.com/watch?v=...">
+                                    <div class="form-text">Paste a YouTube video URL</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vimeo_url" class="form-label">
+                                        <i class="fab fa-vimeo text-primary me-1"></i>Vimeo URL
+                                    </label>
+                                    <input type="url"
+                                           class="form-control"
+                                           id="vimeo_url"
+                                           name="vimeo_url"
+                                           placeholder="https://vimeo.com/...">
+                                    <div class="form-text">Paste a Vimeo video URL</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="twitch_url" class="form-label">
+                                        <i class="fab fa-twitch text-purple me-1"></i>Twitch URL
+                                    </label>
+                                    <input type="url"
+                                           class="form-control"
+                                           id="twitch_url"
+                                           name="twitch_url"
+                                           placeholder="https://www.twitch.tv/videos/...">
+                                    <div class="form-text">Paste a Twitch video URL</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dailymotion_url" class="form-label">
+                                        <i class="fas fa-video text-info me-1"></i>Dailymotion URL
+                                    </label>
+                                    <input type="url"
+                                           class="form-control"
+                                           id="dailymotion_url"
+                                           name="dailymotion_url"
+                                           placeholder="https://www.dailymotion.com/video/...">
+                                    <div class="form-text">Paste a Dailymotion video URL</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="other_video_url" class="form-label">
+                                <i class="fas fa-link me-1"></i>Other Video Platform URL
+                            </label>
+                            <input type="url"
+                                   class="form-control"
+                                   id="other_video_url"
+                                   name="other_video_url"
+                                   placeholder="https://...">
+                            <div class="form-text">Any other video platform URL (TikTok, Instagram, Facebook, etc.)</div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> Make sure the video is publicly accessible and allows embedding.
+                            Some platforms may have restrictions on external embedding.
+                        </div>
+                    </div>
+
+                    <!-- File Upload Section -->
                     <div class="mb-4">
-                        <label class="form-label">Upload Media Files</label>
+                        <label class="form-label">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Media Files
+                        </label>
                         <div class="upload-area border-2 border-dashed rounded p-4 text-center" id="upload-area">
                             <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
                             <h5>Drag & Drop Files Here</h5>
                             <p class="text-muted mb-3">or click to browse files</p>
-                            <input type="file" 
-                                   id="media-upload" 
-                                   multiple 
-                                   accept="video/*,audio/*,image/*" 
+                            <input type="file"
+                                   id="media-upload"
+                                   multiple
+                                   accept="video/*,audio/*,image/*"
                                    style="display: none;">
                             <button type="button" class="btn btn-primary" id="browse-files-btn">
                                 <i class="fas fa-folder-open me-2"></i>Browse Files
@@ -468,10 +558,22 @@ class InterviewCreatePage {
             });
         });
 
+        // Interview type change handler
+        const typeSelect = container.querySelector('#type');
+        if (typeSelect) {
+            typeSelect.addEventListener('change', () => this.toggleVideoSection());
+        }
+
         // Interviewee type toggle
         const intervieweeTypeRadios = container.querySelectorAll('input[name="interviewee_type"]');
         intervieweeTypeRadios.forEach(radio => {
             radio.addEventListener('change', () => this.toggleIntervieweeType());
+        });
+
+        // Video platform URL validation
+        const videoUrlInputs = container.querySelectorAll('#youtube_url, #vimeo_url, #twitch_url, #dailymotion_url, #other_video_url');
+        videoUrlInputs.forEach(input => {
+            input.addEventListener('blur', () => this.validateVideoUrl(input));
         });
 
         // Description character count
@@ -632,6 +734,57 @@ class InterviewCreatePage {
             registeredDiv.style.display = 'none';
             guestDiv.style.display = 'block';
         }
+    }
+
+    toggleVideoSection() {
+        const typeSelect = document.getElementById('type');
+        const videoPlatformSection = document.getElementById('video-platform-section');
+
+        if (typeSelect && videoPlatformSection) {
+            if (typeSelect.value === 'video') {
+                videoPlatformSection.style.display = 'block';
+            } else {
+                videoPlatformSection.style.display = 'none';
+                // Clear video URL fields when not video type
+                this.clearVideoUrls();
+            }
+        }
+    }
+
+    clearVideoUrls() {
+        const videoUrlInputs = ['youtube_url', 'vimeo_url', 'twitch_url', 'dailymotion_url', 'other_video_url'];
+        videoUrlInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+                this.clearFieldError(input);
+            }
+        });
+    }
+
+    validateVideoUrl(input) {
+        const url = input.value.trim();
+        if (!url) return true; // Empty is valid (optional field)
+
+        const urlPatterns = {
+            youtube_url: /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/,
+            vimeo_url: /^https?:\/\/(www\.)?vimeo\.com\/\d+/,
+            twitch_url: /^https?:\/\/(www\.)?twitch\.tv\/(videos\/\d+|[a-zA-Z0-9_]+)/,
+            dailymotion_url: /^https?:\/\/(www\.)?dailymotion\.com\/video\/[a-zA-Z0-9]+/,
+            other_video_url: /^https?:\/\/.+/ // Basic URL validation for other platforms
+        };
+
+        const pattern = urlPatterns[input.id];
+        if (pattern && !pattern.test(url)) {
+            let platformName = input.id.replace('_url', '').replace('_', ' ');
+            platformName = platformName.charAt(0).toUpperCase() + platformName.slice(1);
+
+            this.showFieldError(input.id, `Please enter a valid ${platformName} URL`);
+            return false;
+        }
+
+        this.clearFieldError(input);
+        return true;
     }
 
     nextStep() {
@@ -996,6 +1149,27 @@ class InterviewCreatePage {
         // Handle thumbnail
         if (this.thumbnailUrl) {
             data.thumbnail_url = this.thumbnailUrl;
+        }
+
+        // Handle video platform URLs (only for video interviews)
+        if (data.type === 'video') {
+            const videoPlatforms = {};
+            const videoUrlInputs = [
+                'youtube_url', 'vimeo_url', 'twitch_url',
+                'dailymotion_url', 'other_video_url'
+            ];
+
+            videoUrlInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input && input.value.trim()) {
+                    const platformName = inputId.replace('_url', '');
+                    videoPlatforms[platformName] = input.value.trim();
+                }
+            });
+
+            if (Object.keys(videoPlatforms).length > 0) {
+                data.video_platforms = videoPlatforms;
+            }
         }
 
         return data;

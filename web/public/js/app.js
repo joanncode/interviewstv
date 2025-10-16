@@ -158,8 +158,15 @@ class InterviewsApp {
                 ${this.renderFooter()}
             </div>
         `;
-        
+
         this.setupNavigationEvents();
+
+        // Apply circular avatar styling after page is rendered
+        setTimeout(() => {
+            if (window.avatarManager) {
+                window.avatarManager.applyCircularAvatars();
+            }
+        }, 100);
     }
 
     // API Helper Methods
@@ -1180,7 +1187,7 @@ class InterviewsApp {
 
         if (emailField && passwordField) {
             emailField.value = `${role}@interviews.tv`;
-            passwordField.value = `password123`;
+            passwordField.value = `${role}123`; // Use correct password format
 
             // Add visual feedback
             emailField.focus();
@@ -1588,12 +1595,113 @@ class InterviewsApp {
                                         <div id="mediaUploadSection">
                                             <!-- Video Upload -->
                                             <div id="videoUpload" class="upload-section" style="display: none;">
-                                                <div class="upload-area border border-2 border-dashed rounded p-4 text-center mb-3"
-                                                     onclick="document.getElementById('videoFile').click()" style="cursor: pointer;">
-                                                    <i class="fas fa-video fa-3x mb-3"></i>
-                                                    <h6 class="text-white">Click to upload video file</h6>
-                                                    <p class="mb-0">Supports MP4, MOV, AVI, WebM (Max 500MB)</p>
-                                                    <input type="file" id="videoFile" accept="video/*" style="display: none;" onchange="app.handleFileUpload(this, 'video')">
+                                                <!-- Video Platform Links Section -->
+                                                <div id="video-platform-section" class="mb-4">
+                                                    <label class="form-label">
+                                                        <i class="fab fa-youtube text-danger me-2"></i>Video Platform Links
+                                                    </label>
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        Add links to existing videos from popular streaming platforms
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="youtube_url" class="form-label">
+                                                                    <i class="fab fa-youtube text-danger me-1"></i>YouTube URL
+                                                                </label>
+                                                                <input type="url"
+                                                                       class="form-control"
+                                                                       id="youtube_url"
+                                                                       name="youtube_url"
+                                                                       placeholder="https://www.youtube.com/watch?v=..."
+                                                                       onchange="app.validateVideoUrl(this)">
+                                                                <div class="form-text">Paste a YouTube video URL</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="vimeo_url" class="form-label">
+                                                                    <i class="fab fa-vimeo text-primary me-1"></i>Vimeo URL
+                                                                </label>
+                                                                <input type="url"
+                                                                       class="form-control"
+                                                                       id="vimeo_url"
+                                                                       name="vimeo_url"
+                                                                       placeholder="https://vimeo.com/..."
+                                                                       onchange="app.validateVideoUrl(this)">
+                                                                <div class="form-text">Paste a Vimeo video URL</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="twitch_url" class="form-label">
+                                                                    <i class="fab fa-twitch text-purple me-1"></i>Twitch URL
+                                                                </label>
+                                                                <input type="url"
+                                                                       class="form-control"
+                                                                       id="twitch_url"
+                                                                       name="twitch_url"
+                                                                       placeholder="https://www.twitch.tv/videos/..."
+                                                                       onchange="app.validateVideoUrl(this)">
+                                                                <div class="form-text">Paste a Twitch video URL</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="dailymotion_url" class="form-label">
+                                                                    <i class="fas fa-video text-info me-1"></i>Dailymotion URL
+                                                                </label>
+                                                                <input type="url"
+                                                                       class="form-control"
+                                                                       id="dailymotion_url"
+                                                                       name="dailymotion_url"
+                                                                       placeholder="https://www.dailymotion.com/video/..."
+                                                                       onchange="app.validateVideoUrl(this)">
+                                                                <div class="form-text">Paste a Dailymotion video URL</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="other_video_url" class="form-label">
+                                                            <i class="fas fa-link me-1"></i>Other Video Platform URL
+                                                        </label>
+                                                        <input type="url"
+                                                               class="form-control"
+                                                               id="other_video_url"
+                                                               name="other_video_url"
+                                                               placeholder="https://..."
+                                                               onchange="app.validateVideoUrl(this)">
+                                                        <div class="form-text">Any other video platform URL (TikTok, Instagram, Facebook, etc.)</div>
+                                                    </div>
+
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                                        <strong>Note:</strong> Make sure the video is publicly accessible and allows embedding.
+                                                        Some platforms may have restrictions on external embedding.
+                                                    </div>
+                                                </div>
+
+                                                <!-- OR Divider -->
+                                                <div class="text-center my-4">
+                                                    <span class="badge bg-secondary px-3 py-2">OR</span>
+                                                </div>
+
+                                                <!-- File Upload Section -->
+                                                <div id="video-file-upload">
+                                                    <h6 class="text-white mb-3">Upload Video File</h6>
+                                                    <div class="upload-area border border-2 border-dashed rounded p-4 text-center mb-3"
+                                                         onclick="document.getElementById('videoFile').click()" style="cursor: pointer;">
+                                                        <i class="fas fa-video fa-3x mb-3"></i>
+                                                        <h6 class="text-white">Click to upload video file</h6>
+                                                        <p class="mb-0">Supports MP4, MOV, AVI, WebM (Max 500MB)</p>
+                                                        <input type="file" id="videoFile" accept="video/*" style="display: none;" onchange="app.handleFileUpload(this, 'video')">
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -2031,6 +2139,9 @@ class InterviewsApp {
     renderPrivacySettingsTab(user) {
         const savedPrivacy = JSON.parse(localStorage.getItem('privacy_settings') || '{}');
 
+        // Load settings from API when tab is rendered
+        this.loadPrivacySettings();
+
         return `
             <div class="card settings-card-dark">
                 <div class="card-header">
@@ -2112,6 +2223,9 @@ class InterviewsApp {
 
     renderNotificationSettingsTab(user) {
         const savedNotifications = JSON.parse(localStorage.getItem('notification_settings') || '{}');
+
+        // Load settings from API when tab is rendered
+        this.loadNotificationSettings();
 
         return `
             <div class="card settings-card-dark">
@@ -2390,7 +2504,26 @@ class InterviewsApp {
         submitBtn.disabled = true;
 
         try {
-            // Make API call to login endpoint
+            // Check for predefined demo users first
+            const predefinedUser = this.predefinedUsers[email];
+            if (predefinedUser && predefinedUser.password === password) {
+                // Demo user login
+                this.setAuthToken('demo-token-' + Date.now());
+                this.isAuthenticated = true;
+                this.currentUser = { ...predefinedUser }; // Clone the user object
+
+                // Store user data in localStorage for persistence
+                localStorage.setItem('user_data', JSON.stringify(this.currentUser));
+                localStorage.setItem('is_authenticated', 'true');
+
+                this.showToast(`Welcome ${this.currentUser.name}! Logged in as ${this.currentUser.role}.`, 'success');
+
+                // Role-specific redirect
+                this.handleRoleBasedRedirect(this.currentUser.role);
+                return;
+            }
+
+            // Make API call to login endpoint for non-demo users
             const response = await this.apiPost('/auth/login.php', {
                 email: email,
                 password: password
@@ -2556,19 +2689,44 @@ class InterviewsApp {
 
         // Get additional content based on type
         let additionalContent = '';
+        let videoPlatforms = {};
+
         if (type === 'text') {
             additionalContent = document.getElementById('interviewContent').value;
         } else if (type === 'live') {
             const date = document.getElementById('liveDate').value;
             const time = document.getElementById('liveTime').value;
             additionalContent = `Scheduled for: ${date} at ${time}`;
+        } else if (type === 'video') {
+            // Collect video platform URLs
+            const videoUrlInputs = ['youtube_url', 'vimeo_url', 'twitch_url', 'dailymotion_url', 'other_video_url'];
+
+            videoUrlInputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input && input.value.trim()) {
+                    const platformName = inputId.replace('_url', '');
+                    videoPlatforms[platformName] = input.value.trim();
+                }
+            });
+
+            if (Object.keys(videoPlatforms).length > 0) {
+                additionalContent = `Video platforms: ${Object.keys(videoPlatforms).join(', ')}`;
+            }
         }
 
         // Show success message
         const statusText = publishStatus === 'draft' ? 'saved as draft' :
                           publishStatus === 'scheduled' ? 'scheduled for publishing' : 'published';
 
-        alert(`Interview "${title}" ${statusText} successfully!\n\nType: ${type}\nCategory: ${category || 'Uncategorized'}\nStatus: ${publishStatus}\n\nThis would normally save to the database and redirect to the interview page.`);
+        let successMessage = `Interview "${title}" ${statusText} successfully!\n\nType: ${type}\nCategory: ${category || 'Uncategorized'}\nStatus: ${publishStatus}`;
+
+        if (type === 'video' && Object.keys(videoPlatforms).length > 0) {
+            successMessage += `\nVideo Platforms: ${Object.keys(videoPlatforms).join(', ')}`;
+        }
+
+        successMessage += '\n\nThis would normally save to the database and redirect to the interview page.';
+
+        alert(successMessage);
 
         // Redirect to profile to see the new interview
         this.navigateTo('profile');
@@ -2619,13 +2777,37 @@ class InterviewsApp {
                 const date = document.getElementById('liveDate').value;
                 const time = document.getElementById('liveTime').value;
                 hasContent = date && time;
+            } else if (type === 'video') {
+                // For video, check if file is uploaded OR video platform URLs are provided
+                const hasUploadedFile = document.getElementById('uploadedFiles').innerHTML.trim() !== '';
+
+                // Check for video platform URLs
+                const videoUrlInputs = ['youtube_url', 'vimeo_url', 'twitch_url', 'dailymotion_url', 'other_video_url'];
+                const hasVideoPlatformUrl = videoUrlInputs.some(inputId => {
+                    const input = document.getElementById(inputId);
+                    return input && input.value.trim() !== '';
+                });
+
+                hasContent = hasUploadedFile || hasVideoPlatformUrl;
             } else {
-                // For video/audio, check if file is uploaded
+                // For audio, check if file is uploaded
                 hasContent = document.getElementById('uploadedFiles').innerHTML.trim() !== '';
             }
 
             if (!hasContent) {
-                alert('Please upload media or add content before proceeding to review.');
+                let errorMessage = 'Please add content before proceeding to review.';
+
+                if (type === 'video') {
+                    errorMessage = 'Please either upload a video file OR provide video platform links (YouTube, Vimeo, etc.) before proceeding to review.';
+                } else if (type === 'audio') {
+                    errorMessage = 'Please upload an audio file before proceeding to review.';
+                } else if (type === 'text') {
+                    errorMessage = 'Please add text content or upload a file before proceeding to review.';
+                } else if (type === 'live') {
+                    errorMessage = 'Please set the date and time for the live interview before proceeding to review.';
+                }
+
+                alert(errorMessage);
                 return;
             }
         }
@@ -2693,6 +2875,67 @@ class InterviewsApp {
             if (uploadSection) {
                 uploadSection.style.display = 'block';
             }
+        }
+    }
+
+    validateVideoUrl(input) {
+        const url = input.value.trim();
+        if (!url) {
+            this.clearFieldError(input);
+            return true; // Empty is valid (optional field)
+        }
+
+        const urlPatterns = {
+            youtube_url: /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/,
+            vimeo_url: /^https?:\/\/(www\.)?vimeo\.com\/\d+/,
+            twitch_url: /^https?:\/\/(www\.)?twitch\.tv\/(videos\/\d+|[a-zA-Z0-9_]+)/,
+            dailymotion_url: /^https?:\/\/(www\.)?dailymotion\.com\/video\/[a-zA-Z0-9]+/,
+            other_video_url: /^https?:\/\/.+/ // Basic URL validation for other platforms
+        };
+
+        const pattern = urlPatterns[input.id];
+        if (pattern && !pattern.test(url)) {
+            let platformName = input.id.replace('_url', '').replace('_', ' ');
+            platformName = platformName.charAt(0).toUpperCase() + platformName.slice(1);
+
+            this.showFieldError(input.id, `Please enter a valid ${platformName} URL`);
+            return false;
+        }
+
+        this.clearFieldError(input);
+        return true;
+    }
+
+    showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Remove existing error
+        this.clearFieldError(field);
+
+        // Add error styling
+        field.classList.add('is-invalid');
+
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback';
+        errorDiv.textContent = message;
+        errorDiv.id = `${fieldId}_error`;
+
+        // Insert error message after the field
+        field.parentNode.insertBefore(errorDiv, field.nextSibling);
+    }
+
+    clearFieldError(input) {
+        if (typeof input === 'string') {
+            input = document.getElementById(input);
+        }
+        if (!input) return;
+
+        input.classList.remove('is-invalid');
+        const errorElement = document.getElementById(`${input.id}_error`);
+        if (errorElement) {
+            errorElement.remove();
         }
     }
 
@@ -3570,6 +3813,13 @@ class InterviewsApp {
         // Update content
         const user = this.currentUser;
         document.getElementById('settingsContent').innerHTML = this.renderSettingsTabContent(tab, user);
+
+        // Apply circular avatar styling after content is rendered
+        setTimeout(() => {
+            if (window.avatarManager) {
+                window.avatarManager.applyCircularAvatars();
+            }
+        }, 100);
     }
 
     handleAvatarUpload(input) {
@@ -3590,22 +3840,43 @@ class InterviewsApp {
             return;
         }
 
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const avatarPreview = document.getElementById('avatarPreview');
-            if (avatarPreview) {
-                avatarPreview.src = e.target.result;
+        // Create preview using avatar manager
+        const avatarPreview = document.getElementById('avatarPreview');
+        if (avatarPreview && window.avatarManager) {
+            // Use avatar manager to handle upload and maintain circular shape
+            window.avatarManager.handleAvatarUpload(file, avatarPreview);
 
-                // Store avatar in user data
+            // Store avatar in user data
+            const reader = new FileReader();
+            reader.onload = (e) => {
                 this.currentUser.avatar = e.target.result;
                 localStorage.setItem('user_data', JSON.stringify(this.currentUser));
 
                 // Show success message
                 this.showToast('Profile picture updated successfully!', 'success');
-            }
-        };
-        reader.readAsDataURL(file);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Fallback if avatar manager is not available
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (avatarPreview) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.style.borderRadius = '50%';
+                    avatarPreview.style.objectFit = 'cover';
+                    avatarPreview.style.width = '150px';
+                    avatarPreview.style.height = '150px';
+
+                    // Store avatar in user data
+                    this.currentUser.avatar = e.target.result;
+                    localStorage.setItem('user_data', JSON.stringify(this.currentUser));
+
+                    // Show success message
+                    this.showToast('Profile picture updated successfully!', 'success');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     async handleHeroBannerUpload(input) {
@@ -3680,7 +3951,7 @@ class InterviewsApp {
         this.showToast(message, profileData.heroBanner ? 'success' : 'error');
     }
 
-    handleUpdateProfile(event) {
+    async handleUpdateProfile(event) {
         event.preventDefault();
 
         const name = document.getElementById('profileName').value;
@@ -3691,51 +3962,97 @@ class InterviewsApp {
         const phone = document.getElementById('profilePhone').value;
         const company = document.getElementById('profileCompany').value;
 
-        // Update current user data
-        this.currentUser.name = name;
-        this.currentUser.email = email;
-
-        // Get existing profile data to preserve hero banner
+        // Get existing profile data to preserve hero banner and avatar
         const existingProfileData = JSON.parse(localStorage.getItem('profile_data') || '{}');
 
-        // Save profile data (preserve existing hero banner)
         const profileData = {
-            bio, location, website, phone, company,
-            heroBanner: existingProfileData.heroBanner // Preserve hero banner
+            name: name,
+            bio: bio,
+            location: location,
+            website: website,
+            phone: phone,
+            company: company,
+            avatar: this.currentUser.avatar || existingProfileData.avatar,
+            heroBanner: existingProfileData.heroBanner
         };
-        localStorage.setItem('profile_data', JSON.stringify(profileData));
-        localStorage.setItem('user_data', JSON.stringify(this.currentUser));
 
-        this.showToast('Profile updated successfully!', 'success');
+        try {
+            // Save to API
+            const response = await this.apiPut('/user/settings.php?type=profile', {
+                profile: profileData
+            });
+
+            if (response.success) {
+                // Update current user data
+                this.currentUser.name = name;
+                this.currentUser.email = email;
+
+                // Save profile data locally for UI
+                localStorage.setItem('profile_data', JSON.stringify(profileData));
+                localStorage.setItem('user_data', JSON.stringify(this.currentUser));
+
+                this.showToast('Profile updated successfully!', 'success');
+            } else {
+                this.showToast(response.message || 'Failed to update profile', 'error');
+            }
+        } catch (error) {
+            console.error('Profile update error:', error);
+            this.showToast('Failed to update profile. Please try again.', 'error');
+        }
     }
 
-    handleUpdateAccount(event) {
+    async handleUpdateAccount(event) {
         event.preventDefault();
 
         const currentPassword = document.getElementById('currentPassword').value;
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
 
-        if (newPassword && newPassword !== confirmPassword) {
-            this.showToast('New passwords do not match!', 'error');
-            return;
+        // Only validate if user is trying to change password
+        if (newPassword || confirmPassword || currentPassword) {
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                this.showToast('Please fill in all password fields to change password', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                this.showToast('New passwords do not match!', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                this.showToast('Password must be at least 6 characters long!', 'error');
+                return;
+            }
+
+            try {
+                // Change password via API
+                const response = await this.apiPut('/user/password.php', {
+                    currentPassword: currentPassword,
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                });
+
+                if (response.success) {
+                    this.showToast('Password updated successfully!', 'success');
+
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    this.showToast(response.message || 'Failed to update password', 'error');
+                }
+            } catch (error) {
+                console.error('Password update error:', error);
+                this.showToast('Failed to update password. Please try again.', 'error');
+            }
+        } else {
+            this.showToast('No changes to save', 'info');
         }
-
-        if (newPassword && newPassword.length < 6) {
-            this.showToast('Password must be at least 6 characters long!', 'error');
-            return;
-        }
-
-        // In a real app, this would make an API call
-        this.showToast('Account settings updated successfully!', 'success');
-
-        // Clear password fields
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
     }
 
-    handleUpdatePrivacy(event) {
+    async handleUpdatePrivacy(event) {
         event.preventDefault();
 
         const privacySettings = {
@@ -3747,11 +4064,26 @@ class InterviewsApp {
             allowInterviewRequests: document.getElementById('allowInterviewRequests').checked
         };
 
-        localStorage.setItem('privacy_settings', JSON.stringify(privacySettings));
-        this.showToast('Privacy settings updated successfully!', 'success');
+        try {
+            // Save to API
+            const response = await this.apiPut('/user/settings.php?type=privacy', {
+                privacy: privacySettings
+            });
+
+            if (response.success) {
+                // Save locally for UI
+                localStorage.setItem('privacy_settings', JSON.stringify(privacySettings));
+                this.showToast('Privacy settings updated successfully!', 'success');
+            } else {
+                this.showToast(response.message || 'Failed to update privacy settings', 'error');
+            }
+        } catch (error) {
+            console.error('Privacy settings update error:', error);
+            this.showToast('Failed to update privacy settings. Please try again.', 'error');
+        }
     }
 
-    handleUpdateNotifications(event) {
+    async handleUpdateNotifications(event) {
         event.preventDefault();
 
         const notificationSettings = {
@@ -3766,8 +4098,23 @@ class InterviewsApp {
             inAppSound: document.getElementById('inAppSound').checked
         };
 
-        localStorage.setItem('notification_settings', JSON.stringify(notificationSettings));
-        this.showToast('Notification settings updated successfully!', 'success');
+        try {
+            // Save to API
+            const response = await this.apiPut('/user/settings.php?type=notifications', {
+                notifications: notificationSettings
+            });
+
+            if (response.success) {
+                // Save locally for UI
+                localStorage.setItem('notification_settings', JSON.stringify(notificationSettings));
+                this.showToast('Notification settings updated successfully!', 'success');
+            } else {
+                this.showToast(response.message || 'Failed to update notification settings', 'error');
+            }
+        } catch (error) {
+            console.error('Notification settings update error:', error);
+            this.showToast('Failed to update notification settings. Please try again.', 'error');
+        }
     }
 
     confirmDeleteAccount() {
@@ -3787,6 +4134,80 @@ class InterviewsApp {
                     alert('Account deletion cancelled.');
                 }
             }
+        }
+    }
+
+    // Settings API methods
+    async loadPrivacySettings() {
+        try {
+            const response = await this.apiGet('/user/settings.php?type=privacy');
+            if (response.success && response.data.privacy) {
+                const privacy = response.data.privacy;
+
+                // Update form fields
+                setTimeout(() => {
+                    const profileVisibility = document.querySelector(`input[name="profileVisibility"][value="${privacy.profile_visibility}"]`);
+                    if (profileVisibility) profileVisibility.checked = true;
+
+                    const allowComments = document.getElementById('allowComments');
+                    if (allowComments) allowComments.checked = privacy.allow_comments;
+
+                    const allowDownloads = document.getElementById('allowDownloads');
+                    if (allowDownloads) allowDownloads.checked = privacy.allow_downloads;
+
+                    const showInSearch = document.getElementById('showInSearch');
+                    if (showInSearch) showInSearch.checked = privacy.show_in_search;
+
+                    const allowMessages = document.getElementById('allowMessages');
+                    if (allowMessages) allowMessages.checked = privacy.allow_messages;
+
+                    const allowInterviewRequests = document.getElementById('allowInterviewRequests');
+                    if (allowInterviewRequests) allowInterviewRequests.checked = privacy.allow_interview_requests;
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Failed to load privacy settings:', error);
+        }
+    }
+
+    async loadNotificationSettings() {
+        try {
+            const response = await this.apiGet('/user/settings.php?type=notifications');
+            if (response.success && response.data.notifications) {
+                const notifications = response.data.notifications;
+
+                // Update form fields
+                setTimeout(() => {
+                    const emailNewFollowers = document.getElementById('emailNewFollowers');
+                    if (emailNewFollowers) emailNewFollowers.checked = notifications.email_new_followers;
+
+                    const emailNewComments = document.getElementById('emailNewComments');
+                    if (emailNewComments) emailNewComments.checked = notifications.email_new_comments;
+
+                    const emailInterviewRequests = document.getElementById('emailInterviewRequests');
+                    if (emailInterviewRequests) emailInterviewRequests.checked = notifications.email_interview_requests;
+
+                    const emailWeeklyDigest = document.getElementById('emailWeeklyDigest');
+                    if (emailWeeklyDigest) emailWeeklyDigest.checked = notifications.email_weekly_digest;
+
+                    const pushNewFollowers = document.getElementById('pushNewFollowers');
+                    if (pushNewFollowers) pushNewFollowers.checked = notifications.push_new_followers;
+
+                    const pushNewComments = document.getElementById('pushNewComments');
+                    if (pushNewComments) pushNewComments.checked = notifications.push_new_comments;
+
+                    const pushInterviewRequests = document.getElementById('pushInterviewRequests');
+                    if (pushInterviewRequests) pushInterviewRequests.checked = notifications.push_interview_requests;
+
+                    const inAppAll = document.getElementById('inAppAll');
+                    if (inAppAll) inAppAll.checked = notifications.in_app_all;
+
+                    const inAppSound = document.getElementById('inAppSound');
+                    if (inAppSound) inAppSound.checked = notifications.in_app_sound;
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Failed to load notification settings:', error);
         }
     }
 

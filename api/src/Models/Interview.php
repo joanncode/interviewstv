@@ -28,15 +28,21 @@ class Interview
         $slug = self::generateSlug($data['title']);
         
         $sql = "INSERT INTO interviews (
-            title, description, slug, interviewer_id, interviewee_id, interviewee_name, 
-            interviewee_bio, type, status, thumbnail_url, duration, category, tags, 
+            title, description, slug, interviewer_id, interviewee_id, interviewee_name,
+            interviewee_bio, type, status, thumbnail_url, video_platforms, duration, category, tags,
             published_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         
         $stmt = $pdo->prepare($sql);
         $publishedAt = null;
         if (isset($data['status']) && $data['status'] === 'published') {
             $publishedAt = date('Y-m-d H:i:s');
+        }
+
+        // Prepare video platforms JSON
+        $videoPlatformsJson = null;
+        if (isset($data['video_platforms']) && is_array($data['video_platforms'])) {
+            $videoPlatformsJson = json_encode($data['video_platforms']);
         }
 
         $stmt->execute([
@@ -50,6 +56,7 @@ class Interview
             $data['type'] ?? 'video',
             $data['status'] ?? 'draft',
             $data['thumbnail_url'] ?? null,
+            $videoPlatformsJson,
             $data['duration'] ?? null,
             $data['category'] ?? null,
             isset($data['tags']) ? json_encode($data['tags']) : null,
@@ -329,6 +336,10 @@ class Interview
         // Parse JSON fields
         if ($interview['tags']) {
             $interview['tags'] = json_decode($interview['tags'], true);
+        }
+
+        if ($interview['video_platforms']) {
+            $interview['video_platforms'] = json_decode($interview['video_platforms'], true);
         }
         
         // Format interviewer

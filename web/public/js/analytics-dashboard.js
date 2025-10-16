@@ -97,7 +97,7 @@ class AnalyticsDashboard {
             this.isLoading = true;
             this.showLoading();
             
-            const response = await fetch(`/api/analytics/dashboard?timeRange=${this.currentTimeRange}`);
+            const response = await fetch(`http://localhost:8080/dashboard-data.php?timeRange=${this.currentTimeRange}`);
             const result = await response.json();
             
             if (result.success) {
@@ -548,7 +548,7 @@ class AnalyticsDashboard {
      */
     async updateRealTimeStats() {
         try {
-            const response = await fetch('/api/analytics/realtime');
+            const response = await fetch('http://localhost:8080/dashboard-data.php');
             const result = await response.json();
             
             if (result.success) {

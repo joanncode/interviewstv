@@ -1,6 +1,48 @@
 /* Interviews.tv Dark Theme CSS */
 /* Comprehensive dark mode styling for the entire platform */
 
+/* Circular Avatar Styles - Ensure avatars stay perfectly circular */
+.rounded-circle,
+.avatar,
+.profile-picture,
+#avatarPreview {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
+/* Settings page avatar specific */
+#avatarPreview {
+    width: 150px !important;
+    height: 150px !important;
+    transition: transform 0.2s ease;
+    display: block !important;
+}
+
+#avatarPreview:hover {
+    transform: scale(1.05);
+}
+
+/* Ensure all avatars maintain circular shape regardless of content */
+img.rounded-circle {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+}
+
+/* Fix for Bootstrap's img-responsive that might interfere */
+.rounded-circle.img-responsive {
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Specific fix for settings page avatar container */
+.position-relative .rounded-circle {
+    flex-shrink: 0 !important;
+}
+
 :root {
     /* Dark Theme Color Variables */
     --bg-primary: #1a1a1a;
@@ -422,4 +464,63 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--border-secondary);
+}
+
+/* Video Platform Styling */
+#video-platform-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+#video-platform-section .alert-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-color: var(--accent-info);
+    color: var(--text-primary);
+}
+
+#video-platform-section .alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: var(--accent-warning);
+    color: var(--text-primary);
+}
+
+/* Platform-specific icon colors */
+.fab.fa-youtube {
+    color: #FF0000 !important;
+}
+
+.fab.fa-vimeo {
+    color: #1ab7ea !important;
+}
+
+.fab.fa-twitch {
+    color: #9146ff !important;
+}
+
+.fas.fa-video {
+    color: #0066cc !important;
+}
+
+.fas.fa-link {
+    color: var(--accent-info) !important;
+}
+
+/* Video platform input styling */
+#video-platform-section .form-control {
+    background-color: var(--bg-input);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+#video-platform-section .form-control:focus {
+    background-color: var(--bg-input);
+    border-color: var(--accent-red);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+}
+
+#video-platform-section .form-text {
+    color: var(--text-muted);
 }

@@ -48,7 +48,7 @@ const AuthMiddleware = require('./src/middleware/AuthMiddleware');
 const config = {
   port: process.env.STREAMING_PORT || 8081,
   rtmpPort: process.env.RTMP_PORT || 1935,
-  httpPort: process.env.HTTP_PORT || 8080,
+  httpPort: process.env.HTTP_PORT || 8082,
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   mysqlConfig: {
     host: process.env.DB_HOST || 'localhost',
@@ -166,20 +166,26 @@ class InterviewsStreamingServer {
   }
 
   async initializeRedis() {
+    // Skip Redis if disabled
+    if (process.env.REDIS_ENABLED === 'false') {
+      logger.info('Redis disabled, skipping Redis initialization');
+      return;
+    }
+
     try {
       this.redisClient = redis.createClient({
         url: config.redisUrl
       });
-      
+
       this.redisClient.on('error', (err) => {
         logger.error('Redis Client Error:', err);
       });
-      
+
       await this.redisClient.connect();
       logger.info('Redis connection established');
     } catch (error) {
-      logger.error('Redis connection failed:', error);
-      throw error;
+      logger.warn('Redis connection failed, continuing without Redis:', error.message);
+      this.redisClient = null;
     }
   }
 
@@ -212,6 +218,7 @@ class InterviewsStreamingServer {
     this.streamManager = new StreamManager(this.dbPool, this.redisClient, logger);
     this.webrtcSignaling = new WebRTCSignaling(this.io, logger);
     this.chatManager = new ChatManager(this.io, this.redisClient, logger);
+    this.chatManager.initializeCommands();
     this.analyticsCollector = new AnalyticsCollector(this.dbPool, this.redisClient, logger);
     this.qualityManager = new QualityManager(logger, this.redisClient);
     this.recordingManager = new RecordingManager(this.dbPool, this.redisClient, logger);
@@ -247,7 +254,7 @@ class InterviewsStreamingServer {
         allow_origin: '*'
       },
       relay: {
-        ffmpeg: require('ffmpeg-static'),
+        ffmpeg: process.env.FFMPEG_PATH || require('ffmpeg-static'),
         tasks: [
           {
             app: 'live',
@@ -258,10 +265,16 @@ class InterviewsStreamingServer {
       }
     };
 
-    this.nms = new NodeMediaServer(nmsConfig);
-    
-    // Setup NMS event handlers
-    this.setupNMSEventHandlers();
+    try {
+      this.nms = new NodeMediaServer(nmsConfig);
+
+      // Setup NMS event handlers
+      this.setupNMSEventHandlers();
+    } catch (error) {
+      logger.warn('Node Media Server initialization warning:', error.message);
+      // Continue without NMS if there are issues
+      this.nms = null;
+    }
   }
 
   setupNMSEventHandlers() {
@@ -356,6 +369,30 @@ class InterviewsStreamingServer {
   }
 
   setupRoutes() {
+    // Root endpoint
+    this.app.get('/', (req, res) => {
+      res.json({
+        name: 'Interviews.tv Streaming Server',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+          health: '/health',
+          streams: '/api/streams',
+          webrtc: '/api/webrtc',
+          chat: '/api/chat',
+          analytics: '/api/analytics'
+        },
+        rtmp: {
+          url: `rtmp://localhost:${config.rtmpPort}/live`,
+          port: config.rtmpPort
+        },
+        hls: {
+          url: `http://localhost:${config.httpPort}/live/{stream_key}/index.m3u8`,
+          port: config.httpPort
+        }
+      });
+    });
+
     // Health check endpoint
     this.app.get('/health', (req, res) => {
       res.json({
@@ -426,8 +463,17 @@ class InterviewsStreamingServer {
   async start() {
     try {
       // Start Node Media Server
-      this.nms.run();
-      logger.info(`Node Media Server started on RTMP port ${config.rtmpPort} and HTTP port ${config.httpPort}`);
+      if (this.nms) {
+        try {
+          this.nms.run();
+          logger.info(`Node Media Server started on RTMP port ${config.rtmpPort} and HTTP port ${config.httpPort}`);
+        } catch (error) {
+          logger.warn('Node Media Server start warning:', error.message);
+          logger.info('Continuing without Node Media Server...');
+        }
+      } else {
+        logger.warn('Node Media Server not initialized, skipping RTMP functionality');
+      }
       
       // Start Express server
       this.server.listen(config.port, () => {

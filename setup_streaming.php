@@ -10,8 +10,8 @@ try {
     // Initialize database connection using MySQL
     $host = 'localhost';
     $dbname = 'interviews_tv';
-    $username = 'root';
-    $password = '';
+    $username = 'interviews_user';
+    $password = 'interviews_pass';
 
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
@@ -21,13 +21,8 @@ try {
         ]);
         echo "✓ Database connection established\n";
     } catch (PDOException $e) {
-        // Try to create database first
-        $pdo = new PDO("mysql:host=$host;charset=utf8mb4", $username, $password, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS $dbname CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $pdo->exec("USE $dbname");
-        echo "✓ Database created and connection established\n";
+        echo "❌ Database connection failed: " . $e->getMessage() . "\n";
+        exit(1);
     }
     
     // Create live_streams table

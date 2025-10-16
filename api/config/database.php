@@ -16,21 +16,20 @@ class Database {
         $this->conn = null;
 
         try {
-            // Try SQLite first for development
-            if (file_exists(__DIR__ . '/../../interviews_tv.db') || !$this->isMySQLAvailable()) {
-                $this->conn = $this->getSQLiteConnection();
-            } else {
+            // Try MySQL first since it's working
+            if ($this->isMySQLAvailable()) {
                 $this->conn = $this->getMySQLConnection();
+            } else {
+                // Fallback to SQLite if available
+                if (file_exists(__DIR__ . '/../../interviews_tv.db') && class_exists('SQLite3')) {
+                    $this->conn = $this->getSQLiteConnection();
+                } else {
+                    throw new Exception("No database connection available");
+                }
             }
         } catch(PDOException $exception) {
             error_log("Connection error: " . $exception->getMessage());
-            // Fallback to SQLite if MySQL fails
-            try {
-                $this->conn = $this->getSQLiteConnection();
-            } catch(PDOException $sqliteException) {
-                error_log("SQLite fallback failed: " . $sqliteException->getMessage());
-                throw new Exception("Database connection failed: " . $exception->getMessage());
-            }
+            throw new Exception("Database connection failed: " . $exception->getMessage());
         }
 
         return $this->conn;
