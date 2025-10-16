@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTMP Stream Ingestion Test - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* FORCE ALL TEXT TO BE WHITE - OVERRIDE EVERYTHING */
+        * {
+            color: white !important;
+        }
+
+        body {
+            background-color: #1a1a1a !important;
+            color: white !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: white !important;
+        }
+
+        .card-header {
+            color: white !important;
+        }
+
+        .card-body {
+            color: white !important;
+        }
+
+        .btn-primary {
+            background-color: #FF0000;
+            border-color: #FF0000;
+            color: white !important;
+        }
+
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+            color: white !important;
+        }
+
+        .form-control {
+            background-color: #3a3a3a;
+            border-color: #555;
+            color: white !important;
+        }
+
+        .form-control:focus {
+            background-color: #3a3a3a;
+            border-color: #FF0000;
+            color: white !important;
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background-color: #28a745;
+        }
+        
+        .status-offline {
+            background-color: #dc3545;
+        }
+        
+        .log-container {
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-info {
+            color: #17a2b8;
+        }
+        
+        .log-success {
+            color: #28a745;
+        }
+        
+        .log-warning {
+            color: #ffc107;
+        }
+        
+        .log-error {
+            color: #dc3545;
+        }
+        
+        .stream-config {
+            background-color: #2d2d2d;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: white !important;
+        }
+
+        .copy-button {
+            background-color: #6c757d;
+            border: none;
+            color: white !important;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-button:hover {
+            background-color: #5a6268;
+            color: white !important;
+        }
+
+        .video-preview {
+            background-color: #000;
+            border: 2px solid #444;
+            border-radius: 8px;
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc !important;
+            font-size: 14px;
+        }
+
+        /* Force all text to be white */
+        h1, h2, h3, h4, h5, h6, p, span, div, li, ul, ol, label, strong, code {
+            color: white !important;
+        }
+
+        .text-muted {
+            color: #ccc !important;
+        }
+
+        .alert-info {
+            background-color: #2a4a5a !important;
+            border-color: #1e3a4a !important;
+            color: white !important;
+        }
+
+        .list-unstyled li {
+            color: white !important;
+        }
+
+        .btn-secondary, .btn-success, .btn-warning, .btn-info {
+            color: white !important;
+        }
+
+        /* NUCLEAR OPTION - FORCE EVERYTHING TO BE WHITE */
+        body *, .container *, .card *, .card-header *, .card-body *,
+        .row *, .col *, div *, p *, h1 *, h2 *, h3 *, h4 *, h5 *, h6 *,
+        span *, strong *, em *, li *, ul *, ol *, label *, code *, pre * {
+            color: white !important;
+        }
+
+        /* Bootstrap overrides */
+        .text-dark, .text-black, .text-secondary {
+            color: white !important;
+        }
+
+        /* Input placeholders */
+        .form-control::placeholder {
+            color: #ccc !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">🎥 RTMP Stream Ingestion Test</h1>
+                <p class="text-center text-muted">Test RTMP stream ingestion using OBS Studio or similar streaming software</p>
+            </div>
+        </div>
+        
+        <!-- Server Status -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📊 Server Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator" id="rtmp-status"></span>
+                                    <span>RTMP Server (Port 1935)</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator" id="streaming-status"></span>
+                                    <span>Streaming Server (Port 8081)</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-indicator" id="stream-status"></span>
+                                    <span>Active Stream</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="checkServerStatus()">🔄 Refresh Status</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stream Configuration -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">⚙️ Stream Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stream-config">
+                            <h6>📡 RTMP Settings for OBS Studio:</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Service:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control" value="Custom..." readonly>
+                                    <button class="copy-button ms-2" onclick="copyToClipboard('Custom...')">📋</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Server:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control" id="rtmp-url" value="rtmp://localhost:1935/live" readonly>
+                                    <button class="copy-button ms-2" onclick="copyToClipboard(document.getElementById('rtmp-url').value)">📋</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Stream Key:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="text" class="form-control" id="stream-key" value="test-stream-key" readonly>
+                                    <button class="copy-button ms-2" onclick="copyToClipboard(document.getElementById('stream-key').value)">📋</button>
+                                    <button class="btn btn-secondary btn-sm ms-2" onclick="generateNewStreamKey()">🎲 New Key</button>
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <strong>Full RTMP URL:</strong><br>
+                                <code id="full-rtmp-url">rtmp://localhost:1935/live/test-stream-key</code>
+                                <button class="copy-button ms-2" onclick="copyToClipboard(document.getElementById('full-rtmp-url').textContent)">📋</button>
+                            </div>
+                        </div>
+                        
+                        <h6>🎛️ Recommended OBS Settings:</h6>
+                        <ul class="list-unstyled">
+                            <li>• <strong>Video Bitrate:</strong> 2500 Kbps</li>
+                            <li>• <strong>Audio Bitrate:</strong> 160 Kbps</li>
+                            <li>• <strong>Encoder:</strong> x264</li>
+                            <li>• <strong>Keyframe Interval:</strong> 2 seconds</li>
+                            <li>• <strong>Resolution:</strong> 1280x720 (720p)</li>
+                            <li>• <strong>FPS:</strong> 30</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📺 Stream Monitor</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="video-preview mb-3">
+                            <span>Stream preview will appear here when active</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-success btn-sm" onclick="startMonitoring()">▶️ Start Monitoring</button>
+                            <button class="btn btn-warning btn-sm" onclick="stopMonitoring()">⏹️ Stop Monitoring</button>
+                            <button class="btn btn-info btn-sm" onclick="checkForStream()">🔍 Check Stream</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 Step-by-Step Instructions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>🎥 OBS Studio Setup:</h6>
+                                <ol>
+                                    <li>Open OBS Studio</li>
+                                    <li>Go to <strong>Settings</strong> → <strong>Stream</strong></li>
+                                    <li>Set <strong>Service</strong> to: <code>Custom...</code></li>
+                                    <li>Copy the <strong>Server</strong> URL from above</li>
+                                    <li>Copy the <strong>Stream Key</strong> from above</li>
+                                    <li>Click <strong>OK</strong> to save settings</li>
+                                    <li>Add a video source (Display/Window/Camera)</li>
+                                    <li>Click <strong>Start Streaming</strong></li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>🔍 What to Watch For:</h6>
+                                <ul>
+                                    <li>✅ OBS shows "Streaming" status</li>
+                                    <li>✅ Server status shows active stream</li>
+                                    <li>✅ Stream logs show connection</li>
+                                    <li>✅ No error messages in logs</li>
+                                    <li>✅ HLS output generation starts</li>
+                                </ul>
+                                
+                                <h6 class="mt-3">🚨 Troubleshooting:</h6>
+                                <ul>
+                                    <li>• Check firewall settings</li>
+                                    <li>• Verify RTMP URL is correct</li>
+                                    <li>• Try generating a new stream key</li>
+                                    <li>• Check OBS output settings</li>
+                                    <li>• Monitor server logs below</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logs -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">📝 Stream Logs</h5>
+                        <button class="btn btn-secondary btn-sm" onclick="clearLogs()">🗑️ Clear Logs</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="log-container">
+                            <div class="log-entry log-info">
+                                <span class="text-muted">[INFO]</span> RTMP test interface initialized
+                            </div>
+                            <div class="log-entry log-info">
+                                <span class="text-muted">[INFO]</span> Ready to receive RTMP streams on rtmp://localhost:1935/live
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let streamKey = 'test-stream-key';
+        let monitoringInterval = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('RTMP test interface loaded', 'info');
+            checkServerStatus();
+            startMonitoring();
+        });
+
+        // Generate new stream key
+        function generateNewStreamKey() {
+            streamKey = 'stream-' + Math.random().toString(36).substr(2, 12);
+            updateStreamKey();
+            addLog('Generated new stream key: ' + streamKey, 'info');
+        }
+
+        // Update stream key in UI
+        function updateStreamKey() {
+            document.getElementById('stream-key').value = streamKey;
+            document.getElementById('full-rtmp-url').textContent = `rtmp://localhost:1935/live/${streamKey}`;
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                addLog('Copied to clipboard: ' + text, 'success');
+            }).catch(function(err) {
+                addLog('Failed to copy to clipboard: ' + err, 'error');
+            });
+        }
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `<span class="text-muted">[${timestamp}]</span> ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Clear logs
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = '';
+            addLog('Logs cleared', 'info');
+        }
+
+        // Update status indicator
+        function updateStatusIndicator(elementId, isOnline) {
+            const indicator = document.getElementById(elementId);
+            indicator.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
+        }
+
+        // Check server status
+        async function checkServerStatus() {
+            addLog('Checking server status...', 'info');
+
+            try {
+                // Check streaming server
+                const streamingResponse = await fetch('http://localhost:8081/health');
+                if (streamingResponse.ok) {
+                    updateStatusIndicator('streaming-status', true);
+                    addLog('✅ Streaming server is healthy', 'success');
+                } else {
+                    updateStatusIndicator('streaming-status', false);
+                    addLog('❌ Streaming server is not responding', 'error');
+                }
+            } catch (error) {
+                updateStatusIndicator('streaming-status', false);
+                addLog('❌ Streaming server connection failed: ' + error.message, 'error');
+            }
+
+            try {
+                // Check RTMP server status from health endpoint
+                const healthResponse = await fetch('http://localhost:8081/health');
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    if (healthData.services && healthData.services.nodeMediaServer === 'running') {
+                        updateStatusIndicator('rtmp-status', true);
+                        addLog('✅ RTMP server is running on port 1935', 'success');
+                    } else {
+                        updateStatusIndicator('rtmp-status', false);
+                        addLog('❌ RTMP server is not running', 'error');
+                    }
+                } else {
+                    updateStatusIndicator('rtmp-status', false);
+                    addLog('❌ RTMP server status check failed', 'error');
+                }
+            } catch (error) {
+                updateStatusIndicator('rtmp-status', false);
+                addLog('❌ RTMP server status check failed: ' + error.message, 'error');
+            }
+        }
+
+        // Check for active streams
+        async function checkForStream() {
+            try {
+                addLog('Checking for active streams...', 'info');
+                const response = await fetch('http://localhost:8081/api/streams/live');
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const streams = result.data || [];
+                    if (streams && streams.length > 0) {
+                        addLog(`✅ Found ${streams.length} active stream(s)`, 'success');
+                        updateStatusIndicator('stream-status', true);
+
+                        // Log stream details
+                        streams.forEach(stream => {
+                            addLog(`📺 Stream: ${stream.streamKey || 'unknown'} - ${stream.currentViewers || 0} viewers`, 'info');
+                        });
+                    } else {
+                        addLog('No active streams detected', 'info');
+                        updateStatusIndicator('stream-status', false);
+                    }
+                } else {
+                    addLog('Stream check failed: ' + response.status, 'warning');
+                    updateStatusIndicator('stream-status', false);
+                }
+            } catch (error) {
+                addLog('Stream check failed: ' + error.message, 'error');
+                updateStatusIndicator('stream-status', false);
+            }
+        }
+
+        // Start monitoring
+        function startMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+
+            addLog('Started automatic monitoring (every 5 seconds)', 'info');
+            monitoringInterval = setInterval(() => {
+                checkServerStatus();
+                checkForStream();
+            }, 5000);
+        }
+
+        // Stop monitoring
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                addLog('Stopped automatic monitoring', 'warning');
+            }
+        }
+    </script>
+</body>
+</html>

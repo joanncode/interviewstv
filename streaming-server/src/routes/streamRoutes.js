@@ -94,6 +94,43 @@ module.exports = (streamManager, analyticsCollector) => {
   );
 
   /**
+   * GET /api/streams/live - List active streams
+   */
+  router.get('/live',
+    [
+      query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+      query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+      query('category').optional().isIn(['interview', 'business', 'technology', 'arts', 'education', 'entertainment']).withMessage('Invalid category')
+    ],
+    handleValidationErrors,
+    async (req, res) => {
+      try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const category = req.query.category;
+
+        const activeStreams = streamManager.getActiveStreams();
+
+        res.json({
+          success: true,
+          data: activeStreams,
+          pagination: {
+            page,
+            limit,
+            total: activeStreams.length
+          }
+        });
+      } catch (error) {
+        console.error('Error getting active streams:', error);
+        res.status(500).json({
+          error: 'Failed to get active streams',
+          message: error.message
+        });
+      }
+    }
+  );
+
+  /**
    * GET /api/streams/:id - Get stream details
    */
   router.get('/:id',
@@ -104,7 +141,7 @@ module.exports = (streamManager, analyticsCollector) => {
     async (req, res) => {
       try {
         const stream = await streamManager.getStreamById(req.params.id);
-        
+
         if (!stream) {
           return res.status(404).json({
             error: 'Stream not found'
@@ -344,42 +381,7 @@ module.exports = (streamManager, analyticsCollector) => {
     }
   );
 
-  /**
-   * GET /api/streams/live - List active streams
-   */
-  router.get('/live',
-    [
-      query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-      query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-      query('category').optional().isIn(['interview', 'business', 'technology', 'arts', 'education', 'entertainment']).withMessage('Invalid category')
-    ],
-    handleValidationErrors,
-    async (req, res) => {
-      try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const category = req.query.category;
 
-        const activeStreams = await streamManager.getActiveStreamsList(page, limit, category);
-
-        res.json({
-          success: true,
-          data: activeStreams,
-          pagination: {
-            page,
-            limit,
-            total: activeStreams.length
-          }
-        });
-      } catch (error) {
-        console.error('Error getting active streams:', error);
-        res.status(500).json({
-          error: 'Failed to get active streams',
-          message: error.message
-        });
-      }
-    }
-  );
 
   /**
    * GET /api/streams/:id/stats - Get stream statistics

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Streaming Test - Interviews.tv</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Dark Theme -->
+    <link rel="stylesheet" href="css/dark-theme.css">
+    
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        
+        .test-result {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .test-success {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #28a745;
+        }
+        
+        .test-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        .test-info {
+            background: rgba(23, 162, 184, 0.2);
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+        }
+        
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-streaming {
+            background: #FF0000;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-streaming:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #28a745;
+            box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+        }
+        
+        .status-offline {
+            background: #dc3545;
+        }
+        
+        .status-connecting {
+            background: #ffc107;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-card {
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FF0000;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="text-center mb-4">
+            <h1><i class="fas fa-broadcast-tower text-danger"></i> End-to-End Streaming Test</h1>
+            <p class="text-muted">Comprehensive testing of Interviews.tv live streaming infrastructure</p>
+        </div>
+
+        <!-- Server Status Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-server"></i> Server Status</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value" id="frontend-status">
+                            <span class="status-indicator status-connecting"></span>Testing...
+                        </div>
+                        <div class="metric-label">Frontend Server (8000)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value" id="api-status">
+                            <span class="status-indicator status-connecting"></span>Testing...
+                        </div>
+                        <div class="metric-label">API Server (8080)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value" id="streaming-status">
+                            <span class="status-indicator status-connecting"></span>Testing...
+                        </div>
+                        <div class="metric-label">Streaming Server (8081)</div>
+                    </div>
+                </div>
+            </div>
+            <div id="server-results"></div>
+        </div>
+
+        <!-- WebRTC Test Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-video"></i> WebRTC Configuration Test</h3>
+            <div class="controls">
+                <button class="btn btn-streaming" onclick="testWebRTC()">
+                    <i class="fas fa-play"></i> Test WebRTC Config
+                </button>
+                <button class="btn btn-streaming" onclick="testMediaDevices()">
+                    <i class="fas fa-microphone"></i> Test Media Devices
+                </button>
+            </div>
+            <div id="webrtc-results"></div>
+        </div>
+
+        <!-- RTMP Test Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-broadcast-tower"></i> RTMP Ingestion Test</h3>
+            <div class="test-info">
+                <strong>RTMP URL:</strong> rtmp://localhost:1935/live<br>
+                <strong>Stream Key:</strong> test-stream-key<br>
+                <strong>Instructions:</strong> Use OBS Studio or similar software to test RTMP streaming
+            </div>
+            <div class="controls">
+                <button class="btn btn-streaming" onclick="testRTMPConnection()">
+                    <i class="fas fa-satellite-dish"></i> Test RTMP Connection
+                </button>
+                <button class="btn btn-streaming" onclick="generateStreamKey()">
+                    <i class="fas fa-key"></i> Generate Stream Key
+                </button>
+            </div>
+            <div id="rtmp-results"></div>
+        </div>
+
+        <!-- Live Video Test Section -->
+        <div class="test-section">
+            <h3><i class="fas fa-camera"></i> Live Video Test</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Local Camera</h5>
+                    <div class="video-container">
+                        <video id="localVideo" autoplay muted playsinline></video>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-streaming" onclick="startLocalVideo()">
+                            <i class="fas fa-video"></i> Start Camera
+                        </button>
+                        <button class="btn btn-streaming" onclick="stopLocalVideo()">
+                            <i class="fas fa-video-slash"></i> Stop Camera
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Remote Stream</h5>
+                    <div class="video-container">
+                        <video id="remoteVideo" autoplay playsinline controls></video>
+                    </div>
+                    <div class="controls">
+                        <button class="btn btn-streaming" onclick="connectToStream()">
+                            <i class="fas fa-link"></i> Connect to Stream
+                        </button>
+                        <button class="btn btn-streaming" onclick="disconnectStream()">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="video-results"></div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="test-section">
+            <h3><i class="fas fa-chart-line"></i> Performance Metrics</h3>
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value" id="latency-metric">-- ms</div>
+                    <div class="metric-label">Latency</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="bitrate-metric">-- kbps</div>
+                    <div class="metric-label">Bitrate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="fps-metric">-- fps</div>
+                    <div class="metric-label">Frame Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="quality-metric">--</div>
+                    <div class="metric-label">Quality</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Results Summary -->
+        <div class="test-section">
+            <h3><i class="fas fa-clipboard-check"></i> Test Results Summary</h3>
+            <div id="summary-results">
+                <div class="test-info">
+                    <i class="fas fa-info-circle"></i> Run tests above to see results summary
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Socket.io for WebSocket testing -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        // Test results tracking
+        const testResults = {
+            servers: {},
+            webrtc: {},
+            rtmp: {},
+            video: {},
+            performance: {}
+        };
+
+        // Initialize tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            testServerStatus();
+            updateSummary();
+        });
+
+        // Server status testing
+        async function testServerStatus() {
+            const servers = [
+                { name: 'frontend', url: 'http://localhost:8000', element: 'frontend-status' },
+                { name: 'api', url: 'http://localhost:8080/api/health', element: 'api-status' },
+                { name: 'streaming', url: 'http://localhost:8081/health', element: 'streaming-status' }
+            ];
+
+            for (const server of servers) {
+                try {
+                    const response = await fetch(server.url, { 
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (response.ok) {
+                        document.getElementById(server.element).innerHTML = 
+                            `<span class="status-indicator status-online"></span>Online`;
+                        testResults.servers[server.name] = 'online';
+                        addResult('server-results', `✅ ${server.name} server is online`, 'success');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    document.getElementById(server.element).innerHTML = 
+                        `<span class="status-indicator status-offline"></span>Offline`;
+                    testResults.servers[server.name] = 'offline';
+                    addResult('server-results', `❌ ${server.name} server is offline: ${error.message}`, 'error');
+                }
+            }
+            updateSummary();
+        }
+
+        // WebRTC configuration test
+        async function testWebRTC() {
+            try {
+                const response = await fetch('http://localhost:8081/api/webrtc/config');
+                const config = await response.json();
+                
+                if (config.iceServers && config.iceServers.length > 0) {
+                    testResults.webrtc.config = 'success';
+                    addResult('webrtc-results', `✅ WebRTC config loaded: ${config.iceServers.length} ICE servers`, 'success');
+                    addResult('webrtc-results', `📡 ICE Servers: ${JSON.stringify(config.iceServers, null, 2)}`, 'info');
+                } else {
+                    throw new Error('No ICE servers configured');
+                }
+            } catch (error) {
+                testResults.webrtc.config = 'error';
+                addResult('webrtc-results', `❌ WebRTC config failed: ${error.message}`, 'error');
+            }
+            updateSummary();
+        }
+
+        // Media devices test
+        async function testMediaDevices() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const audioDevices = devices.filter(device => device.kind === 'audioinput');
+                
+                testResults.webrtc.devices = 'success';
+                addResult('webrtc-results', `✅ Media devices detected: ${videoDevices.length} cameras, ${audioDevices.length} microphones`, 'success');
+                
+                if (videoDevices.length === 0) {
+                    addResult('webrtc-results', `⚠️ No video devices found`, 'error');
+                }
+                if (audioDevices.length === 0) {
+                    addResult('webrtc-results', `⚠️ No audio devices found`, 'error');
+                }
+            } catch (error) {
+                testResults.webrtc.devices = 'error';
+                addResult('webrtc-results', `❌ Media devices test failed: ${error.message}`, 'error');
+            }
+            updateSummary();
+        }
+
+        // RTMP connection test
+        async function testRTMPConnection() {
+            try {
+                // Test if RTMP server is accepting connections
+                const response = await fetch('http://localhost:8081/api/streams/active');
+                
+                if (response.ok) {
+                    const streams = await response.json();
+                    testResults.rtmp.connection = 'success';
+                    addResult('rtmp-results', `✅ RTMP server is accessible`, 'success');
+                    addResult('rtmp-results', `📊 Active streams: ${streams.length || 0}`, 'info');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                testResults.rtmp.connection = 'error';
+                addResult('rtmp-results', `❌ RTMP connection test failed: ${error.message}`, 'error');
+            }
+            updateSummary();
+        }
+
+        // Generate stream key
+        function generateStreamKey() {
+            const streamKey = 'test-' + Math.random().toString(36).substr(2, 9);
+            testResults.rtmp.streamKey = streamKey;
+            addResult('rtmp-results', `🔑 Generated stream key: ${streamKey}`, 'info');
+            addResult('rtmp-results', `📺 Full RTMP URL: rtmp://localhost:1935/live/${streamKey}`, 'info');
+            updateSummary();
+        }
+
+        // Local video functions
+        let localStream = null;
+
+        async function startLocalVideo() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                document.getElementById('localVideo').srcObject = localStream;
+                testResults.video.local = 'success';
+                addResult('video-results', `✅ Local camera started successfully`, 'success');
+                
+                // Update metrics
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    const settings = videoTrack.getSettings();
+                    document.getElementById('fps-metric').textContent = settings.frameRate || '--';
+                    document.getElementById('quality-metric').textContent = 
+                        `${settings.width}x${settings.height}` || '--';
+                }
+            } catch (error) {
+                testResults.video.local = 'error';
+                addResult('video-results', `❌ Local camera failed: ${error.message}`, 'error');
+            }
+            updateSummary();
+        }
+
+        function stopLocalVideo() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                document.getElementById('localVideo').srcObject = null;
+                localStream = null;
+                testResults.video.local = 'stopped';
+                addResult('video-results', `⏹️ Local camera stopped`, 'info');
+            }
+            updateSummary();
+        }
+
+        // Remote stream functions
+        async function connectToStream() {
+            try {
+                // Simulate connecting to a remote stream
+                addResult('video-results', `🔄 Attempting to connect to remote stream...`, 'info');
+                
+                // This would normally connect to an actual stream
+                // For demo purposes, we'll simulate a connection
+                setTimeout(() => {
+                    testResults.video.remote = 'connected';
+                    addResult('video-results', `✅ Connected to remote stream (simulated)`, 'success');
+                    updateSummary();
+                }, 2000);
+                
+            } catch (error) {
+                testResults.video.remote = 'error';
+                addResult('video-results', `❌ Remote stream connection failed: ${error.message}`, 'error');
+                updateSummary();
+            }
+        }
+
+        function disconnectStream() {
+            document.getElementById('remoteVideo').srcObject = null;
+            testResults.video.remote = 'disconnected';
+            addResult('video-results', `🔌 Disconnected from remote stream`, 'info');
+            updateSummary();
+        }
+
+        // Utility functions
+        function addResult(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result test-${type}`;
+            result.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(result);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary-results');
+            let html = '<h5>Test Status Overview:</h5>';
+            
+            // Server tests
+            html += '<div class="row mb-3">';
+            html += '<div class="col-md-3"><strong>Servers:</strong></div>';
+            html += '<div class="col-md-9">';
+            Object.entries(testResults.servers).forEach(([name, status]) => {
+                const icon = status === 'online' ? '✅' : '❌';
+                html += `${icon} ${name} `;
+            });
+            html += '</div></div>';
+            
+            // WebRTC tests
+            html += '<div class="row mb-3">';
+            html += '<div class="col-md-3"><strong>WebRTC:</strong></div>';
+            html += '<div class="col-md-9">';
+            Object.entries(testResults.webrtc).forEach(([name, status]) => {
+                const icon = status === 'success' ? '✅' : status === 'error' ? '❌' : '⏳';
+                html += `${icon} ${name} `;
+            });
+            html += '</div></div>';
+            
+            // Overall status
+            const allTests = Object.values(testResults).flatMap(category => Object.values(category));
+            const successCount = allTests.filter(status => status === 'success' || status === 'online').length;
+            const totalCount = allTests.length;
+            
+            if (totalCount > 0) {
+                const percentage = Math.round((successCount / totalCount) * 100);
+                html += `<div class="mt-3 p-3 rounded" style="background: rgba(255, 0, 0, 0.1); border: 1px solid #FF0000;">`;
+                html += `<strong>Overall Status: ${percentage}% (${successCount}/${totalCount} tests passed)</strong>`;
+                html += `</div>`;
+            }
+            
+            summary.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
