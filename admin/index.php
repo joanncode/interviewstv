@@ -195,8 +195,8 @@ $recent_queue = $db->getRows(
         <!-- Welcome Message -->
         <div class="row mb-4">
             <div class="col-12">
-                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
-                <p class="lead">Welcome to the YouTube Interview Curation System. Manage and curate innovation content for uncensored discovery.</p>
+                <h1><i class="fas fa-tachometer-alt"></i> Curation Dashboard</h1>
+                <p class="lead">Welcome to the manual curation system. Carefully select and curate high-quality innovation interviews for uncensored community discovery and discussion.</p>
             </div>
         </div>
 
@@ -251,17 +251,17 @@ $recent_queue = $db->getRows(
                         <div class="row">
                             <div class="col-md-3 mb-2">
                                 <a href="import.php" class="btn btn-primary w-100">
-                                    <i class="fas fa-plus"></i> Import Single Video
+                                    <i class="fas fa-plus"></i> Curate Single Video
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <a href="import.php?bulk=1" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-upload"></i> Bulk Import
+                                    <i class="fas fa-clipboard-list"></i> Curated Batch
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">
                                 <a href="manage.php?status=pending" class="btn btn-warning w-100">
-                                    <i class="fas fa-eye"></i> Review Pending
+                                    <i class="fas fa-eye"></i> Review Queue
                                 </a>
                             </div>
                             <div class="col-md-3 mb-2">

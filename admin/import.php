@@ -449,8 +449,8 @@ function processQueueItem($queueId, $videoData = null) {
         <!-- Page Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <h1><i class="fas fa-upload"></i> Import YouTube Videos</h1>
-                <p class="lead">Import individual videos or bulk import hundreds of innovation interviews for curation.</p>
+                <h1><i class="fas fa-hand-paper"></i> Manual Video Curation</h1>
+                <p class="lead">Carefully select and curate high-quality innovation interviews. Focus on quality over quantity with thoughtful editorial review.</p>
             </div>
         </div>
 
@@ -478,12 +478,12 @@ function processQueueItem($queueId, $videoData = null) {
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk" type="button" role="tab">
-                            <i class="fas fa-list"></i> Bulk URLs
+                            <i class="fas fa-clipboard-list"></i> Curated Batch
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="csv-tab" data-bs-toggle="tab" data-bs-target="#csv" type="button" role="tab">
-                            <i class="fas fa-file-csv"></i> CSV Upload
+                            <i class="fas fa-search"></i> Research Tools
                         </button>
                     </li>
                 </ul>
@@ -554,10 +554,11 @@ function processQueueItem($queueId, $videoData = null) {
 
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="auto_process" name="auto_process" value="1">
+                                    <input class="form-check-input" type="checkbox" id="auto_process" name="auto_process" value="1" checked>
                                     <label class="form-check-label" for="auto_process">
-                                        Process immediately (skip queue)
+                                        Add to curation queue for manual review
                                     </label>
+                                    <div class="form-text">Recommended: All videos go through editorial review process</div>
                                 </div>
                             </div>
 
@@ -569,26 +570,37 @@ function processQueueItem($queueId, $videoData = null) {
 
                     <!-- Bulk URL Import -->
                     <div class="tab-pane fade" id="bulk" role="tabpanel">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-hand-paper"></i> Manual Curation Approach</h6>
+                            <p class="mb-2">We focus on <strong>quality over quantity</strong> with careful manual review:</p>
+                            <ul class="mb-0">
+                                <li><strong>Individual Review:</strong> Each video is personally evaluated</li>
+                                <li><strong>Editorial Control:</strong> Maintain high standards for innovation content</li>
+                                <li><strong>Contextual Curation:</strong> Add meaningful descriptions and insights</li>
+                                <li><strong>Community Value:</strong> Select videos that spark meaningful discussions</li>
+                            </ul>
+                        </div>
+
                         <form method="POST" action="">
                             <input type="hidden" name="action" value="import_bulk">
 
                             <div class="mb-3">
                                 <label for="bulk_urls" class="form-label">
-                                    <i class="fas fa-list"></i> YouTube URLs (one per line)
+                                    <i class="fas fa-clipboard-list"></i> Curated Video List (one per line)
                                 </label>
-                                <textarea class="form-control" id="bulk_urls" name="bulk_urls" rows="10"
+                                <textarea class="form-control" id="bulk_urls" name="bulk_urls" rows="8"
                                           placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/watch?v=...&#10;https://youtu.be/..." required></textarea>
                                 <div class="form-text">
-                                    Paste multiple YouTube URLs, one per line. Maximum 100 URLs per batch.
+                                    Add YouTube URLs for videos you've personally reviewed. Recommended: 5-10 videos per batch for quality control.
                                 </div>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="bulk_category_id" class="form-label">Default Category</label>
-                                        <select class="form-select" id="bulk_category_id" name="category_id">
-                                            <option value="">Auto-detect category</option>
+                                        <label for="bulk_category_id" class="form-label">Content Category</label>
+                                        <select class="form-select" id="bulk_category_id" name="category_id" required>
+                                            <option value="">Select category for this batch</option>
                                             <?php foreach ($categories as $category): ?>
                                                 <option value="<?= $category['id'] ?>">
                                                     <?= htmlspecialchars($category['name']) ?>
@@ -597,70 +609,103 @@ function processQueueItem($queueId, $videoData = null) {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="bulk_priority" class="form-label">Priority</label>
-                                        <select class="form-select" id="bulk_priority" name="priority">
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
-                                            <option value="low">Low</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="bulk_tags" class="form-label">Default Tags</label>
+                                        <label for="bulk_tags" class="form-label">Content Tags</label>
                                         <input type="text" class="form-control" id="bulk_tags" name="tags"
-                                               placeholder="innovation, tech">
+                                               placeholder="innovation, startup, engineering" required>
+                                        <div class="form-text">Describe the common themes in this batch</div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="bulk_notes" class="form-label">Batch Notes</label>
-                                <textarea class="form-control" id="bulk_notes" name="notes" rows="2"
-                                          placeholder="Notes for this bulk import batch..."></textarea>
+                                <label for="bulk_notes" class="form-label">Curation Notes</label>
+                                <textarea class="form-control" id="bulk_notes" name="notes" rows="3"
+                                          placeholder="Why did you select these videos? What makes them valuable for the community? What discussions might they spark?" required></textarea>
+                                <div class="form-text">Explain your editorial reasoning for this batch</div>
                             </div>
 
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload"></i> Import Bulk URLs
+                                <i class="fas fa-check-circle"></i> Submit Curated Batch
                             </button>
                         </form>
                     </div>
 
-                    <!-- CSV Upload -->
+                    <!-- Research & Discovery -->
                     <div class="tab-pane fade" id="csv" role="tabpanel">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-search"></i> Research & Discovery Tools</h6>
+                            <p class="mb-2">Use these resources to find high-quality innovation interviews:</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-microscope"></i> Research Channels</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li><strong>Innovation:</strong> TED Talks, Y Combinator, Stanford eCorner</li>
+                                            <li><strong>Engineering:</strong> IEEE Spectrum, MIT OpenCourseWare</li>
+                                            <li><strong>AI/ML:</strong> DeepMind, OpenAI, Lex Fridman</li>
+                                            <li><strong>Hardware:</strong> EEVblog, Ben Eater, Andreas Spiess</li>
+                                            <li><strong>Startups:</strong> This Week in Startups, Masters of Scale</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-star"></i> Quality Criteria</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li>✅ <strong>Technical Depth:</strong> Real insights, not marketing</li>
+                                            <li>✅ <strong>Innovation Focus:</strong> Breakthrough ideas or methods</li>
+                                            <li>✅ <strong>Uncensored:</strong> Honest, unfiltered discussions</li>
+                                            <li>✅ <strong>Educational:</strong> Teaches something valuable</li>
+                                            <li>✅ <strong>Discussion-worthy:</strong> Will spark community debate</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <form method="POST" action="" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="upload_csv">
 
                             <div class="mb-3">
                                 <label for="csv_file" class="form-label">
-                                    <i class="fas fa-file-csv"></i> CSV File
+                                    <i class="fas fa-file-csv"></i> Research Notes File (Optional)
                                 </label>
                                 <input type="file" class="form-control" id="csv_file" name="csv_file"
-                                       accept=".csv,.txt" required>
+                                       accept=".csv,.txt">
                                 <div class="form-text">
-                                    Upload a CSV file with YouTube URLs. Format: URL, Category ID, Tags, Notes
+                                    Upload a CSV with your research notes. Format: URL, Category, Tags, Your Notes
                                 </div>
                             </div>
 
                             <div class="alert alert-info">
-                                <h6><i class="fas fa-info-circle"></i> CSV Format:</h6>
-                                <p class="mb-2">Your CSV should have the following columns:</p>
+                                <h6><i class="fas fa-info-circle"></i> CSV Format for Research Notes:</h6>
+                                <p class="mb-2">If you keep research notes in spreadsheets:</p>
                                 <ul class="mb-0">
-                                    <li><strong>Column 1:</strong> YouTube URL (required)</li>
-                                    <li><strong>Column 2:</strong> Category ID (optional)</li>
-                                    <li><strong>Column 3:</strong> Tags (optional, comma-separated)</li>
-                                    <li><strong>Column 4:</strong> Notes (optional)</li>
+                                    <li><strong>Column 1:</strong> YouTube URL</li>
+                                    <li><strong>Column 2:</strong> Category (Innovation, Engineering, AI, etc.)</li>
+                                    <li><strong>Column 3:</strong> Tags (your keywords)</li>
+                                    <li><strong>Column 4:</strong> Your research notes and why it's valuable</li>
                                 </ul>
                             </div>
 
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="csv_category_id" class="form-label">Default Category</label>
                                         <select class="form-select" id="csv_category_id" name="category_id">
-                                            <option value="">Auto-detect category</option>
+                                            <option value="">Select from your research</option>
                                             <?php foreach ($categories as $category): ?>
                                                 <option value="<?= $category['id'] ?>">
                                                     <?= htmlspecialchars($category['name']) ?>
@@ -669,27 +714,17 @@ function processQueueItem($queueId, $videoData = null) {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="csv_priority" class="form-label">Priority</label>
-                                        <select class="form-select" id="csv_priority" name="priority">
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
-                                            <option value="low">Low</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="csv_tags" class="form-label">Default Tags</label>
+                                        <label for="csv_tags" class="form-label">Research Tags</label>
                                         <input type="text" class="form-control" id="csv_tags" name="tags"
-                                               placeholder="innovation, tech">
+                                               placeholder="research, curated, high-quality">
                                     </div>
                                 </div>
                             </div>
 
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-file-upload"></i> Upload CSV
+                                <i class="fas fa-file-upload"></i> Import Research Notes
                             </button>
                         </form>
                     </div>
@@ -702,7 +737,7 @@ function processQueueItem($queueId, $videoData = null) {
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="fas fa-lightbulb"></i> Import Tips</h5>
+                        <h5><i class="fas fa-lightbulb"></i> Manual Curation Guidelines</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -727,13 +762,13 @@ function processQueueItem($queueId, $videoData = null) {
                                 </ul>
                             </div>
                             <div class="col-md-4">
-                                <h6><i class="fas fa-cogs"></i> Processing</h6>
+                                <h6><i class="fas fa-user-edit"></i> Editorial Process</h6>
                                 <ul class="small">
-                                    <li>Videos are queued for review</li>
-                                    <li>Auto-approval for high scores</li>
-                                    <li>Duplicate detection included</li>
-                                    <li>Metadata extracted automatically</li>
-                                    <li>Categories suggested by AI</li>
+                                    <li>Manual review for every video</li>
+                                    <li>Editorial notes and context</li>
+                                    <li>Quality over quantity approach</li>
+                                    <li>Community value assessment</li>
+                                    <li>Thoughtful categorization</li>
                                 </ul>
                             </div>
                         </div>
