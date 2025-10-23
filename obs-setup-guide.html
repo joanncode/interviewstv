@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Studio Setup Guide - Interviews.tv</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF0000;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2a2a2a;
+            --input-dark: #3a3a3a;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--card-dark) !important;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+        
+        .card {
+            background-color: var(--card-dark);
+            border: 1px solid #444;
+            color: white;
+        }
+        
+        .card-header {
+            background-color: var(--input-dark);
+            border-bottom: 1px solid #444;
+        }
+        
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1);
+            border-color: #0dcaf0;
+            color: #9eeaf9;
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-color: #ffc107;
+            color: #ffda6a;
+        }
+        
+        .alert-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-color: #198754;
+            color: #75b798;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #cc0000;
+            border-color: #cc0000;
+        }
+        
+        .code-block {
+            background-color: var(--input-dark);
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        
+        .step-number {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .screenshot-placeholder {
+            background-color: var(--input-dark);
+            border: 2px dashed #666;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            margin: 15px 0;
+        }
+        
+        .nav-link {
+            color: white !important;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.php">
+                <i class="fas fa-video"></i> Interviews.tv
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="rtmp-test-setup.html">
+                            <i class="fas fa-broadcast-tower"></i> RTMP Test
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="obs-setup-guide.html">
+                            <i class="fas fa-cog"></i> OBS Setup
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin/index.php">
+                            <i class="fas fa-user-shield"></i> Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1><i class="fas fa-video"></i> OBS Studio Setup Guide</h1>
+                <p class="lead">Complete guide to set up OBS Studio for streaming to Interviews.tv RTMP server</p>
+            </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> RTMP Connection Details</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>RTMP Server URL:</strong><br>
+                            <div class="code-block">rtmp://localhost:1935/live</div>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stream Key:</strong><br>
+                            <div class="code-block">test-stream-key</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installation Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-download"></i> Step 1: Install OBS Studio</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="step-number">1</span>Download OBS Studio</h6>
+                                <p>Choose your installation method:</p>
+                                
+                                <div class="alert alert-warning">
+                                    <strong>Option A: Package Manager (Recommended)</strong><br>
+                                    <div class="code-block">sudo apt update && sudo apt install obs-studio</div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <strong>Option B: AppImage (Already Downloaded)</strong><br>
+                                    <div class="code-block">
+                                        chmod +x obs-studio.AppImage<br>
+                                        ./obs-studio.AppImage
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success">
+                                    <strong>Option C: Official Website</strong><br>
+                                    Download from: <a href="https://obsproject.com/" target="_blank" class="text-light">obsproject.com</a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="screenshot-placeholder">
+                                    <i class="fas fa-download fa-3x"></i><br>
+                                    OBS Studio Download Page
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-cog"></i> Step 2: Configure OBS for RTMP Streaming</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="step-number">2</span>Open OBS Studio Settings</h6>
+                                <p>Launch OBS Studio and follow these steps:</p>
+                                <ol>
+                                    <li>Click <strong>File</strong> → <strong>Settings</strong></li>
+                                    <li>Navigate to <strong>Stream</strong> in the left sidebar</li>
+                                    <li>Set <strong>Service</strong> to <strong>"Custom..."</strong></li>
+                                    <li>Enter the RTMP server details</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="screenshot-placeholder">
+                                    <i class="fas fa-cog fa-3x"></i><br>
+                                    OBS Settings → Stream
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <h6><span class="step-number">3</span>RTMP Stream Configuration</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Service:</strong>
+                                        <div class="code-block">Custom...</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Server:</strong>
+                                        <div class="code-block">rtmp://localhost:1935/live</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Stream Key:</strong>
+                                        <div class="code-block">test-stream-key</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scene Setup -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-desktop"></i> Step 3: Set Up Your Scene</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="step-number">4</span>Add Video Sources</h6>
+                                <p>Common sources for interview streaming:</p>
+                                <ul>
+                                    <li><strong>Video Capture Device</strong> - Webcam or camera</li>
+                                    <li><strong>Display Capture</strong> - Screen sharing</li>
+                                    <li><strong>Window Capture</strong> - Specific application</li>
+                                    <li><strong>Audio Input Capture</strong> - Microphone</li>
+                                    <li><strong>Audio Output Capture</strong> - System audio</li>
+                                </ul>
+                                
+                                <div class="alert alert-info">
+                                    <strong>Quick Setup:</strong><br>
+                                    1. Right-click in Sources<br>
+                                    2. Add → Video Capture Device<br>
+                                    3. Select your webcam<br>
+                                    4. Add → Audio Input Capture<br>
+                                    5. Select your microphone
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="screenshot-placeholder">
+                                    <i class="fas fa-plus fa-3x"></i><br>
+                                    Add Sources Menu
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Streaming Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-broadcast-tower"></i> Step 4: Start Streaming</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="step-number">5</span>Begin Your Stream</h6>
+                                <ol>
+                                    <li>Click <strong>"Start Streaming"</strong> button</li>
+                                    <li>Check the <a href="rtmp-test-setup.html" target="_blank">RTMP Test Interface</a></li>
+                                    <li>Verify your stream appears in the active streams list</li>
+                                    <li>Monitor the HLS output URL</li>
+                                </ol>
+                                
+                                <div class="alert alert-success">
+                                    <strong>Success Indicators:</strong><br>
+                                    ✅ Green "LIVE" indicator in OBS<br>
+                                    ✅ Stream appears in test interface<br>
+                                    ✅ HLS playlist generates<br>
+                                    ✅ No connection errors
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="screenshot-placeholder">
+                                    <i class="fas fa-play fa-3x"></i><br>
+                                    Start Streaming Button
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-wrench"></i> Troubleshooting</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Common Issues</h6>
+                                <ul>
+                                    <li><strong>Connection Failed:</strong> Check RTMP server is running</li>
+                                    <li><strong>No Video:</strong> Verify camera permissions</li>
+                                    <li><strong>No Audio:</strong> Check microphone settings</li>
+                                    <li><strong>Poor Quality:</strong> Adjust bitrate settings</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-tools"></i> Quick Fixes</h6>
+                                <div class="code-block">
+                                    # Check RTMP server status<br>
+                                    curl http://localhost:8081/health<br><br>
+                                    # Test RTMP connection<br>
+                                    telnet localhost 1935
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-rocket"></i> Quick Actions</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <a href="rtmp-test-setup.html" class="btn btn-primary w-100">
+                                    <i class="fas fa-broadcast-tower"></i> Test RTMP
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button onclick="checkRTMPStatus()" class="btn btn-outline-light w-100">
+                                    <i class="fas fa-heartbeat"></i> Check Status
+                                </button>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="admin/index.php" class="btn btn-outline-light w-100">
+                                    <i class="fas fa-user-shield"></i> Admin Panel
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button onclick="copyRTMPURL()" class="btn btn-outline-light w-100">
+                                    <i class="fas fa-copy"></i> Copy RTMP URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function checkRTMPStatus() {
+            fetch('http://localhost:8081/health')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'healthy') {
+                        alert('✅ RTMP Server is healthy and ready for streaming!');
+                    } else {
+                        alert('⚠️ RTMP Server status: ' + data.status);
+                    }
+                })
+                .catch(error => {
+                    alert('❌ Cannot connect to RTMP server. Make sure it\'s running.');
+                });
+        }
+        
+        function copyRTMPURL() {
+            const rtmpURL = 'rtmp://localhost:1935/live';
+            navigator.clipboard.writeText(rtmpURL).then(() => {
+                alert('📋 RTMP URL copied to clipboard: ' + rtmpURL);
+            });
+        }
+    </script>
+</body>
+</html>
